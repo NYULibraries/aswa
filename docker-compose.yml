@@ -1,0 +1,11 @@
+version: '3.7'
+
+services:
+
+  cli:
+    image: aswa
+    build: .
+    environment:
+      - ASWA_URL
+      - ASWA_EXPECTED_STATUS
+      - ASWA_TIMEOUT
