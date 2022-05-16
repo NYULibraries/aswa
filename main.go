@@ -9,9 +9,9 @@ import (
 
 const defaultTimeout = 1 * time.Minute
 
-func main() {
+func loadApplicationVariables() (string, int, time.Duration) {
 	url := os.Getenv("ASWA_URL")
-	expectedStatus, err := strconv.Atoi(os.Getenv("ASWA_EXPECTED_STATUS"))
+	expectedStatusCode, err := strconv.Atoi(os.Getenv("ASWA_EXPECTED_STATUS"))
 	if err != nil {
 		log.Println("Could not parse expected status; aborting!")
 		panic(err)
@@ -23,7 +23,13 @@ func main() {
 		timeout = defaultTimeout
 	}
 
-	test := NewSyntheticTest(url, expectedStatus, timeout)
-	results := test.GetResults()
-	log.Println(results)
+	return url, expectedStatusCode, timeout
+}
+
+func main() {
+	url, expectedStatusCode, timeout := loadApplicationVariables()
+
+	test := NewApplication(url, expectedStatusCode, timeout)
+	appStatus := test.GetStatus()
+	log.Println(appStatus)
 }
