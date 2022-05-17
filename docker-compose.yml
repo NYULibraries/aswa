@@ -9,3 +9,8 @@ services:
       - ASWA_URL
       - ASWA_EXPECTED_STATUS
       - ASWA_TIMEOUT
+  test:
+    image: aswa_test
+    build:
+      context: .
+      dockerfile: Dockerfile.test
