@@ -19,9 +19,9 @@ func NewApplication(url string, expectedStatusCode int, timeout time.Duration) *
 
 // ApplicationStatus represents the results of a synthetic test
 type ApplicationStatus struct {
+	Application      *Application
 	Success          bool
 	ActualStatusCode int
-	Test             *Application
 }
 
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
@@ -29,7 +29,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 
 	// TODO: code the actual http call here
 
-	return &ApplicationStatus{true, http.StatusOK, &test}
+	return &ApplicationStatus{&test, true, http.StatusOK}
 }
 
 // String outputs the application status as a single string

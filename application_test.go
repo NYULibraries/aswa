@@ -30,7 +30,24 @@ func TestGetStatus(t *testing.T) {
 func testGetStatusFunc(application *Application, expectedSuccess bool, expectedActualStatusCode int) func(*testing.T) {
 	return func(t *testing.T) {
 		status := application.GetStatus()
-		assert.Equal(t, status.Success, expectedSuccess)
-		assert.Equal(t, status.ActualStatusCode, expectedActualStatusCode)
+		assert.Equal(t, expectedSuccess, status.Success)
+		assert.Equal(t, expectedActualStatusCode, status.ActualStatusCode)
+	}
+}
+
+func TestString(t *testing.T) {
+	var tests = []struct {
+		description    string
+		appStatus      *ApplicationStatus
+		expectedOutput string
+	}{
+		{"Successful status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusFound, time.Second}, true, http.StatusFound}, "Success: URL https://library.nyu.edu resolved with 200"},
+		{"Failed status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusFound, time.Second}, true, http.StatusNotFound}, "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			assert.Equal(t, test.expectedOutput, test.appStatus.String())
+		})
 	}
 }
