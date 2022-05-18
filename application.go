@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 	"time"
+	"strconv"
+	"fmt"
 )
 
 // Application represents a synthetic test on an external url to perform
@@ -27,15 +29,32 @@ type ApplicationStatus struct {
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
 func (test Application) GetStatus() *ApplicationStatus {
 
-	// TODO: code the actual http call here
+	resp, err := http.Get(test.URL)
+	if err != nil {
+		return &ApplicationStatus{&test, false, 0}
+	}
 
-	return &ApplicationStatus{&test, true, http.StatusOK}
+	if resp.StatusCode == test.ExpectedStatusCode {
+		return &ApplicationStatus{&test, true, http.StatusOK}
+	}
+
+	// defer resp.Body.Close()
+
+	fmt.Println("Status code: ", resp.StatusCode)
+	return &ApplicationStatus{&test, false, resp.StatusCode}
+	// TODO: code the actual http call here
 }
 
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
 
+	if results.Success {
+		return "Success: URL " + results.Application.URL + " resolved with " + strconv.Itoa(results.ActualStatusCode)
+	}
+
+	return "Failure: URL " + results.Application.URL + " resolved with " + strconv.Itoa(results.ActualStatusCode) + ", expected " + strconv.Itoa(results.Application.ExpectedStatusCode)
+
 	// TODO: code the formatting of results here
 
-	return "Hello world!"
+	// return "Hello world!"
 }
