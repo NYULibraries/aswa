@@ -42,7 +42,7 @@ func TestString(t *testing.T) {
 		expectedOutput string
 	}{
 		{"Successful status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second}, true, http.StatusOK}, "Success: URL https://library.nyu.edu resolved with 200"},
-		{"Failed status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second}, true, http.StatusNotFound}, "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
+		{"Failed status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second}, false, http.StatusNotFound}, "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
 	}
 
 	for _, test := range tests {

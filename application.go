@@ -3,7 +3,6 @@ package main
 import (
 	"net/http"
 	"time"
-	"strconv"
 	"fmt"
 )
 
@@ -29,32 +28,30 @@ type ApplicationStatus struct {
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
 func (test Application) GetStatus() *ApplicationStatus {
 
-	resp, err := http.Get(test.URL)
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	resp, err := client.Head(test.URL)
 	if err != nil {
 		return &ApplicationStatus{&test, false, 0}
 	}
 
-	if resp.StatusCode == test.ExpectedStatusCode {
-		return &ApplicationStatus{&test, true, http.StatusOK}
+	if resp.StatusCode != test.ExpectedStatusCode {
+		return &ApplicationStatus{&test, false, resp.StatusCode}
 	}
 
-	// defer resp.Body.Close()
-
-	fmt.Println("Status code: ", resp.StatusCode)
-	return &ApplicationStatus{&test, false, resp.StatusCode}
-	// TODO: code the actual http call here
+	return &ApplicationStatus{&test, true, resp.StatusCode}
 }
 
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
 
 	if results.Success {
-		return "Success: URL " + results.Application.URL + " resolved with " + strconv.Itoa(results.ActualStatusCode)
+		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
 	}
 
-	return "Failure: URL " + results.Application.URL + " resolved with " + strconv.Itoa(results.ActualStatusCode) + ", expected " + strconv.Itoa(results.Application.ExpectedStatusCode)
-
-	// TODO: code the formatting of results here
-
-	// return "Hello world!"
+	return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode)
 }
