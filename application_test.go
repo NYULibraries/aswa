@@ -19,7 +19,7 @@ func TestGetStatus(t *testing.T) {
 	}{
 		{"Success: correct redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 200 * time.Millisecond}, true, http.StatusMovedPermanently},
 		{"Failure: wrong redirect expected", &Application{"http://library.nyu.edu", http.StatusFound, 200 * time.Millisecond}, false, http.StatusMovedPermanently},
-		{"Success: correct error expected", &Application{"https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 200 * time.Millisecond}, true, http.StatusNotFound},
+		{"Success: correct error expected", &Application{"https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond}, true, http.StatusNotFound},
 		{"Success: success status code expected", &Application{"https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond}, true, http.StatusOK},
 		{"Failure: wrong status code expected", &Application{"https://httpstat.us/404", http.StatusOK, 400 * time.Millisecond}, false, http.StatusNotFound},
 		{"Failure: application is down", &Application{"https://httpstat.us/500", http.StatusOK, 200 * time.Millisecond}, false, http.StatusInternalServerError},
