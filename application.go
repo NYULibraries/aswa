@@ -1,9 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
-	"fmt"
 )
 
 // Application represents a synthetic test on an external url to perform
