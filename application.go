@@ -32,6 +32,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
+		Timeout: test.Timeout,
 	}
 
 	resp, err := client.Head(test.URL)
