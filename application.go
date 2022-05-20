@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -27,15 +28,30 @@ type ApplicationStatus struct {
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
 func (test Application) GetStatus() *ApplicationStatus {
 
-	// TODO: code the actual http call here
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
 
-	return &ApplicationStatus{&test, true, http.StatusOK}
+	resp, err := client.Head(test.URL)
+	if err != nil {
+		return &ApplicationStatus{&test, false, 0}
+	}
+
+	if resp.StatusCode != test.ExpectedStatusCode {
+		return &ApplicationStatus{&test, false, resp.StatusCode}
+	}
+
+	return &ApplicationStatus{&test, true, resp.StatusCode}
 }
 
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
 
-	// TODO: code the formatting of results here
+	if results.Success {
+		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
+	}
 
-	return "Hello world!"
+	return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode)
 }
