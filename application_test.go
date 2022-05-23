@@ -28,6 +28,7 @@ func TestGetStatus(t *testing.T) {
 		{"Failure: timeout", &Application{"httpstat.us/200?sleep=100", http.StatusOK, 1 * time.Millisecond, ""}, false, 0, ""},
 		{"Success: correct redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 200 * time.Millisecond, "https://library.nyu.edu"}, true, http.StatusMovedPermanently, "https://library.nyu.edu"},
 		{"Failure: wrong redirect expected", &Application{"http://library.nyu.edu", http.StatusFound, 200 * time.Millisecond, "http://library.nyu.edu"}, false, http.StatusMovedPermanently, "https://library.nyu.edu"},
+		{"Failure: wrong redirect location expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 200 * time.Millisecond, "http://library.nyu.edu"}, false, http.StatusMovedPermanently, "https://library.nyu.edu"},
 	}
 
 	for _, test := range tests {
