@@ -11,7 +11,7 @@ type Application struct {
 	URL                string
 	ExpectedStatusCode int
 	Timeout            time.Duration
-	ExpectedLocation   string `default:""` 
+	ExpectedLocation   string `default:""`
 }
 
 // NewApplication returns a Application initialized with specified values
@@ -49,12 +49,11 @@ func (test Application) GetStatus() *ApplicationStatus {
 	return &ApplicationStatus{&test, true, resp.StatusCode, resp.Header.Get("Location")}
 }
 
-
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
 
 	if results.Success {
-		return fmt.Sprintf("Success: URL %s resolved with %d, %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation )
+		return fmt.Sprintf("Success: URL %s resolved with %d, %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
 	}
 
 	return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, %s", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode, results.ActualLocation)
