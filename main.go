@@ -9,7 +9,7 @@ import (
 
 const defaultTimeout = 1 * time.Minute
 
-func loadApplicationVariables() (string, int, time.Duration) {
+func loadApplicationVariables() (string, int, time.Duration, string) {
 	url := os.Getenv("ASWA_URL")
 	expectedStatusCode, err := strconv.Atoi(os.Getenv("ASWA_EXPECTED_STATUS"))
 	if err != nil {
@@ -23,13 +23,15 @@ func loadApplicationVariables() (string, int, time.Duration) {
 		timeout = defaultTimeout
 	}
 
-	return url, expectedStatusCode, timeout
+	expectedActualLocation := os.Getenv("ASWA_EXPECTED_LOCATION")
+
+	return url, expectedStatusCode, timeout, expectedActualLocation
 }
 
 func main() {
-	url, expectedStatusCode, timeout := loadApplicationVariables()
+	url, expectedStatusCode, timeout, expectedActualLocation := loadApplicationVariables()
 
-	test := NewApplication(url, expectedStatusCode, timeout)
+	test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
 	appStatus := test.GetStatus()
 	log.Println(appStatus)
 }
