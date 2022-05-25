@@ -29,6 +29,7 @@ func TestGetStatus(t *testing.T) {
 		{"Success: correct redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
 		{"Failure: wrong redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
 		{"Failure: wrong redirect location expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
+		{"Failure: wrong error expected", &Application{"https://library.nyu.edu/nopageexistshere", http.StatusFound, 600 * time.Millisecond, ""}, false, http.StatusNotFound, ""},
 	}
 
 	for _, test := range tests {
@@ -41,7 +42,6 @@ func testGetStatusFunc(application *Application, expectedSuccess bool, expectedA
 		status := application.GetStatus()
 		assert.Equal(t, expectedSuccess, status.Success)
 		assert.Equal(t, expectedActualStatusCode, status.ActualStatusCode)
-		// assert.Equal(t, application.ExpectedLocation, status.ActualLocation)
 	}
 }
 
@@ -51,8 +51,10 @@ func TestString(t *testing.T) {
 		appStatus      *ApplicationStatus
 		expectedOutput string
 	}{
-		{"Successful status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second, ""}, true, http.StatusOK, ""}, "Success: URL https://library.nyu.edu resolved with 200, "},
+		{"Successful status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second, ""}, true, http.StatusOK, ""}, "Success: URL https://library.nyu.edu resolved with 200"},
 		{"Failed status", &ApplicationStatus{&Application{"https://library.nyu.edu", http.StatusOK, time.Second, ""}, false, http.StatusNotFound, ""}, "Failure: URL https://library.nyu.edu resolved with 404, expected 200, "},
+		{"Successful status with location", &ApplicationStatus{&Application{"http://library.nyu.edu", http.StatusMovedPermanently, time.Second, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"}, "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
+		{"Failed status with location", &ApplicationStatus{&Application{"http://library.nyu.edu", http.StatusMovedPermanently, time.Second, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"}, "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
 	}
 
 	for _, test := range tests {
