@@ -1,7 +1,3 @@
-project: aswa
-description: application status watch agent
-version: 1.0.0
-config-version: 1
 applications:
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search'
