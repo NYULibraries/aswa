@@ -8,23 +8,22 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-
 //Config struct to replace environment variables
 type Config struct {
-	Applications [] *Application
+	Applications []*Application
 }
 
 type Application struct {
-	Name 			   string `yaml:"name"`
-	URL                string `yaml:"url"`
-	ExpectedStatusCode int    `yaml:"expected_status"`
+	Name               string        `yaml:"name"`
+	URL                string        `yaml:"url"`
+	ExpectedStatusCode int           `yaml:"expected_status"`
 	Timeout            time.Duration `default:"1 * time.Minute"`
-	ExpectedLocation   string `yaml:"expected_location"`
+	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
 // Check if any required App field is empty
 func (app *Application) anyRequiredField() bool {
-	return app.Name == "" || app.URL == "" || app.ExpectedStatusCode == 0 
+	return app.Name == "" || app.URL == "" || app.ExpectedStatusCode == 0
 }
 
 // Loop through all applications and check if any required field is empty
@@ -46,7 +45,7 @@ func loadConfig(yamlPath string) (*Config, error) {
 	var config Config
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		panic (err)
+		panic(err)
 	}
 
 	if config.anyRequiredEmpty() {
@@ -59,4 +58,3 @@ func loadConfig(yamlPath string) (*Config, error) {
 func NewConfig(yamlPath string) (*Config, error) {
 	return loadConfig(yamlPath)
 }
-
