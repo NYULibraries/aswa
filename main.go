@@ -2,36 +2,26 @@ package main
 
 import (
 	"log"
-	"os"
-	"strconv"
-	"time"
+
+	"github.com/NYULibraries/aswa/lib/config"
 )
 
-const defaultTimeout = 1 * time.Minute
+func main() {
 
-func loadApplicationVariables() (string, int, time.Duration, string) {
-	url := os.Getenv("ASWA_URL")
-	expectedStatusCode, err := strconv.Atoi(os.Getenv("ASWA_EXPECTED_STATUS"))
+	applications, err := config.NewConfig("./config/applications.yml")
 	if err != nil {
-		log.Println("Could not parse expected status; aborting!")
+		log.Println("Could not load config file; aborting!")
 		panic(err)
 	}
 
-	timeout, err := time.ParseDuration(os.Getenv("ASWA_TIMEOUT"))
-	if timeout <= 0 || err != nil {
-		log.Println("No valid timeout provided; using default")
-		timeout = defaultTimeout
+	for _, app := range applications.Applications {
+		url := app.URL
+		expectedStatusCode := app.ExpectedStatusCode
+		timeout := app.Timeout
+		expectedActualLocation := app.ExpectedLocation
+
+		test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
+		appStatus := test.GetStatus()
+		log.Println(appStatus)
 	}
-
-	expectedActualLocation := os.Getenv("ASWA_EXPECTED_LOCATION")
-
-	return url, expectedStatusCode, timeout, expectedActualLocation
-}
-
-func main() {
-	url, expectedStatusCode, timeout, expectedActualLocation := loadApplicationVariables()
-
-	test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
-	appStatus := test.GetStatus()
-	log.Println(appStatus)
 }
