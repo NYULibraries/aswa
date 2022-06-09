@@ -21,7 +21,7 @@ func extractValuesFromConfig(app *config.Application) (name string, url string, 
 
 func containApp(applications []*config.Application, e string) bool {
 	for _, application := range applications {
-		if application.Name == e{
+		if application.Name == e {
 			return true
 		}
 	}
