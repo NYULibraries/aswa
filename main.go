@@ -19,12 +19,26 @@ func extractValuesFromConfig(app *config.Application) (name string, url string, 
 	return
 }
 
+func containApp(applications []*config.Application, e string) bool {
+	for _, application := range applications {
+		if application.Name == e{
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	cmdArg := os.Args[1]
 
 	applications, err := config.NewConfig(yamlPath)
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
+		panic(err)
+	}
+
+	if !containApp(applications.Applications, cmdArg) {
+		log.Println("Application not found in config file; aborting!")
 		panic(err)
 	}
 
