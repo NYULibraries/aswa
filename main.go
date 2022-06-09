@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/NYULibraries/aswa/lib/config"
@@ -9,7 +10,8 @@ import (
 
 const yamlPath = "./config/applications.yml"
 
-func extractValuesFromConfig(app *config.Application) (url string, expectedStatusCode int, timeout time.Duration, expectedActualLocation string) {
+func extractValuesFromConfig(app *config.Application) (name string, url string, expectedStatusCode int, timeout time.Duration, expectedActualLocation string) {
+	name = app.Name
 	url = app.URL
 	expectedStatusCode = app.ExpectedStatusCode
 	timeout = app.Timeout
@@ -18,6 +20,7 @@ func extractValuesFromConfig(app *config.Application) (url string, expectedStatu
 }
 
 func main() {
+	cmdArg := os.Args[1]
 
 	applications, err := config.NewConfig(yamlPath)
 	if err != nil {
@@ -26,10 +29,11 @@ func main() {
 	}
 
 	for _, app := range applications.Applications {
-		url, expectedStatusCode, timeout, expectedActualLocation := extractValuesFromConfig(app)
-
-		test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
-		appStatus := test.GetStatus()
-		log.Println(appStatus)
+		name, url, expectedStatusCode, timeout, expectedActualLocation := extractValuesFromConfig(app)
+		if cmdArg == name {
+			test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
+			appStatus := test.GetStatus()
+			log.Println(appStatus)
+		}
 	}
 }
