@@ -29,7 +29,7 @@ func TestGetStatus(t *testing.T) {
 		{"Success: correct redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
 		{"Failure: wrong redirect expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
 		{"Failure: wrong redirect location expected", &Application{"http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
-		{"Failure: wrong error expected", &Application{"https://library.nyu.edu/nopageexistshere", http.StatusFound, 600 * time.Millisecond, ""}, false, http.StatusNotFound, ""},
+		{"Failure: wrong error expected", &Application{"https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, ""}, false, http.StatusNotFound, ""},
 	}
 
 	for _, test := range tests {

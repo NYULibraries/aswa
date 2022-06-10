@@ -3,78 +3,58 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+	"time"
 
 	"gopkg.in/yaml.v3"
 )
 
-//Config stores configuration data on applications
+//Config struct to replace environment variables
 type Config struct {
-	Applications *ResourceList
+	Applications []*Application
 }
 
-//ResourceList stores data on applications
-type ResourceList struct {
-	resources map[string]*resourceConfig
+type Application struct {
+	Name               string        `yaml:"name"`
+	URL                string        `yaml:"url"`
+	ExpectedStatusCode int           `yaml:"expected_status"`
+	Timeout            time.Duration `default:"1 * time.Minute"`
+	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
-//resourceConfig stores data on an application
-type resourceConfig struct {
-	Name                     string `yaml:"name"`
-	URL                      string `yaml:"url"`
-	ExpectedStatus           int    `yaml:"expected_status"`
-	ExpectedRedirectLocation string `yaml:"expected_redirect_location"`
+// Check if any required App field is empty
+func (app *Application) anyRequiredField() bool {
+	return app.Name == "" || app.URL == "" || app.ExpectedStatusCode == 0
 }
 
-type configList struct {
-	Applications []*resourceConfig `yaml:"applications"`
-}
-
-//NewConfig returns a Config pointer loaded from a yaml file
-func NewConfig(yamlPath string) (*Config, error) {
-	list := &configList{}
-	err := list.loadConfig(yamlPath)
-	if err != nil {
-		return nil, err
-	}
-
-	applications := &ResourceList{}
-	err = applications.loadConfig(list.Applications)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Config{applications}, nil
-}
-
-func (r *ResourceList) loadConfig(list []*resourceConfig) error {
-	missingConfig := false
-	r.resources = make(map[string]*resourceConfig)
-	for _, resource := range list {
-		r.resources[resource.Name] = resource
-		if resource.anyRequiredEmpty() {
-			missingConfig = true
+// Loop through all applications and check if any required field is empty
+func (list *Config) anyRequiredEmpty() bool {
+	for _, app := range list.Applications {
+		if app.anyRequiredField() {
+			return true
 		}
 	}
-
-	if missingConfig {
-		return errors.New("incomplete configuration")
-	}
-
-	return nil
+	return false
 }
 
-func (c *resourceConfig) anyRequiredEmpty() bool {
-	return c.Name == "" || c.URL == "" || c.ExpectedStatus == 0
-}
-
-// loadConfig returns a list of applications structs from a yaml file
-func (list *configList) loadConfig(yamlPath string) error {
-	yamlData, err := ioutil.ReadFile(yamlPath)
+func loadConfig(yamlPath string) (*Config, error) {
+	data, err := ioutil.ReadFile(yamlPath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	err = yaml.Unmarshal(yamlData, list)
+	var config Config
+	err = yaml.Unmarshal(data, &config)
+	if err != nil {
+		panic(err)
+	}
 
-	return err
+	if config.anyRequiredEmpty() {
+		return nil, errors.New("config file is missing required fields")
+	}
+
+	return &config, nil
+}
+
+func NewConfig(yamlPath string) (*Config, error) {
+	return loadConfig(yamlPath)
 }
