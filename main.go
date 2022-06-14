@@ -33,7 +33,7 @@ func main() {
 	if len(os.Args) == 1 {
 		panic("No application name provided")
 	}
-	
+
 	cmdArg := os.Args[1] // get the command line argument
 
 	applications, err := config.NewConfig(yamlPath)
@@ -61,7 +61,6 @@ func main() {
 			log.Fatal("Please provide a valid application name")
 			os.Exit(1)
 		}
-
 
 	}
 }
