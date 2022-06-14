@@ -5,7 +5,9 @@ import (
 	"io/ioutil"
 	"time"
 
+
 	"gopkg.in/yaml.v3"
+	 a "github.com/NYULibraries/aswa/lib/application"
 )
 
 //Config struct to replace environment variables
@@ -13,13 +15,8 @@ type Config struct {
 	Applications []*Application
 }
 
-type Application struct {
-	Name               string        `yaml:"name"`
-	URL                string        `yaml:"url"`
-	ExpectedStatusCode int           `yaml:"expected_status"`
-	Timeout            time.Duration `default:"1 * time.Minute"`
-	ExpectedLocation   string        `yaml:"expected_location"`
-}
+type Application a.Application
+
 
 // Check if any required App field is empty
 func (app *Application) anyRequiredField() bool {
@@ -54,6 +51,25 @@ func loadConfig(yamlPath string) (*Config, error) {
 
 	return &config, nil
 }
+
+func ExtractValuesFromConfig(app *Application) (name string, url string, expectedStatusCode int, timeout time.Duration, expectedActualLocation string) {
+	name = app.Name
+	url = app.URL
+	expectedStatusCode = app.ExpectedStatusCode
+	timeout = app.Timeout
+	expectedActualLocation = app.ExpectedLocation
+	return
+}
+
+func ContainApp(applications []*Application, e string) bool {
+	for _, application := range applications {
+		if application.Name == e {
+			return true
+		}
+	}
+	return false
+}
+
 
 func NewConfig(yamlPath string) (*Config, error) {
 	return loadConfig(yamlPath)

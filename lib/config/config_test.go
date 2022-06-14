@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-const configTestPath = "./applications.yml"
+const configTestPath = "./applications.yml/"
 
 func TestNewConfig(t *testing.T) {
 	var tests = []struct {
@@ -14,6 +14,8 @@ func TestNewConfig(t *testing.T) {
 		expectedErr string
 	}{
 		{"Valid path", configTestPath, ""},
+		{"Valid path with invalid yaml", "./invalid.yml", "yaml: unmarshal errors:"},
+		{"Valid path with valid yaml", configTestPath, ""},
 		{"Invalid path", "../../config/config_test.yml", "open ../../config/config_test.yml: no such file or directory"},
 		{"Empty path", "", "open : no such file or directory"},
 		{"Invalid yaml", "./invalid.yml", "yaml: unmarshal errors"},
