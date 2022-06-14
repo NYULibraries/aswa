@@ -10,7 +10,6 @@ import (
 
 const yamlPath = "./config/applications.yml"
 
-
 func main() {
 
 	if len(os.Args) == 1 {
@@ -20,7 +19,7 @@ func main() {
 	cmdArg := os.Args[1] // get the command line argument
 
 	applications, err := config.NewConfig(yamlPath)
-	
+
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
 		panic(err)

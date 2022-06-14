@@ -5,9 +5,8 @@ import (
 	"io/ioutil"
 	"time"
 
-
+	a "github.com/NYULibraries/aswa/lib/application"
 	"gopkg.in/yaml.v3"
-	 a "github.com/NYULibraries/aswa/lib/application"
 )
 
 //Config struct to replace environment variables
@@ -16,7 +15,6 @@ type Config struct {
 }
 
 type Application a.Application
-
 
 // Check if any required App field is empty
 func (app *Application) anyRequiredField() bool {
@@ -69,7 +67,6 @@ func ContainApp(applications []*Application, e string) bool {
 	}
 	return false
 }
-
 
 func NewConfig(yamlPath string) (*Config, error) {
 	return loadConfig(yamlPath)
