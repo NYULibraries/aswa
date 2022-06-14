@@ -1,4 +1,4 @@
-# ASWA (Application Status Watch App)
+# ASWA (Application Status Watch Agent)
 
 ## Usage
 
