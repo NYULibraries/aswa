@@ -29,7 +29,12 @@ func containApp(applications []*config.Application, e string) bool {
 }
 
 func main() {
-	cmdArg := os.Args[1]
+
+	if len(os.Args) == 1 {
+		panic("No application name provided")
+	}
+	
+	cmdArg := os.Args[1] // get the command line argument
 
 	applications, err := config.NewConfig(yamlPath)
 	if err != nil {
@@ -44,10 +49,19 @@ func main() {
 
 	for _, app := range applications.Applications {
 		name, url, expectedStatusCode, timeout, expectedActualLocation := extractValuesFromConfig(app)
+		if cmdArg == "" {
+			log.Fatal("Please provide a valid application name")
+			os.Exit(1)
+		}
 		if cmdArg == name {
 			test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
+		} else if cmdArg == "" {
+			log.Fatal("Please provide a valid application name")
+			os.Exit(1)
 		}
+
+
 	}
 }
