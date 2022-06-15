@@ -42,11 +42,11 @@ func testNewConfigFunc(path string, expectedErr string) func(*testing.T) {
 
 func TestContainApp(t *testing.T) {
 	var tests = []struct {
-		description string
+		description  string
 		applications []*Application
 		appName      string
 		expected     bool
-	}{	
+	}{
 		{"Valid application", []*Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
 		{"Valid application", []*Application{{Name: "test"}}, "test", true},
 		{"Invalid application", []*Application{{Name: "test"}}, "test2", false},
@@ -61,7 +61,7 @@ func TestContainApp(t *testing.T) {
 	}
 }
 
-func testContainAppFunc(applications []*Application, appName string) func (*testing.T) {
+func testContainAppFunc(applications []*Application, appName string) func(*testing.T) {
 	return func(t *testing.T) {
 		for _, app := range applications {
 			if app.Name == appName {
@@ -72,32 +72,31 @@ func testContainAppFunc(applications []*Application, appName string) func (*test
 		}
 	}
 }
-	
+
 func TestExtractValuesFromConfig(t *testing.T) {
 	var tests = []struct {
-		description string
-		application *Application
-		appName      string
-		expectedName string
-		expectedURL  string
-		expectedStatusCode int
-		expectedTimeout time.Duration
+		description            string
+		application            *Application
+		appName                string
+		expectedName           string
+		expectedURL            string
+		expectedStatusCode     int
+		expectedTimeout        time.Duration
 		expectedActualLocation string
-	}{	
+	}{
 		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test.com", 200, time.Second, "test"},
 		{"Valid application", &Application{Name: "test", URL: "http://test1.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test1.com", 200, time.Second, "test"},
 		{"Empty application", &Application{}, "", "", "", 0, 0, ""},
 		{"Empty application", &Application{Name: "test"}, "", "test", "", 0, 0, ""},
 		{"Empty application", &Application{Name: "test", URL: "http://test.com"}, "test", "test", "http://test.com", 0, 0, ""},
 	}
-	
+
 	for _, test := range tests {
 		t.Run(test.description, testExtractValuesFromConfigFunc(test.application, test.appName, test.expectedName, test.expectedURL, test.expectedStatusCode, test.expectedTimeout, test.expectedActualLocation))
 	}
 }
 
-
-func testExtractValuesFromConfigFunc(app *Application, appName string, expectedName string, expectedURL string, expectedStatusCode int, expectedTimeout time.Duration, expectedActualLocation string) func (*testing.T) {
+func testExtractValuesFromConfigFunc(app *Application, appName string, expectedName string, expectedURL string, expectedStatusCode int, expectedTimeout time.Duration, expectedActualLocation string) func(*testing.T) {
 	return func(t *testing.T) {
 		assert.Equal(t, expectedName, app.Name)
 		assert.Equal(t, expectedURL, app.URL)
