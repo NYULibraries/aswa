@@ -105,3 +105,35 @@ func testExtractValuesFromConfigFunc(app *Application, appName string, expectedN
 		assert.Equal(t, expectedActualLocation, app.ExpectedLocation)
 	}
 }
+
+func TestAnyRequiredField(t *testing.T) {
+	var tests = []struct {
+		description string
+		application *Application
+		expected    bool
+	}{
+		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
+		{"Invalid application", &Application{Name: "test"}, false},
+		{"Invalid application", &Application{Name: "test"}, false},
+		{"Invalid application", &Application{Name: "test", URL: "http://test.com"}, false},
+		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Millisecond}, true},
+		{"Invalid application", &Application{Name: "", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second}, false},
+		{"Invalid application", &Application{Name: "test", URL: "", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, false},
+		{"Empty application", &Application{}, false},
+		{"Empty application", &Application{Name: "test"}, false},
+		{"Empty application", &Application{Name: "test", URL: "http://test.com"}, false},
+		{"Empty application", &Application{Name: "", URL: "", ExpectedStatusCode: 200}, false},
+		{"Empty application", &Application{Name: "test", URL: "http://test.com", Timeout: time.Second}, false},
+		{"Empty application", &Application{Name: "", URL: "", Timeout: time.Second, ExpectedLocation: "test"}, false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, testAnyRequiredFieldFunc(test.application, test.expected))
+	}
+}
+
+func testAnyRequiredFieldFunc(app *Application, expected bool) func(*testing.T) {
+	return func(t *testing.T) {
+		assert.Equal(t, expected, app.Name != "" && app.URL != "" && app.ExpectedStatusCode != 0)
+	}
+}
