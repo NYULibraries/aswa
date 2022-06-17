@@ -9,7 +9,7 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflag
 FROM scratch
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /app/app ./aswa
+COPY --from=builder /app/app /aswa
 
-ENTRYPOINT [ "./aswa" ]
+ENTRYPOINT [ "/aswa" ]
 

@@ -26,7 +26,7 @@ func main() {
 	}
 
 	if !config.ContainApp(applications.Applications, cmdArg) {
-		log.Println("Application not found in config file; aborting!")
+		log.Println("Application '", cmdArg, "' not found in config file; aborting!")
 		panic(err)
 	}
 
