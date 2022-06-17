@@ -78,11 +78,11 @@ func TestExtractValuesFromConfig(t *testing.T) {
 		description            string
 		application            *Application
 		appName                string
-		expectedName           string
-		expectedURL            string
-		expectedStatusCode     int
-		expectedTimeout        time.Duration
-		expectedActualLocation string
+		ExpectedName           string
+		ExpectedURL            string
+		ExpectedStatusCode     int
+		ExpectedTimeout        time.Duration
+		ExpectedActualLocation string
 	}{
 		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test.com", 200, time.Second, "test"},
 		{"Valid application", &Application{Name: "test", URL: "http://test1.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test1.com", 200, time.Second, "test"},
@@ -92,12 +92,13 @@ func TestExtractValuesFromConfig(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, testExtractValuesFromConfigFunc(test.application, test.appName, test.expectedName, test.expectedURL, test.expectedStatusCode, test.expectedTimeout, test.expectedActualLocation))
+		t.Run(test.description, testExtractValuesFromConfigFunc(test.application))
 	}
 }
 
-func testExtractValuesFromConfigFunc(app *Application, appName string, expectedName string, expectedURL string, expectedStatusCode int, expectedTimeout time.Duration, expectedActualLocation string) func(*testing.T) {
+func testExtractValuesFromConfigFunc(app *Application) func(*testing.T) {
 	return func(t *testing.T) {
+		expectedName, expectedURL, expectedStatusCode, expectedTimeout, expectedActualLocation := ExtractValuesFromConfig(app)
 		assert.Equal(t, expectedName, app.Name)
 		assert.Equal(t, expectedURL, app.URL)
 		assert.Equal(t, expectedStatusCode, app.ExpectedStatusCode)
