@@ -3,35 +3,41 @@ package main
 import (
 	"log"
 	"os"
-	"strconv"
-	"time"
+
+	"github.com/NYULibraries/aswa/lib/application"
+	"github.com/NYULibraries/aswa/lib/config"
 )
 
-const defaultTimeout = 1 * time.Minute
+const yamlPath = "./config/applications.yml"
 
-func loadApplicationVariables() (string, int, time.Duration, string) {
-	url := os.Getenv("ASWA_URL")
-	expectedStatusCode, err := strconv.Atoi(os.Getenv("ASWA_EXPECTED_STATUS"))
+func main() {
+
+	if len(os.Args) == 1 {
+		panic("No application name provided")
+	}
+
+	cmdArg := os.Args[1] // get the command line argument
+
+	applications, err := config.NewConfig(yamlPath)
+
 	if err != nil {
-		log.Println("Could not parse expected status; aborting!")
+		log.Println("Could not load config file; aborting!")
 		panic(err)
 	}
 
-	timeout, err := time.ParseDuration(os.Getenv("ASWA_TIMEOUT"))
-	if timeout <= 0 || err != nil {
-		log.Println("No valid timeout provided; using default")
-		timeout = defaultTimeout
+	if !config.ContainApp(applications.Applications, cmdArg) {
+		log.Println("Application '", cmdArg, "' not found in config file; aborting!")
+		panic(err)
 	}
 
-	expectedActualLocation := os.Getenv("ASWA_EXPECTED_LOCATION")
+	for _, app := range applications.Applications {
+		name, url, expectedStatusCode, timeout, expectedActualLocation := config.ExtractValuesFromConfig(app)
 
-	return url, expectedStatusCode, timeout, expectedActualLocation
-}
+		if cmdArg == name {
+			test := application.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
+			appStatus := test.GetStatus()
+			log.Println(appStatus)
+		}
 
-func main() {
-	url, expectedStatusCode, timeout, expectedActualLocation := loadApplicationVariables()
-
-	test := NewApplication(url, expectedStatusCode, timeout, expectedActualLocation)
-	appStatus := test.GetStatus()
-	log.Println(appStatus)
+	}
 }

@@ -1,4 +1,4 @@
-package main
+package application
 
 import (
 	"fmt"
@@ -8,15 +8,16 @@ import (
 
 // Application represents a synthetic test on an external url to perform
 type Application struct {
-	URL                string
-	ExpectedStatusCode int
-	Timeout            time.Duration
-	ExpectedLocation   string `default:""`
+	Name               string        `yaml:"name"`
+	URL                string        `yaml:"url"`
+	ExpectedStatusCode int           `yaml:"expected_status"`
+	Timeout            time.Duration `default:"1 * time.Minute"`
+	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
 // NewApplication returns a Application initialized with specified values
-func NewApplication(url string, expectedStatusCode int, timeout time.Duration, expectedLocation string) *Application {
-	return &Application{url, expectedStatusCode, timeout, expectedLocation}
+func NewApplication(name string, url string, expectedStatusCode int, timeout time.Duration, expectedLocation string) *Application {
+	return &Application{name, url, expectedStatusCode, timeout, expectedLocation}
 }
 
 // ApplicationStatus represents the results of a synthetic test

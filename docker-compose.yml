@@ -5,10 +5,8 @@ services:
   cli:
     image: aswa
     build: .
-    environment:
-      - ASWA_URL
-      - ASWA_EXPECTED_STATUS
-      - ASWA_TIMEOUT
+    volumes:
+      - ./config:/config
   test:
     image: aswa_test
     build:
