@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 
+	a "github.com/NYULibraries/aswa/lib/application"
 	c "github.com/NYULibraries/aswa/lib/config"
 )
 
@@ -32,7 +33,13 @@ func main() {
 	}
 
 	for _, app := range appData {
-		c.PingApp(app)
+		name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)
+
+		if os.Args[1] == name {
+			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
+			appStatus := test.GetStatus()
+			log.Println(appStatus)
+		}
 
 	}
 }
