@@ -4,8 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/NYULibraries/aswa/lib/application"
-	"github.com/NYULibraries/aswa/lib/config"
+	c "github.com/NYULibraries/aswa/lib/config"
 )
 
 const yamlPath = "./config/applications.yml"
@@ -16,28 +15,24 @@ func main() {
 		panic("No application name provided")
 	}
 
-	cmdArg := os.Args[1] // get the command line argument
+	CmdArg := os.Args[1] // get the command line argument
 
-	applications, err := config.NewConfig(yamlPath)
+	inputData, err := c.NewConfig(yamlPath)
+
+	appData := inputData.Applications
 
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
 		panic(err)
 	}
 
-	if !config.ContainApp(applications.Applications, cmdArg) {
-		log.Println("Application '", cmdArg, "' not found in config file; aborting!")
+	if !c.ContainApp(appData, CmdArg) {
+		log.Println("Application '", CmdArg, "' not found in config file; aborting!")
 		panic(err)
 	}
 
-	for _, app := range applications.Applications {
-		name, url, expectedStatusCode, timeout, expectedActualLocation := config.ExtractValuesFromConfig(app)
-
-		if cmdArg == name {
-			test := application.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
-			appStatus := test.GetStatus()
-			log.Println(appStatus)
-		}
+	for _, app := range appData {
+		c.PingApp(app)
 
 	}
 }

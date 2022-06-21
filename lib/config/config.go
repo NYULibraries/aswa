@@ -3,6 +3,8 @@ package config
 import (
 	"errors"
 	"io/ioutil"
+	"log"
+	"os"
 	"time"
 
 	a "github.com/NYULibraries/aswa/lib/application"
@@ -70,4 +72,14 @@ func ContainApp(applications []*Application, e string) bool {
 
 func NewConfig(yamlPath string) (*Config, error) {
 	return loadConfig(yamlPath)
+}
+
+func PingApp(app *Application) {
+	name, url, expectedStatusCode, timeout, expectedActualLocation := ExtractValuesFromConfig(app)
+
+	if os.Args[1] == name {
+		test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
+		appStatus := test.GetStatus()
+		log.Println(appStatus)
+	}
 }
