@@ -16,7 +16,7 @@ func main() {
 		panic("No application name provided")
 	}
 
-	CmdArg := os.Args[1] // get the command line argument
+	cmdArg := os.Args[1] // get the command line argument
 
 	inputData, err := c.NewConfig(yamlPath)
 
@@ -27,15 +27,15 @@ func main() {
 		panic(err)
 	}
 
-	if !c.ContainApp(appData, CmdArg) {
-		log.Println("Application '", CmdArg, "' not found in config file; aborting!")
+	if !c.ContainApp(appData, cmdArg) {
+		log.Println("Application '", cmdArg, "' not found in config file; aborting!")
 		panic(err)
 	}
 
 	for _, app := range appData {
 		name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)
 
-		if os.Args[1] == name {
+		if cmdArg == name {
 			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
