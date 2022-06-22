@@ -11,7 +11,7 @@ type Application struct {
 	Name               string        `yaml:"name"`
 	URL                string        `yaml:"url"`
 	ExpectedStatusCode int           `yaml:"expected_status"`
-	Timeout            time.Duration `default:"1 * time.Minute"`
+	Timeout            time.Duration `yaml:"timeout (ms) (optional)"`
 	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
