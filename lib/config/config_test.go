@@ -1,9 +1,12 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
+	"io/ioutil"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
+	"gopkg.in/yaml.v3"
 )
 
 const configTestPath = "../../config/applications.yml"
@@ -136,5 +139,43 @@ func TestAnyRequiredField(t *testing.T) {
 func testAnyRequiredFieldFunc(app *Application, expected bool) func(*testing.T) {
 	return func(t *testing.T) {
 		assert.Equal(t, expected, app.Name != "" && app.URL != "" && app.ExpectedStatusCode != 0)
+	}
+}
+
+func TestYamlFileFunc(t *testing.T) {
+	var tests = []struct {
+		description string
+		path        string
+		expected    bool
+	}{
+		{"Valid yaml", configTestPath, true},
+		{"Valid yaml", "../../testdata/applications.yml", true},
+		{"Invalid yaml", "../../testdata/config.yml", false},
+		{"Invalid yaml", "../../testdata/app.yml", false},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, testYamlFileFunc(test.path))
+	}
+}
+
+func testYamlFileFunc(path string) func(*testing.T) {
+
+	return func(t *testing.T) {
+
+		data, err := ioutil.ReadFile(path)
+		if err != nil {
+			t.Error(err)
+		}
+
+		var applications Config
+
+		err = yaml.Unmarshal(data, &applications)
+		if err != nil {
+			t.Error(err)
+		}
+
+		assert := assert.New(t)
+		assert.NotNil(applications)
 	}
 }
