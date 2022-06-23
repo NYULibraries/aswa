@@ -43,7 +43,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 		return &ApplicationStatus{&test, false, 0, ""}
 	}
 
-	if resp.StatusCode != test.ExpectedStatusCode || (test.ExpectedLocation != "" && resp.Header.Get("Location") != test.ExpectedLocation) {
+	if resp.StatusCode != test.ExpectedStatusCode || test.ExpectedLocation != "" && (resp.Header.Get("Location") != test.ExpectedLocation) {
 		return &ApplicationStatus{&test, false, resp.StatusCode, resp.Header.Get("Location")}
 	}
 

@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -20,7 +21,7 @@ func TestNewConfig(t *testing.T) {
 		{"Valid path", configTestPath, ""},
 		{"Valid path with valid yaml", configTestPath, ""},
 		{"Valid path with invalid yaml", "../../config/config.yml", "yaml: unmarshal errors:"},
-		{"Valid path with valid yaml but missing required fields", "../../testdata/applications.yml", "config file is missing required fields"},
+		{"Valid path with valid yaml but missing required fields", "../../testdata/test.yml", "config file is missing required fields"},
 		{"Invalid path", "../../config/config_test.yml", "open ../../config/config_test.yml: no such file or directory"},
 		{"Invalid path with valid yaml", "./applications.yml", "yaml: unmarshal errors:"},
 		{"Empty path", "", "open : no such file or directory"},
@@ -116,6 +117,7 @@ func TestAnyRequiredField(t *testing.T) {
 		application *Application
 		expected    bool
 	}{
+		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
 		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
 		{"Invalid application", &Application{Name: "test"}, false},
 		{"Invalid application", &Application{Name: "test"}, false},
@@ -149,7 +151,7 @@ func TestYamlFileFunc(t *testing.T) {
 		expected    bool
 	}{
 		{"Valid yaml", configTestPath, true},
-		{"Valid yaml", "../../testdata/applications.yml", true},
+		{"Valid yaml", "../../testdata/test.yml", true},
 		{"Invalid yaml", "../../testdata/config.yml", false},
 		{"Invalid yaml", "../../testdata/app.yml", false},
 	}
@@ -160,21 +162,36 @@ func TestYamlFileFunc(t *testing.T) {
 }
 
 func testYamlFileFunc(path string) func(*testing.T) {
-
 	return func(t *testing.T) {
-
 		data, err := ioutil.ReadFile(path)
 		if err != nil {
 			t.Error(err)
 		}
 
+		var temp struct {
+			Name               string `yaml:"name"`
+			URL                string `yaml:"url"`
+			ExpectedStatusCode int    `yaml:"expected_status_code"`
+			Timeout            int    `yaml:"timeout"`
+			ExpectedLocation   string `yaml:"expected_location"`
+		}
+
 		var applications Config
 
-		err = yaml.Unmarshal(data, &applications)
+		err = yaml.Unmarshal(data, &temp)
 		if err != nil {
 			t.Error(err)
 		}
 
+		applications.Applications = append(applications.Applications, &Application{
+			Name:               temp.Name,
+			URL:                temp.URL,
+			ExpectedStatusCode: temp.ExpectedStatusCode,
+			Timeout:            time.Duration(temp.Timeout) * time.Millisecond,
+			ExpectedLocation:   temp.ExpectedLocation,
+		})
+
+		fmt.Println("Timeout :", temp.Timeout)
 		assert := assert.New(t)
 		assert.NotNil(applications)
 	}

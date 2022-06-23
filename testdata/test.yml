@@ -8,5 +8,5 @@ applications:
   - name: library-nyu-edu
     url: 'http://library.nyu.edu'
     expected_status: 301
-    expected_redirect_location: 'https://library.nyu.edu'
+    expected_location: 'https://library.nyu.edu'
 
