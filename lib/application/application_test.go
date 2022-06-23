@@ -9,11 +9,8 @@ import (
 
 func TestGetStatus(t *testing.T) {
 	var tests = []struct {
-		description string
-		application *Application
-		//url string
-		//expectedStatusCode  int
-		//timeout time.Duration
+		description              string
+		application              *Application
 		expectedSuccess          bool
 		expectedActualStatusCode int
 		expectedActualLocation   string
