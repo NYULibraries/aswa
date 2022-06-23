@@ -1,12 +1,13 @@
 package config
 
 import (
-	"io/ioutil"
+	// "io/ioutil"
+	// "log"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"gopkg.in/yaml.v3"
+	// "gopkg.in/yaml.v3"
 )
 
 const configTestPath = "../../config/applications.yml"
@@ -143,38 +144,33 @@ func testAnyRequiredFieldFunc(app *Application, expected bool) func(*testing.T) 
 	}
 }
 
-func TestYamlFileFunc(t *testing.T) {
+func TestUnmarshalErrors(t *testing.T) {
 	var tests = []struct {
-		description string
-		path        string
-		expected    bool
+		description          string
+		path                 string
+		expectedErrorMessage string
+		expected             bool
 	}{
-		{"Valid yaml", configTestPath, true},
-		{"Valid yaml", "../../testdata/valid.yml", true},
-		{"Invalid yaml", "../../testdata/invalid.yml", false},
-		{"Invalid yaml", "../../testdata/timeout_wrong_type.yml", false},
+		{"Valid yaml", configTestPath, "", true},
+		{"Another valid yaml", "../../testdata/expect_valid.yml", "", true},
+		{"Invalid yaml", "../../testdata/expect_invalid.yml", "config file is missing required fields", false},
+		{"Wrong type timeout yaml", "../../testdata/expect_timeout_wrong_type.yml", "yaml: unmarshal errors:\n  line 5: cannot unmarshal !!int `600` into time.Duration", false},
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, testYamlFileFunc(test.path))
+		t.Run(test.description, testUnmarshalErrorsFunc(test.path, test.expectedErrorMessage, test.expected))
 	}
 }
 
-func testYamlFileFunc(path string) func(*testing.T) {
+func testUnmarshalErrorsFunc(path string, expectedErrorMessage string, expected bool) func(*testing.T) {
 	return func(t *testing.T) {
-		data, err := ioutil.ReadFile(path)
-		if err != nil {
-			t.Error(err)
+		_, err := NewConfig(path)
+
+		if expectedErrorMessage == "" {
+			assert.NoError(t, err)
+		} else {
+			assert.EqualError(t, err, expectedErrorMessage)
 		}
-
-		var applications Config
-
-		err = yaml.Unmarshal(data, &applications)
-		if err != nil {
-			t.Error(err)
-		}
-
-		assert := assert.New(t)
-		assert.NotNil(applications)
+		assert.Equal(t, expected, err == nil)
 	}
 }
