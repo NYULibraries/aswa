@@ -5,7 +5,7 @@
 Run a synthetic test in a docker container:
 
 ```
-docker-compose run cli $APP_NAME
+docker-compose run aswa $APP_NAME
 ```
 
 Run a synthetic test locally:
