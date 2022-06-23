@@ -39,6 +39,7 @@ func main() {
 			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
+			break
 		}
 
 	}

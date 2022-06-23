@@ -168,30 +168,16 @@ func testYamlFileFunc(path string) func(*testing.T) {
 			t.Error(err)
 		}
 
-		var temp struct {
-			Name               string `yaml:"name"`
-			URL                string `yaml:"url"`
-			ExpectedStatusCode int    `yaml:"expected_status_code"`
-			Timeout            int    `yaml:"timeout"`
-			ExpectedLocation   string `yaml:"expected_location"`
-		}
-
 		var applications Config
 
-		err = yaml.Unmarshal(data, &temp)
+		err = yaml.Unmarshal(data, &applications)
 		if err != nil {
 			t.Error(err)
 		}
 
-		applications.Applications = append(applications.Applications, &Application{
-			Name:               temp.Name,
-			URL:                temp.URL,
-			ExpectedStatusCode: temp.ExpectedStatusCode,
-			Timeout:            time.Duration(temp.Timeout) * time.Millisecond,
-			ExpectedLocation:   temp.ExpectedLocation,
-		})
-
-		fmt.Println("Timeout :", temp.Timeout)
+		for _, app := range applications.Applications {
+			fmt.Println("Timeout :", app.Timeout)
+		}
 		assert := assert.New(t)
 		assert.NotNil(applications)
 	}

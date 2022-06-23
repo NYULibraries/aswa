@@ -2,7 +2,7 @@ applications:
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
-    timeout: 600
+    timeout: 600ms
     expected_location: 'https://specialcollections.library.nyu.edu/search/'
   - name: specialcollections-dev
     url: 'https://specialcollections-dev.library.nyu.edu/search'

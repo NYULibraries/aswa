@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"time"
 
@@ -41,6 +42,10 @@ func loadConfig(yamlPath string) (*Config, error) {
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
 		panic(err)
+	}
+
+	for _, app := range config.Applications {
+		fmt.Println("Timeout :", app.Timeout)
 	}
 
 	if config.anyRequiredEmpty() {
