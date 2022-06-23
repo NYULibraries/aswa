@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"testing"
 	"time"
@@ -151,9 +150,9 @@ func TestYamlFileFunc(t *testing.T) {
 		expected    bool
 	}{
 		{"Valid yaml", configTestPath, true},
-		{"Valid yaml", "../../testdata/test.yml", true},
-		{"Invalid yaml", "../../testdata/config.yml", false},
-		{"Invalid yaml", "../../testdata/app.yml", false},
+		{"Valid yaml", "../../testdata/valid.yml", true},
+		{"Invalid yaml", "../../testdata/invalid.yml", false},
+		{"Invalid yaml", "../../testdata/timeout_wrong_type.yml", false},
 	}
 
 	for _, test := range tests {
@@ -175,9 +174,6 @@ func testYamlFileFunc(path string) func(*testing.T) {
 			t.Error(err)
 		}
 
-		for _, app := range applications.Applications {
-			fmt.Println("Timeout :", app.Timeout)
-		}
 		assert := assert.New(t)
 		assert.NotNil(applications)
 	}
