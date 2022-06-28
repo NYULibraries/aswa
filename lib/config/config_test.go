@@ -1,13 +1,10 @@
 package config
 
 import (
-	// "io/ioutil"
-	// "log"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	// "gopkg.in/yaml.v3"
 )
 
 const configTestPath = "../../config/applications.yml"
