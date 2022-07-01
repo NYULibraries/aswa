@@ -1,9 +1,10 @@
 package config
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 const configTestPath = "../../config/applications.yml"
@@ -17,11 +18,15 @@ func TestNewConfig(t *testing.T) {
 		{"Valid path", configTestPath, ""},
 		{"Valid path with valid yaml", configTestPath, ""},
 		{"Valid path with invalid yaml", "../../config/config.yml", "yaml: unmarshal errors:"},
-		{"Valid path with valid yaml but missing required fields", "../../testdata/applications.yml", "config file is missing required fields"},
+		{"Valid path with valid yaml but missing required fields", "../../testdata/test.yml", "config file is missing required fields"},
 		{"Invalid path", "../../config/config_test.yml", "open ../../config/config_test.yml: no such file or directory"},
 		{"Invalid path with valid yaml", "./applications.yml", "yaml: unmarshal errors:"},
 		{"Empty path", "", "open : no such file or directory"},
 		{"Invalid yaml", "./invalid.yml", "yaml: unmarshal errors"},
+		{"Valid yaml", configTestPath, ""},
+		{"Another valid yaml", "../../testdata/expect_valid.yml", ""},
+		{"Invalid yaml", "../../testdata/expect_invalid.yml", "config file is missing required fields"},
+		{"Wrong type timeout yaml", "../../testdata/expect_timeout_wrong_type.yml", "yaml: unmarshal errors:\n  line 5: cannot unmarshal !!int `600` into time.Duration"},
 	}
 
 	for _, test := range tests {
@@ -113,6 +118,7 @@ func TestAnyRequiredField(t *testing.T) {
 		application *Application
 		expected    bool
 	}{
+		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
 		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
 		{"Invalid application", &Application{Name: "test"}, false},
 		{"Invalid application", &Application{Name: "test"}, false},

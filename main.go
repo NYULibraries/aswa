@@ -20,12 +20,12 @@ func main() {
 
 	inputData, err := c.NewConfig(yamlPath)
 
-	appData := inputData.Applications
-
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
 		panic(err)
 	}
+
+	appData := inputData.Applications
 
 	if !c.ContainApp(appData, cmdArg) {
 		log.Println("Application '", cmdArg, "' not found in config file; aborting!")
@@ -39,6 +39,7 @@ func main() {
 			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
+			break
 		}
 
 	}

@@ -40,9 +40,8 @@ func loadConfig(yamlPath string) (*Config, error) {
 	var config Config
 	err = yaml.Unmarshal(data, &config)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
-
 	if config.anyRequiredEmpty() {
 		return nil, errors.New("config file is missing required fields")
 	}

@@ -9,16 +9,13 @@ import (
 
 func TestGetStatus(t *testing.T) {
 	var tests = []struct {
-		description string
-		application *Application
-		//url string
-		//expectedStatusCode  int
-		//timeout time.Duration
+		description              string
+		application              *Application
 		expectedSuccess          bool
 		expectedActualStatusCode int
 		expectedActualLocation   string
 	}{
-		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, ""}, true, http.StatusMovedPermanently, ""},
+		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 600 * time.Millisecond, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 600 * time.Millisecond, ""}, false, http.StatusMovedPermanently, ""},
 		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, ""}, true, http.StatusNotFound, ""},
 		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 600 * time.Millisecond, ""}, true, http.StatusOK, ""},
