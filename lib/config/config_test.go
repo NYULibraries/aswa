@@ -23,6 +23,10 @@ func TestNewConfig(t *testing.T) {
 		{"Invalid path with valid yaml", "./applications.yml", "yaml: unmarshal errors:"},
 		{"Empty path", "", "open : no such file or directory"},
 		{"Invalid yaml", "./invalid.yml", "yaml: unmarshal errors"},
+		{"Valid yaml", configTestPath, ""},
+		{"Another valid yaml", "../../testdata/expect_valid.yml", ""},
+		{"Invalid yaml", "../../testdata/expect_invalid.yml", "config file is missing required fields"},
+		{"Wrong type timeout yaml", "../../testdata/expect_timeout_wrong_type.yml", "yaml: unmarshal errors:\n  line 5: cannot unmarshal !!int `600` into time.Duration"},
 	}
 
 	for _, test := range tests {
@@ -138,36 +142,5 @@ func TestAnyRequiredField(t *testing.T) {
 func testAnyRequiredFieldFunc(app *Application, expected bool) func(*testing.T) {
 	return func(t *testing.T) {
 		assert.Equal(t, expected, app.Name != "" && app.URL != "" && app.ExpectedStatusCode != 0)
-	}
-}
-
-func TestUnmarshalErrors(t *testing.T) {
-	var tests = []struct {
-		description          string
-		path                 string
-		expectedErrorMessage string
-		expected             bool
-	}{
-		{"Valid yaml", configTestPath, "", true},
-		{"Another valid yaml", "../../testdata/expect_valid.yml", "", true},
-		{"Invalid yaml", "../../testdata/expect_invalid.yml", "config file is missing required fields", false},
-		{"Wrong type timeout yaml", "../../testdata/expect_timeout_wrong_type.yml", "yaml: unmarshal errors:\n  line 5: cannot unmarshal !!int `600` into time.Duration", false},
-	}
-
-	for _, test := range tests {
-		t.Run(test.description, testUnmarshalErrorsFunc(test.path, test.expectedErrorMessage, test.expected))
-	}
-}
-
-func testUnmarshalErrorsFunc(path string, expectedErrorMessage string, expected bool) func(*testing.T) {
-	return func(t *testing.T) {
-		_, err := NewConfig(path)
-
-		if expectedErrorMessage == "" {
-			assert.NoError(t, err)
-		} else {
-			assert.EqualError(t, err, expectedErrorMessage)
-		}
-		assert.Equal(t, expected, err == nil)
 	}
 }
