@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/slack-go/slack"
 	"log"
 	"os"
 
@@ -41,30 +40,8 @@ func main() {
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
 
-			token := os.Getenv("SLACK_TOKEN")
+			PostToSlack(appStatus.String())
 
-			if token == "" {
-				log.Println("SLACK_TOKEN not set; aborting!")
-				panic(err)
-			}
-
-			channel := os.Getenv("CHANNEL_ID")
-
-			if channel == "" {
-				log.Println("CHANNEL_ID not set; aborting!")
-				panic(err)
-			}
-
-			api := slack.New(token)
-
-			channelID, timestamp, err := api.PostMessage(channel, slack.MsgOptionText(appStatus.String(), false))
-
-			if err != nil {
-				log.Fatal(err)
-				return
-			}
-
-			log.Printf("Message sent to channel %s at %s", channelID, timestamp)
 			break
 		}
 
