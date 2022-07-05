@@ -43,7 +43,7 @@ func main() {
 
 			api := slack.New(os.Getenv("SLACK_TOKEN"))
 
-			channelID, timestamp, err := api.PostMessage(os.Getenv("CHANNEL_ID"), slack.MsgOptionText("Starting ASWA", false))
+			channelID, timestamp, err := api.PostMessage(os.Getenv("CHANNEL_ID"), slack.MsgOptionText(appStatus.String(), false))
 
 			if err != nil {
 				log.Fatal(err)
