@@ -41,9 +41,23 @@ func main() {
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
 
-			api := slack.New(os.Getenv("SLACK_TOKEN"))
+			token := os.Getenv("SLACK_TOKEN")
 
-			channelID, timestamp, err := api.PostMessage(os.Getenv("CHANNEL_ID"), slack.MsgOptionText(appStatus.String(), false))
+			if token == "" {
+				log.Println("SLACK_TOKEN not set; aborting!")
+				panic(err)
+			}
+
+			channel := os.Getenv("CHANNEL_ID")
+
+			if channel == "" {
+				log.Println("CHANNEL_ID not set; aborting!")
+				panic(err)
+			}
+
+			api := slack.New(token)
+
+			channelID, timestamp, err := api.PostMessage(channel, slack.MsgOptionText(appStatus.String(), false))
 
 			if err != nil {
 				log.Fatal(err)
