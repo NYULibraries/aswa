@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/slack-go/slack"
 	"log"
 	"os"
 
@@ -39,6 +40,17 @@ func main() {
 			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
+
+			api := slack.New(os.Getenv("SLACK_TOKEN"))
+
+			channelID, timestamp, err := api.PostMessage(os.Getenv("CHANNEL_ID"), slack.MsgOptionText("Starting ASWA", false))
+
+			if err != nil {
+				log.Fatal(err)
+				return
+			}
+
+			log.Printf("Message sent to channel %s at %s", channelID, timestamp)
 			break
 		}
 
