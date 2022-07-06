@@ -4,20 +4,35 @@ import (
 	"github.com/slack-go/slack"
 	"log"
 	"os"
+	"strconv"
+	"strings"
+	"time"
 )
+
+func parseUnixTimestamp(ms string) (time.Time, error) {
+	str := strings.Split(ms, ".")
+	i, err := strconv.ParseInt(str[0], 10, 64)
+	if err != nil {
+		panic(err)
+	}
+
+	tm := time.Unix(i, 0)
+
+	return tm, nil
+}
 
 func PostToSlack(status string) {
 	token := os.Getenv("SLACK_TOKEN")
 
 	if token == "" {
-		log.Println("SLACK_TOKEN not set; aborting!")
+		log.Println("SLACK_TOKEN not set; aborting posting slack message!")
 		return
 	}
 
-	channel := os.Getenv("CHANNEL_ID")
+	channel := os.Getenv("SLACK_CHANNEL_ID")
 
 	if channel == "" {
-		log.Println("CHANNEL_ID not set; aborting!")
+		log.Println("SLACK_CHANNEL_ID not set; aborting posting slack message!")
 		return
 	}
 
@@ -30,5 +45,7 @@ func PostToSlack(status string) {
 		return
 	}
 
-	log.Printf("Message sent to channel %s at %s", channelID, timestamp)
+	parsed_time, _ := parseUnixTimestamp(timestamp)
+
+	log.Printf("Message sent to channel %s at %s", channelID, parsed_time)
 }
