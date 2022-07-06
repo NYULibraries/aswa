@@ -10,8 +10,8 @@ import (
 )
 
 func parseUnixTimestamp(ms string) (time.Time, error) {
-	str := strings.Split(ms, ".")
-	i, err := strconv.ParseInt(str[0], 10, 64)
+	str := strings.Split(ms, ".")[0]
+	i, err := strconv.ParseInt(str, 10, 64)
 	if err != nil {
 		panic(err)
 	}
