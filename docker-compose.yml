@@ -7,6 +7,9 @@ services:
     build: .
     volumes:
       - ./config:/config
+    environment:
+      - SLACK_TOKEN=${SLACK_TOKEN}
+      - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID}
   test:
     image: aswa_test
     build:
