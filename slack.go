@@ -7,7 +7,12 @@ import (
 	"time"
 )
 
+type postMessageClient interface {
+	PostMessage(channel string, options ...slack.MsgOption) (string, string, error)
+}
+
 func PostToSlack(status string) {
+
 	token := os.Getenv("SLACK_TOKEN")
 
 	if token == "" {
@@ -15,16 +20,22 @@ func PostToSlack(status string) {
 		return
 	}
 
+	api := slack.New(token)
+
+	PostToSlackWithClient(status, api)
+
+}
+
+func PostToSlackWithClient(status string, client postMessageClient) {
+
 	channel := os.Getenv("SLACK_CHANNEL_ID")
 
 	if channel == "" {
-		log.Println("SLACK_CHANNEL_ID not set; aborting posting slack message!")
+		log.Println("SLACK_CHANNEL _ID not set; aborting posting slack message!")
 		return
 	}
 
-	api := slack.New(token)
-
-	channelID, _, err := api.PostMessage(channel, slack.MsgOptionText(status, false))
+	channelID, _, err := client.PostMessage(channel, slack.MsgOptionText(status, false))
 
 	if err != nil {
 		log.Fatal(err)
@@ -34,4 +45,5 @@ func PostToSlack(status string) {
 	timestamp := time.Now().Local().Format(time.ANSIC)
 
 	log.Printf("Message sent to channel %s on %s", channelID, timestamp)
+
 }

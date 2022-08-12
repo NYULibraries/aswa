@@ -1,45 +1,64 @@
 package main
 
 import (
-	"log"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-
-	"github.com/NYULibraries/aswa/mock_server"
 	"github.com/slack-go/slack"
+	"github.com/stretchr/testify/assert"
 )
 
-type SlackApi interface {
-	PostMessage(channel string, options ...slack.MsgOption) (string, string, error)
+type mockPostMessageClient struct {
+	mockChannelID string
+	mockStatus    string
+	mockError     error
 }
 
-type SlackService struct {
-	api SlackApi
+func (m *mockPostMessageClient) PostMessage(channel string, options ...slack.MsgOption) (string, string, error) {
+	return m.mockChannelID, m.mockStatus, m.mockError
 }
 
-func NewSlackService(api SlackApi) *SlackService {
-	return &SlackService{api: api}
+func testPostToSlackWithClientFunc(t *testing.T, channelID string, status string, error error) {
+
+	mockApi := &mockPostMessageClient{channelID, status, error}
+	PostToSlackWithClient("testStatus", mockApi)
+
+	if assert.Equal(t, channelID, mockApi.mockChannelID) {
+		assert.True(t, true)
+
+	} else {
+		assert.True(t, false)
+	}
+
+	if assert.Equal(t, status, mockApi.mockStatus) {
+		assert.True(t, true)
+	} else {
+		assert.True(t, false)
+	}
+
+	if assert.Equal(t, error, mockApi.mockError) {
+		assert.True(t, true)
+	} else {
+		assert.True(t, false)
+	}
 }
 
-func (s *SlackService) PostMessage(channel string) (string, string, error) {
-	return s.api.PostMessage(channel, slack.MsgOptionText("test", false))
-}
+func TestPostToSlackWithClient(t *testing.T) {
+	var tests = []struct {
+		description string
+		channelID   string
+		status      string
+		error       error
+	}{
+		{"Valid channelID and status", "C1234567890", "testStatus", nil},
+		{"Invalid channelID", "", "testStatus", nil},
+		{"Invalid status", "C1234567890", "", nil},
+		{"Invalid channelID and status", "", "", nil},
+		{"Invalid channelID and status and error", "", "", error(nil)},
+	}
 
-func TestPostToSlack(t *testing.T) {
-
-	mockServer := server.New()
-
-	client := slack.New("SLACK_TOKEN", slack.OptionAPIURL(mockServer.Server.URL+"/"))
-
-	s := NewSlackService(client)
-
-	channel, timestamp, err := s.PostMessage("CHANNEL_ID")
-
-	log.Printf("Channel: %v, timestamp: %v, err: %v", channel, timestamp, err)
-
-	assert.NoError(t, err, "should not error when posting message")
-	assert.Equal(t, "CHANNEL_ID", channel, "should have posted to correct channel")
-	assert.NotEmpty(t, timestamp, "should have a timestamp")
-
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			testPostToSlackWithClientFunc(t, test.channelID, test.status, test.error)
+		})
+	}
 }
