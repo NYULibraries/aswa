@@ -20,7 +20,7 @@ func (m *mockPostMessageClient) PostMessage(channel string, options ...slack.Msg
 func testPostToSlackWithClientFunc(t *testing.T, channelID string, status string, error error) {
 
 	mockApi := &mockPostMessageClient{channelID, status, error}
-	PostToSlackWithClient("testStatus", mockApi)
+	PostToSlackWithClient(status, mockApi)
 
 	if assert.Equal(t, channelID, mockApi.mockChannelID) {
 		assert.True(t, true)
