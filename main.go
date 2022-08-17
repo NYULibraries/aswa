@@ -28,6 +28,7 @@ func main() {
 		return
 	}
 
+	//no command line args, loop through all applications and post to slack
 	if len(os.Args) == 1 {
 		for _, app := range appData {
 			name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)
@@ -42,6 +43,7 @@ func main() {
 
 	} else {
 
+		//command line arg presents, loop through all applications and post to slack if name matches
 		cmdArg := os.Args[1] // get the command line argument
 
 		if !c.ContainApp(appData, cmdArg) {
