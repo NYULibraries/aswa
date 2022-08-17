@@ -21,6 +21,13 @@ func main() {
 
 	appData := inputData.Applications
 
+	token := os.Getenv("SLACK_TOKEN")
+
+	if token == "" {
+		log.Println("SLACK_TOKEN not set; aborting posting slack message!")
+		return
+	}
+
 	if len(os.Args) == 1 {
 		for _, app := range appData {
 			name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)
@@ -29,7 +36,8 @@ func main() {
 			appStatus := test.GetStatus()
 			log.Println(appStatus)
 
-			PostToSlack(appStatus.String())
+			slackClient := NewSlackClient(token)
+			slackClient.PostToSlack(appStatus.String())
 		}
 
 	} else {
@@ -49,7 +57,8 @@ func main() {
 				appStatus := test.GetStatus()
 				log.Println(appStatus)
 
-				PostToSlack(appStatus.String())
+				slackClient := NewSlackClient(token)
+				slackClient.PostToSlack(appStatus.String())
 
 				break
 			}
