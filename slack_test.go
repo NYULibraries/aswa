@@ -40,7 +40,7 @@ func testPostToSlackFunc(t *testing.T, channelID string, status string, error er
 	slackClient := &SlackClient{
 		api: mockClient,
 	}
-	slackClient.PostToSlack(status)
+	slackClient.PostToSlack(status, channelID)
 
 	if assert.Equal(t, channelID, mockClient.mockChannelID) {
 		assert.Equal(t, status, mockClient.mockStatus)

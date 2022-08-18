@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/slack-go/slack"
 	"log"
-	"os"
 	"time"
 )
 
@@ -20,13 +19,7 @@ func NewSlackClient(token string) *SlackClient {
 	return &SlackClient{api}
 }
 
-func (s *SlackClient) PostToSlack(status string) {
-	channel := os.Getenv("SLACK_CHANNEL_ID")
-
-	if channel == "" {
-		log.Println("SLACK_CHANNEL_ID not set; aborting posting slack message!")
-		return
-	}
+func (s *SlackClient) PostToSlack(status string, channel string) {
 
 	channelID, _, err := s.api.PostMessage(channel, slack.MsgOptionText(status, false))
 
