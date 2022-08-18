@@ -21,6 +21,13 @@ func main() {
 
 	appData := inputData.Applications
 
+	channel := os.Getenv("SLACK_CHANNEL_ID")
+
+	if channel == "" {
+		log.Println("SLACK_CHANNEL_ID not set; aborting posting slack message!")
+		return
+	}
+
 	token := os.Getenv("SLACK_TOKEN")
 
 	if token == "" {
