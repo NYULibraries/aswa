@@ -7,6 +7,20 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestNewSlackClient(t *testing.T) {
+	token := "test"
+	slackClient := NewSlackClient(token)
+
+	if assert.NotNil(t, slackClient) {
+		assert.NotNil(t, slackClient.api)
+	}
+
+	if assert.NotNil(t, slackClient.api) {
+		assert.Equal(t, slack.New(token), slackClient.api)
+	}
+
+}
+
 type mockPostMessageClient struct {
 	mockChannelID string
 	mockStatus    string
