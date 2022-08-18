@@ -45,7 +45,7 @@ func main() {
 			log.Println(appStatus)
 
 			slackClient := NewSlackClient(token)
-			slackClient.PostToSlack(appStatus.String())
+			slackClient.PostToSlack(appStatus.String(), channel)
 		}
 
 	} else {
@@ -67,7 +67,7 @@ func main() {
 				log.Println(appStatus)
 
 				slackClient := NewSlackClient(token)
-				slackClient.PostToSlack(appStatus.String())
+				slackClient.PostToSlack(appStatus.String(), channel)
 
 				break
 			}
