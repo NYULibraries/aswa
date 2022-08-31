@@ -23,3 +23,10 @@ Run a synthetic test locally:
 
 Name, url, expected status, timeout and expected location of an application are specified in config/applications.yml
 
+~~~ {.yml}
+applications:
+  - name: specialcollections
+    url: 'https://specialcollections.library.nyu.edu/search/'
+    expected_status: 200
+    timeout: 600ms
+~~~
