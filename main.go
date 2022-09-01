@@ -67,8 +67,11 @@ func main() {
 				log.Println(appStatus)
 
 				slackClient := NewSlackClient(token)
-				slackClient.PostToSlack(appStatus.String(), channel)
-
+				err := slackClient.PostToSlack(appStatus.String(), channel)
+				if err != nil {
+					log.Println(err)
+					panic(err)
+				}
 				break
 			}
 
