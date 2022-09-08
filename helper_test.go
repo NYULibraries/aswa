@@ -82,7 +82,7 @@ func TestRunTestsNoCmdArgs(t *testing.T) {
 		error       error
 	}{
 		{"Valid test run", []*c.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", nil},
-		{"Test Run Tests No Cmd Args", []*c.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second}}, "test", "test", nil},
+		{"Test Run Tests No Cmd Args", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "collections", "www.collections.com", nil},
 		{"Invalid Test Run Tests No Cmd Args", []*c.Application{{Name: "", URL: "", ExpectedStatusCode: 200, Timeout: 1 * time.Second}}, "", "", errors.New("Application Name & Url not provided, aborting!")},
 	}
 
