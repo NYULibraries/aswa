@@ -52,15 +52,14 @@ func testPostToSlackFunc(t *testing.T, channelID string, status string, mockErro
 	err := slackClient.PostToSlack(status, channelID)
 
 	//workaround to assert the options argument passed to the PostMessage method
-	slackMsgOption := runtime.FuncForPC(reflect.ValueOf([]slack.MsgOption{slack.MsgOptionText(status, false)}).Pointer())
-	mockClientOptionsArg := runtime.FuncForPC(reflect.ValueOf(mockClient.optionsArg).Pointer())
+	expectedFirstElementPointer := runtime.FuncForPC(reflect.ValueOf([]slack.MsgOption{slack.MsgOptionText(status, false)}[0]).Pointer())
+	mockClientOptionsArgFirstElementPointer := runtime.FuncForPC(reflect.ValueOf(mockClient.optionsArg[0]).Pointer())
 
 	if assert.Equal(t, channelID, mockClient.channelArg) {
 		// This does not work:
 		// assert.Equal(t, []slack.MsgOption{slack.MsgOptionText(status, false)}[0], mockClient.optionsArg[0])
-		// assert.ElementsMatch(t, []slack.MsgOption{slack.MsgOptionText(status, false)}[0], mockClient.optionsArg[0])
 		// assert.ElementsMatch(t, []slack.MsgOption{slack.MsgOptionText(status, false)}, mockClient.optionsArg)
-		assert.Equal(t, slackMsgOption, mockClientOptionsArg)
+		assert.Equal(t, expectedFirstElementPointer, mockClientOptionsArgFirstElementPointer)
 		assert.Equal(t, err, mockClient.mockError)
 	}
 
