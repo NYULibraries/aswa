@@ -52,8 +52,8 @@ func testPostToSlackFunc(t *testing.T, channelID string, status string, mockErro
 	err := slackClient.PostToSlack(status, channelID)
 
 	//workaround to assert the options argument passed to the PostMessage method
-	slackMsgOption := runtime.FuncForPC(reflect.ValueOf([]slack.MsgOption{slack.MsgOptionText(status, false)}).Pointer()).Name()
-	mockClientOptionsArg := runtime.FuncForPC(reflect.ValueOf(mockClient.optionsArg).Pointer()).Name()
+	slackMsgOption := runtime.FuncForPC(reflect.ValueOf([]slack.MsgOption{slack.MsgOptionText(status, false)}).Pointer())
+	mockClientOptionsArg := runtime.FuncForPC(reflect.ValueOf(mockClient.optionsArg).Pointer())
 
 	if assert.Equal(t, channelID, mockClient.channelArg) {
 		// This does not work:
