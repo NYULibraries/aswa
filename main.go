@@ -27,18 +27,18 @@ func main() {
 
 	//no command line args, loop through all applications and post to slack
 	if len(os.Args) == 1 {
-		error := RunTestsNoCmdArgs(appData, channel, token)
-		if error != nil {
-			log.Println(error)
-			panic(error)
+		err := RunTestsNoCmdArgs(appData, channel, token)
+		if err != nil {
+			log.Println(err)
+			panic(err)
 		}
 	} else {
 		cmdArg := os.Args[1]
 
-		error := RunTests(appData, channel, token, cmdArg)
-		if error != nil {
-			log.Println(error)
-			panic(error)
+		err := RunTests(appData, channel, token, cmdArg)
+		if err != nil {
+			log.Println(err)
+			panic(err)
 		}
 	}
 }
