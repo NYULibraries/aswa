@@ -7,14 +7,14 @@ import (
 	c "github.com/NYULibraries/aswa/lib/config"
 )
 
-const yamlPath = "config/applications.yml"
+const yamlPath = "./config/applications.yml"
 
 func main() {
 
 	inputData, err := c.NewConfig(yamlPath)
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
-		panic(err)
+		log.Println(err)
 	}
 
 	appData := inputData.Applications
