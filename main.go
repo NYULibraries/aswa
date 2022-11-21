@@ -7,7 +7,7 @@ import (
 	c "github.com/NYULibraries/aswa/lib/config"
 )
 
-const yamlPath = "./config/applications.yml"
+const yamlPath = "./configuration/applications.yml"
 
 func main() {
 
