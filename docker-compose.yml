@@ -5,8 +5,8 @@ services:
   aswa:
     image: aswa
     build: .
-    volumes:
-      - ./config:/config
+    # volumes:
+    #   - ./config:/config
   test:
     image: aswa_test
     build:
