@@ -14,7 +14,7 @@ func main() {
 	inputData, err := c.NewConfig(yamlPath)
 	if err != nil {
 		log.Println("Could not load config file; aborting!")
-		log.Println(err)
+		panic(err)
 	}
 
 	appData := inputData.Applications
