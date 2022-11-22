@@ -2,14 +2,14 @@ package config
 
 import (
 	"errors"
-	"io/ioutil"
+	"os"
 	"time"
 
 	a "github.com/NYULibraries/aswa/lib/application"
 	"gopkg.in/yaml.v3"
 )
 
-//Config struct to replace environment variables
+// Config struct to replace environment variables
 type Config struct {
 	Applications []*Application
 }
@@ -32,7 +32,7 @@ func (list *Config) anyRequiredEmpty() bool {
 }
 
 func loadConfig(yamlPath string) (*Config, error) {
-	data, err := ioutil.ReadFile(yamlPath)
+	data, err := os.ReadFile(yamlPath)
 	if err != nil {
 		return nil, err
 	}
