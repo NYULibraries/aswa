@@ -7,7 +7,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-const configTestPath = "../../configuration/applications.yml"
+const configTestPath = "../../config/applications.yml"
 
 func TestNewConfig(t *testing.T) {
 	var tests = []struct {
