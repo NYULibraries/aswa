@@ -5,27 +5,28 @@
 Run a synthetic test in a docker container:
 
 ```
-docker-compose run aswa $APP_NAME
+docker-compose run aswa $APP_NAME 
+
+docker-compose run aswa
+
 ```
 
 Run a synthetic test locally:
 
 ```
 ./aswa $APP_NAME
+
+./aswa 
 ```
 
 ### YAML config
 
-Name, url, expected status and expected location of an application are specified in config/applications.yml
+Name, url, expected status, timeout and expected location of an application are specified in config/applications.yml
 
-Timeout is currently defaulting to `1*time.Minute`
 ~~~ {.yml}
 applications:
   - name: specialcollections
-    url: 'https://specialcollections.library.nyu.edu/search'
+    url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
-    expectedLocation: 'https://specialcollections.library.nyu.edu/search'
+    timeout: 600ms
 ~~~
-
-
-Configuration of timeout duration in config YAML will be implemented in the next release

@@ -28,15 +28,15 @@ jobs:
           name: Build app
           command: |
             docker-compose build
-            #- run:
-            #    name: Push image
-            #    command: |
-            #      export BRANCH_NO_SLASH=${CIRCLE_BRANCH//\//_}
-            #      docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
-            #      docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
-            #      docker login -u "$QUAY_USERNAME" --password "$QUAY_PASSWORD" quay.io
-            #      docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
-            #      docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
+      - run:
+          name: Push image
+          command: |
+            export BRANCH_NO_SLASH=${CIRCLE_BRANCH//\//_}
+            docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
+            docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
+            docker login -u "$QUAY_USERNAME" --password "$QUAY_PASSWORD" quay.io
+            docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
+            docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
 
 workflows:
   version: 2
