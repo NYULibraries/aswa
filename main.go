@@ -32,6 +32,6 @@ func main() {
 
 	err = RunTests(appData, channel, token, cmdArg)
 	if err != nil {
-		log.Fatal("Error running tests:", err)
+		logger.Fatal("Error running tests:", err)
 	}
 }
