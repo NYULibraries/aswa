@@ -10,16 +10,17 @@ import (
 	a "github.com/NYULibraries/aswa/lib/application"
 )
 
+// postTestResult posts the result of the given test to Slack.
 func postTestResult(test *a.Application, channel string, token string) error {
 	appStatus := test.GetStatus()
 	log.Println(appStatus)
 
 	slackClient := NewSlackClient(token)
-	err := slackClient.PostToSlack(appStatus.String(), channel)
-	if err != nil {
+	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
 		log.Println(err)
 		return err
 	}
+
 	return nil
 }
 
