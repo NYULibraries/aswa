@@ -54,11 +54,11 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 func checkSlackEnvs() (string, string, error) {
 	if os.Getenv("SLACK_CHANNEL_ID") == "" {
 		err := errors.New("SLACK_CHANNEL_ID environment variable is not set")
-		log.Fatal("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
+		log.Println("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
 	}
 	if os.Getenv("SLACK_TOKEN") == "" {
 		err := errors.New("SLACK_TOKEN environment variable is not set")
-		log.Fatal("Error checking Slack environment variable SLACK_TOKEN:", err)
+		log.Println("Error checking Slack environment variable SLACK_TOKEN:", err)
 	}
 	return os.Getenv("SLACK_CHANNEL_ID"), os.Getenv("SLACK_TOKEN"), nil
 }
