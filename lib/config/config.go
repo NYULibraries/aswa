@@ -31,6 +31,10 @@ func (list *Config) anyRequiredEmpty() bool {
 	return false
 }
 
+func (list *Config) Close() {
+	list.Applications = nil
+}
+
 func loadConfig(yamlPath string) (*Config, error) {
 	data, err := os.ReadFile(yamlPath)
 	if err != nil {
