@@ -14,11 +14,10 @@ func main() {
 	if err != nil {
 		logger.Fatal("Could not load config file; aborting!", err)
 	}
-	defer inputData.Close()
 
 	appData := inputData.Applications
 
-	channel, token, err := checkSlackEnvs()
+	channel, token, err := getSlackCredentials()
 	if err != nil {
 		logger.Fatal("Error checking Slack environment variables:", err)
 	}
