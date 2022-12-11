@@ -52,7 +52,7 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 	return nil
 }
 
-func checkSlackEnvs() (string, string, error) {
+func getSlackCredentials() (string, string, error) {
 	if os.Getenv("SLACK_CHANNEL_ID") == "" {
 		err := errors.New("SLACK_CHANNEL_ID environment variable is not set")
 		log.Println("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
