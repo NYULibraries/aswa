@@ -49,14 +49,14 @@ func (test Application) GetStatus() *ApplicationStatus {
 
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
-
-	if results.Success && results.ActualLocation != "" {
+	switch {
+	case results.Success && results.ActualLocation != "":
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
-	} else if results.Success {
+	case results.Success:
 		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
-	} else if !results.Success && results.ActualLocation != "" && results.ActualStatusCode == results.Application.ExpectedStatusCode {
+	case !results.Success && results.ActualLocation != "" && results.ActualStatusCode == results.Application.ExpectedStatusCode:
 		return fmt.Sprintf("Failure: URL %s resolved with %d, but redirect location %s did not match %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation, results.Application.ExpectedLocation)
-	} else {
+	default:
 		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, %s", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode, results.ActualLocation)
 	}
 }
