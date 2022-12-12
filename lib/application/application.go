@@ -15,18 +15,7 @@ type Application struct {
 	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
-func isCodeNotAsExpected(actualStatusCode int, expectedStatusCode int) bool {
-	return actualStatusCode != expectedStatusCode
-}
-
-func isLocationNotAsExpected(actualLocation string, expectedLocation string) bool {
-	if expectedLocation == "" {
-		return false
-	}
-	return actualLocation != expectedLocation
-}
-
-// NewApplication returns a Application initialized with specified values
+// NewApplication returns an Application initialized with specified values
 func NewApplication(name string, url string, expectedStatusCode int, timeout time.Duration, expectedLocation string) *Application {
 	return &Application{name, url, expectedStatusCode, timeout, expectedLocation}
 }
@@ -54,11 +43,8 @@ func (test Application) GetStatus() *ApplicationStatus {
 		return &ApplicationStatus{&test, false, 0, ""}
 	}
 
-	if isCodeNotAsExpected(resp.StatusCode, test.ExpectedStatusCode) || isLocationNotAsExpected(resp.Header.Get("Location"), test.ExpectedLocation) {
-		return &ApplicationStatus{&test, false, resp.StatusCode, resp.Header.Get("Location")}
-	}
-
-	return &ApplicationStatus{&test, true, resp.StatusCode, resp.Header.Get("Location")}
+	statusOk := resp.StatusCode == test.ExpectedStatusCode && resp.Header.Get("Location") == test.ExpectedLocation
+	return &ApplicationStatus{&test, statusOk, resp.StatusCode, resp.Header.Get("Location")}
 }
 
 // String outputs the application status as a single string
