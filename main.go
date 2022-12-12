@@ -7,52 +7,30 @@ import (
 	c "github.com/NYULibraries/aswa/lib/config"
 )
 
-const yamlPath = "./config/applications.yml"
-
 func main() {
+	logger := log.New(os.Stdout, "", 0)
 
-	inputData, err := c.NewConfig(yamlPath)
+	inputData, err := c.NewConfig("./config/applications.yml")
 	if err != nil {
-		log.Println("Could not load config file; aborting!")
-		panic(err)
+		logger.Fatal("Could not load config file; aborting!", err)
 	}
 
 	appData := inputData.Applications
 
-	channel, token, err := checkSlackEnvs()
+	channel, token, err := getSlackCredentials()
 	if err != nil {
-		log.Println(err)
-		panic(err)
+		logger.Fatal("Error checking Slack environment variables:", err)
 	}
-
-	//no command line args, loop through all applications and post to slack
+	// Get the command line argument without using the flag package
+	var cmdArg string
 	if len(os.Args) == 1 {
-		err := RunTestsNoCmdArgs(appData, channel, token)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
+		cmdArg = ""
 	} else {
-		cmdArg := os.Args[1]
-
-		err := RunTests(appData, channel, token, cmdArg)
-		if err != nil {
-			log.Println(err)
-			panic(err)
-		}
-	}
-}
-
-func checkSlackEnvs() (string, string, error) {
-	channel := os.Getenv("SLACK_CHANNEL_ID")
-	if channel == "" {
-		log.Fatal("SLACK_CHANNEL_ID not set; aborting posting slack message!")
+		cmdArg = os.Args[1]
 	}
 
-	token := os.Getenv("SLACK_TOKEN")
-	if token == "" {
-		log.Fatal("SLACK_TOKEN not set; aborting posting slack message!")
+	err = RunTests(appData, channel, token, cmdArg)
+	if err != nil {
+		logger.Fatal("Error running tests:", err)
 	}
-
-	return channel, token, nil
 }
