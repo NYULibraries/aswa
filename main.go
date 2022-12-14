@@ -10,7 +10,7 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "", 0)
 
-	inputData, err := c.NewConfig("./config/applications.yml")
+	inputData, err := c.NewConfig("./config/prod.applications.yml")
 	if err != nil {
 		logger.Fatal("Could not load config file; aborting!", err)
 	}

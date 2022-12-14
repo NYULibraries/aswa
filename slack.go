@@ -3,7 +3,6 @@ package main
 import (
 	"github.com/slack-go/slack"
 	"log"
-	"time"
 )
 
 type postMessageClient interface {
@@ -21,14 +20,15 @@ func NewSlackClient(token string) *SlackClient {
 
 func (s *SlackClient) PostToSlack(status string, channel string) error {
 
-	channelID, _, err := s.api.PostMessage(channel, slack.MsgOptionText(status, false))
+	log.Println("Posting message to Slack")
 
+	// Use the `api` object to post a message to the specified Slack channel.
+	_, _, err := s.api.PostMessage(channel, slack.MsgOptionText(status, false))
+
+	// If an error occurred, return it.
 	if err != nil {
 		return err
 	}
 
-	timestamp := time.Now().Local().Format(time.ANSIC)
-
-	log.Printf("Message sent to channel %s on %s", channelID, timestamp)
 	return nil
 }
