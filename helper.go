@@ -22,6 +22,8 @@ func postTestResult(test *a.Application, channel string, token string) error {
 			log.Println(err)
 			return err
 		}
+		timestamp := time.Now().Local().Format(time.ANSIC)
+		log.Printf("Message sent to channel %s on %s", channel, timestamp)
 	}
 
 	return nil
@@ -52,9 +54,6 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 		log.Println(err)
 		return err
 	}
-
-	timestamp := time.Now().Local().Format(time.ANSIC)
-	log.Printf("Message sent to channel %s on %s", channel, timestamp)
 
 	return nil
 }
