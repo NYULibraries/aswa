@@ -3,11 +3,11 @@ package main
 import (
 	"errors"
 	"fmt"
+	a "github.com/NYULibraries/aswa/lib/application"
 	c "github.com/NYULibraries/aswa/lib/config"
 	"log"
 	"os"
-
-	a "github.com/NYULibraries/aswa/lib/application"
+	"time"
 )
 
 // postTestResult posts the result of the given test to Slack.
@@ -15,10 +15,13 @@ func postTestResult(test *a.Application, channel string, token string) error {
 	appStatus := test.GetStatus()
 	log.Println(appStatus)
 
-	slackClient := NewSlackClient(token)
-	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
-		log.Println(err)
-		return err
+	// check if the status is not successful
+	if !appStatus.Success {
+		slackClient := NewSlackClient(token)
+		if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
+			log.Println(err)
+			return err
+		}
 	}
 
 	return nil
@@ -49,17 +52,26 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 		log.Println(err)
 		return err
 	}
+
+	timestamp := time.Now().Local().Format(time.ANSIC)
+	log.Printf("Message sent to channel %s on %s", channel, timestamp)
+
 	return nil
 }
 
 func getSlackCredentials() (string, string, error) {
-	if os.Getenv("SLACK_CHANNEL_ID") == "" {
-		err := errors.New("SLACK_CHANNEL_ID environment variable is not set")
-		log.Println("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
+	if os.Getenv(envSlackChannelProdId) == "" {
+		err := errors.New("SLACK_CHANNEL_PROD_ID environment variable is not set")
+		log.Println("Error checking Slack environment variable SLACK_CHANNEL_PROD_ID:", err)
 	}
-	if os.Getenv("SLACK_TOKEN") == "" {
+	if os.Getenv(envSlackToken) == "" {
 		err := errors.New("SLACK_TOKEN environment variable is not set")
 		log.Println("Error checking Slack environment variable SLACK_TOKEN:", err)
 	}
-	return os.Getenv("SLACK_CHANNEL_ID"), os.Getenv("SLACK_TOKEN"), nil
+	return os.Getenv(envSlackChannelProdId), os.Getenv(envSlackToken), nil
 }
+
+const (
+	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
+	envSlackToken         = "SLACK_TOKEN"
+)
