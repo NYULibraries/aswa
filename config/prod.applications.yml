@@ -70,6 +70,7 @@ applications:
   - name: libguides-assets
     url: 'https://guides.nyu.edu'
     expected_status: 200
+    timeout: 600ms
   - name: libcal-assets
     url: 'https://nyu.libcal.com'
     expected_status: 200
