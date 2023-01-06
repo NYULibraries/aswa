@@ -6,10 +6,10 @@ applications:
     url: 'http://library.nyu.edu/'
     expected_status: 301
     expected_location: 'https://library.nyu.edu/'
-  - name: guest-passes
-    url: 'https://guestpasses.library.nyu.edu/'
-    expected_status: 401
-    timeout: 1200ms
+#  - name: guest-passes
+#    url: 'https://guestpasses.library.nyu.edu/'
+#    expected_status: 401
+#    timeout: 1200ms
   - name: primo-explore-views
     url: 'https://bobcat.library.nyu.edu'
     expected_status: 301
@@ -60,17 +60,17 @@ applications:
     url: 'https://pds.library.nyu.edu/'
     expected_status: 302
     expected_location: 'http://bobcat.library.nyu.edu'
-  - name: kibana
-    url: 'https://kibana.library.nyu.edu/'
-    expected_status: 401
-  - name: grafana
-    url: 'https://grafana.library.nyu.edu/'
-    expected_status: 302
-    expected_location: '/login'
-  - name: libguides-assets
-    url: 'https://guides.nyu.edu'
-    expected_status: 200
-    timeout: 600ms
+#  - name: kibana
+#    url: 'https://kibana.library.nyu.edu/'
+#    expected_status: 401
+#  - name: grafana
+#    url: 'https://grafana.library.nyu.edu/'
+#    expected_status: 302
+#    expected_location: '/login'
+#  - name: libguides-assets
+#    url: 'https://guides.nyu.edu'
+#    expected_status: 200
+#    timeout: 600ms
   - name: libcal-assets
     url: 'https://nyu.libcal.com'
     expected_status: 200
