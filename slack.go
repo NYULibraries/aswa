@@ -27,6 +27,7 @@ func (s *SlackClient) PostToSlack(status string, channel string) error {
 
 	// If an error occurred, return it.
 	if err != nil {
+		log.Println("Error posting message to Slack!!:", err)
 		return err
 	}
 
