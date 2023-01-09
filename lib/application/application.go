@@ -28,6 +28,18 @@ type ApplicationStatus struct {
 	ActualLocation   string `default:""`
 }
 
+// compareStatusCodes compares the actual and expected status codes.
+// It returns true if they are equal, and false otherwise.
+func compareStatusCodes(actual int, expected int) bool {
+	return actual == expected
+}
+
+// compareLocations compares the actual and expected locations.
+// It returns true if they are equal, and false otherwise.
+func compareLocations(actual string, expected string) bool {
+	return actual == expected
+}
+
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
 func (test Application) GetStatus() *ApplicationStatus {
 
@@ -43,7 +55,8 @@ func (test Application) GetStatus() *ApplicationStatus {
 		return &ApplicationStatus{&test, false, 0, ""}
 	}
 
-	statusOk := resp.StatusCode == test.ExpectedStatusCode && resp.Header.Get("Location") == test.ExpectedLocation
+	statusOk := compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) && compareLocations(resp.Header.Get("Location"), test.ExpectedLocation)
+	//statusOk := resp.StatusCode == test.ExpectedStatusCode && resp.Header.Get("Location") == test.ExpectedLocation
 	return &ApplicationStatus{&test, statusOk, resp.StatusCode, resp.Header.Get("Location")}
 }
 
