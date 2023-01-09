@@ -59,18 +59,18 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 }
 
 func getSlackCredentials() (string, string, error) {
-	if os.Getenv(envSlackChannelProdId) == "" {
-		err := errors.New("SLACK_CHANNEL_PROD_ID environment variable is not set")
-		log.Println("Error checking Slack environment variable SLACK_CHANNEL_PROD_ID:", err)
+	if os.Getenv(envSlackChannelId) == "" {
+		err := errors.New("SLACK_CHANNEL_ID environment variable is not set")
+		log.Println("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
 	}
 	if os.Getenv(envSlackToken) == "" {
 		err := errors.New("SLACK_TOKEN environment variable is not set")
 		log.Println("Error checking Slack environment variable SLACK_TOKEN:", err)
 	}
-	return os.Getenv(envSlackChannelProdId), os.Getenv(envSlackToken), nil
+	return os.Getenv(envSlackChannelId), os.Getenv(envSlackToken), nil
 }
 
 const (
-	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
-	envSlackToken         = "SLACK_TOKEN"
+	envSlackChannelId = "SLACK_CHANNEL_ID"
+	envSlackToken     = "SLACK_TOKEN"
 )
