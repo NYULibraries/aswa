@@ -19,7 +19,6 @@ func postTestResult(test *a.Application, channel string, token string) error {
 	if !appStatus.Success {
 		slackClient := NewSlackClient(token)
 		if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
-			log.Println(err)
 			return err
 		}
 		timestamp := time.Now().Local().Format(time.ANSIC)
@@ -39,7 +38,6 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
 			err := postTestResult(test, channel, token)
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 
