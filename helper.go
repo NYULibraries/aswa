@@ -57,15 +57,25 @@ func RunTests(appData []*c.Application, channel string, token string, cmdArg str
 }
 
 func getSlackCredentials() (string, string, error) {
-	if os.Getenv(envSlackChannelId) == "" {
-		err := errors.New("SLACK_CHANNEL_ID environment variable is not set")
-		log.Println("Error checking Slack environment variable SLACK_CHANNEL_ID:", err)
+	channelId := os.Getenv(envSlackChannelId)
+	token := os.Getenv(envSlackToken)
+	if channelId == "" || token == "" {
+		if channelId == "" && token == "" {
+			// if both are not set, log a warning and return with no error
+			log.Println("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables are not set")
+			return "", "", nil
+		}
+		// if only one of the variables is set, return an error
+		return "", "", errors.New("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables must both be set")
 	}
-	if os.Getenv(envSlackToken) == "" {
-		err := errors.New("SLACK_TOKEN environment variable is not set")
-		log.Println("Error checking Slack environment variable SLACK_TOKEN:", err)
+
+	// Check if the credentials are valid by trying to post a message to Slack
+	slackClient := NewSlackClient(token)
+	if err := slackClient.PostToSlack("Testing slack credentials", channelId); err != nil {
+		return "", "", fmt.Errorf("invalid slack credentials: %v", err)
 	}
-	return os.Getenv(envSlackChannelId), os.Getenv(envSlackToken), nil
+
+	return channelId, token, nil
 }
 
 const (
