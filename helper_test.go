@@ -79,13 +79,14 @@ func TestRunTests(t *testing.T) {
 		appData     []*c.Application
 		channel     string
 		token       string
+		cmdArg      string
 		error       error
 	}{
-		{"Valid test run", []*c.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", nil},
-		{"Test Run Tests No Cmd Args", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "collections", "www.collections.com", nil},
-		{"Invalid Test Run Tests No Cmd Args", []*c.Application{{Name: "", URL: "", ExpectedStatusCode: 200, Timeout: 1 * time.Second}}, "", "", errors.New("application Name & Url not provided, aborting")},
-		{"Test Run Tests Invalid Credentials", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "collections", "invalid_token", errors.New("invalid slack credentials: invalid token")},
-		{"Test Run Tests No Credentials", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "", "", nil},
+		{"Valid test run with cmdArgs", []*c.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "test", nil},
+		{"Valid test run without cmdArgs", []*c.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "", nil},
+		{"Invalid Test Run Tests No Cmd Args", []*c.Application{{Name: "", URL: "", ExpectedStatusCode: 200, Timeout: 1 * time.Second}}, "", "", "", errors.New("application Name & Url not provided, aborting")},
+		{"Run with invalid slack credentials", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "collections", "invalid_token", "", errors.New("invalid slack credentials: invalid token")},
+		{"Run with no slack credentials", []*c.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "", "", "", nil},
 	}
 
 	for _, test := range tests {
