@@ -38,7 +38,7 @@ func (m *mockApplicationStatus) postTestResult(test *a.Application, channel stri
 	return nil
 }
 
-func testRunTestsNoCmdArgsfunc(t *testing.T, appData []*c.Application, channel string, token string, mockError error) error {
+func testRunTestsFunc(t *testing.T, appData []*c.Application, channel string, token string, mockError error) error {
 	mockApp := &mockApplication{
 		mockName:               "test",
 		mockURL:                "test",
@@ -73,7 +73,7 @@ func testRunTestsNoCmdArgsfunc(t *testing.T, appData []*c.Application, channel s
 	return nil
 }
 
-func TestRunTestsNoCmdArgs(t *testing.T) {
+func TestRunTests(t *testing.T) {
 	var tests = []struct {
 		description string
 		appData     []*c.Application
@@ -88,7 +88,7 @@ func TestRunTestsNoCmdArgs(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
-			err := testRunTestsNoCmdArgsfunc(t, test.appData, test.channel, test.token, test.error)
+			err := testRunTestsFunc(t, test.appData, test.channel, test.token, test.error)
 			if err != nil {
 				log.Println(err)
 			}
