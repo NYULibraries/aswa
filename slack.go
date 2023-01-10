@@ -19,9 +19,6 @@ func NewSlackClient(token string) *SlackClient {
 }
 
 func (s *SlackClient) PostToSlack(status string, channel string) error {
-
-	log.Println("Posting message to Slack")
-
 	// Use the `api` object to post a message to the specified Slack channel.
 	_, _, err := s.api.PostMessage(channel, slack.MsgOptionText(status, false))
 
