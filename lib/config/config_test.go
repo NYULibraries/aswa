@@ -1,6 +1,7 @@
 package config
 
 import (
+	a "github.com/NYULibraries/aswa/lib/application"
 	"testing"
 	"time"
 
@@ -48,17 +49,17 @@ func testNewConfigFunc(path string, expectedErr string) func(*testing.T) {
 func TestContainApp(t *testing.T) {
 	var tests = []struct {
 		description  string
-		applications []*Application
+		applications []*a.Application
 		appName      string
 		expected     bool
 	}{
-		{"Valid application", []*Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
-		{"Valid application", []*Application{{Name: "test"}}, "test", true},
-		{"Invalid application", []*Application{{Name: "test"}}, "test2", false},
-		{"Invalid application", []*Application{{"test", "test", 0, 0, ""}}, "test2", false},
-		{"Empty application", []*Application{}, "test", false},
-		{"Empty application", []*Application{{Name: "test"}}, "", false},
-		{"Empty application", []*Application{}, "", false},
+		{"Valid application", []*a.Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
+		{"Valid application", []*a.Application{{Name: "test"}}, "test", true},
+		{"Invalid application", []*a.Application{{Name: "test"}}, "test2", false},
+		{"Invalid application", []*a.Application{{"test", "test", 0, 0, ""}}, "test2", false},
+		{"Empty application", []*a.Application{}, "test", false},
+		{"Empty application", []*a.Application{{Name: "test"}}, "", false},
+		{"Empty application", []*a.Application{}, "", false},
 	}
 
 	for _, test := range tests {
@@ -66,7 +67,7 @@ func TestContainApp(t *testing.T) {
 	}
 }
 
-func testContainAppFunc(applications []*Application, appName string) func(*testing.T) {
+func testContainAppFunc(applications []*a.Application, appName string) func(*testing.T) {
 	return func(t *testing.T) {
 		for _, app := range applications {
 			if app.Name == appName {
@@ -78,68 +79,34 @@ func testContainAppFunc(applications []*Application, appName string) func(*testi
 	}
 }
 
-func TestExtractValuesFromConfig(t *testing.T) {
-	var tests = []struct {
-		description            string
-		application            *Application
-		appName                string
-		ExpectedName           string
-		ExpectedURL            string
-		ExpectedStatusCode     int
-		ExpectedTimeout        time.Duration
-		ExpectedActualLocation string
-	}{
-		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test.com", 200, time.Second, "test"},
-		{"Valid application", &Application{Name: "test", URL: "http://test1.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, "test", "test", "http://test1.com", 200, time.Second, "test"},
-		{"Empty application", &Application{}, "", "", "", 0, 0, ""},
-		{"Empty application", &Application{Name: "test"}, "", "test", "", 0, 0, ""},
-		{"Empty application", &Application{Name: "test", URL: "http://test.com"}, "test", "test", "http://test.com", 0, 0, ""},
-	}
-
-	for _, test := range tests {
-		t.Run(test.description, testExtractValuesFromConfigFunc(test.application))
-	}
-}
-
-func testExtractValuesFromConfigFunc(app *Application) func(*testing.T) {
-	return func(t *testing.T) {
-		expectedName, expectedURL, expectedStatusCode, expectedTimeout, expectedActualLocation := ExtractValuesFromConfig(app)
-		assert.Equal(t, expectedName, app.Name)
-		assert.Equal(t, expectedURL, app.URL)
-		assert.Equal(t, expectedStatusCode, app.ExpectedStatusCode)
-		assert.Equal(t, expectedTimeout, app.Timeout)
-		assert.Equal(t, expectedActualLocation, app.ExpectedLocation)
-	}
-}
-
-func TestAnyRequiredField(t *testing.T) {
+func TestIsConfigAnyRequiredFieldEmpty(t *testing.T) {
 	var tests = []struct {
 		description string
-		application *Application
+		application *a.Application
 		expected    bool
 	}{
-		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
-		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
-		{"Invalid application", &Application{Name: "test"}, false},
-		{"Invalid application", &Application{Name: "test"}, false},
-		{"Invalid application", &Application{Name: "test", URL: "http://test.com"}, false},
-		{"Valid application", &Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Millisecond}, true},
-		{"Invalid application", &Application{Name: "", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second}, false},
-		{"Invalid application", &Application{Name: "test", URL: "", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, false},
-		{"Empty application", &Application{}, false},
-		{"Empty application", &Application{Name: "test"}, false},
-		{"Empty application", &Application{Name: "test", URL: "http://test.com"}, false},
-		{"Empty application", &Application{Name: "", URL: "", ExpectedStatusCode: 200}, false},
-		{"Empty application", &Application{Name: "test", URL: "http://test.com", Timeout: time.Second}, false},
-		{"Empty application", &Application{Name: "", URL: "", Timeout: time.Second, ExpectedLocation: "test"}, false},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
+		{"Invalid application", &a.Application{Name: "test"}, false},
+		{"Invalid application", &a.Application{Name: "test"}, false},
+		{"Invalid application", &a.Application{Name: "test", URL: "http://test.com"}, false},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Millisecond}, true},
+		{"Invalid application", &a.Application{Name: "", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second}, false},
+		{"Invalid application", &a.Application{Name: "test", URL: "", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, false},
+		{"Empty application", &a.Application{}, false},
+		{"Empty application", &a.Application{Name: "test"}, false},
+		{"Empty application", &a.Application{Name: "test", URL: "http://test.com"}, false},
+		{"Empty application", &a.Application{Name: "", URL: "", ExpectedStatusCode: 200}, false},
+		{"Empty application", &a.Application{Name: "test", URL: "http://test.com", Timeout: time.Second}, false},
+		{"Empty application", &a.Application{Name: "", URL: "", Timeout: time.Second, ExpectedLocation: "test"}, false},
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, testAnyRequiredFieldFunc(test.application, test.expected))
+		t.Run(test.description, testIsAnyRequiredFieldFunc(test.application, test.expected))
 	}
 }
 
-func testAnyRequiredFieldFunc(app *Application, expected bool) func(*testing.T) {
+func testIsAnyRequiredFieldFunc(app *a.Application, expected bool) func(*testing.T) {
 	return func(t *testing.T) {
 		assert.Equal(t, expected, app.Name != "" && app.URL != "" && app.ExpectedStatusCode != 0)
 	}
