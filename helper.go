@@ -28,7 +28,7 @@ func postTestResult(test *a.Application, channel string, token string) error {
 	return nil
 }
 
-func RunTests(appData []*c.Application, channel string, token string, cmdArg string) error {
+func RunSyntheticTests(appData []*c.Application, channel string, token string, cmdArg string) error {
 	found := false // Keep track of whether the app was found in the config file
 	for _, app := range appData {
 		name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)

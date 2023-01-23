@@ -29,7 +29,7 @@ func main() {
 		cmdArg = os.Args[1]
 	}
 
-	err = RunTests(appData, channel, token, cmdArg)
+	err = RunSyntheticTests(appData, channel, token, cmdArg)
 	if err != nil {
 		logger.Fatal("Error running tests:", err)
 	}
