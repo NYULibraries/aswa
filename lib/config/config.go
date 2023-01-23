@@ -17,14 +17,14 @@ type Config struct {
 type Application a.Application
 
 // Check if any required App field is empty
-func (app *Application) anyRequiredField() bool {
+func (app *Application) hasEmptyRequiredFields() bool {
 	return app.Name == "" || app.URL == "" || app.ExpectedStatusCode == 0
 }
 
 // Loop through all applications and check if any required field is empty
 func (list *Config) anyRequiredEmpty() bool {
 	for _, app := range list.Applications {
-		if app.anyRequiredField() {
+		if app.hasEmptyRequiredFields() {
 			return true
 		}
 	}
