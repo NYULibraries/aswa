@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	a "github.com/NYULibraries/aswa/lib/application"
-	c "github.com/NYULibraries/aswa/lib/config"
 	"log"
 	"os"
 	"time"
@@ -28,15 +27,13 @@ func postTestResult(test *a.Application, channel string, token string) error {
 	return nil
 }
 
-func RunSyntheticTests(appData []*c.Application, channel string, token string, cmdArg string) error {
+func RunSyntheticTests(appData []*a.Application, channel string, token string, cmdArg string) error {
 	found := false // Keep track of whether the app was found in the config file
 	for _, app := range appData {
-		name, url, expectedStatusCode, timeout, expectedActualLocation := c.ExtractValuesFromConfig(app)
 
-		if cmdArg == "" || cmdArg == name {
+		if cmdArg == "" || cmdArg == app.Name {
 			found = true // The app was found in the config file
-			test := a.NewApplication(name, url, expectedStatusCode, timeout, expectedActualLocation)
-			err := postTestResult(test, channel, token)
+			err := postTestResult(app, channel, token)
 			if err != nil {
 				return err
 			}
