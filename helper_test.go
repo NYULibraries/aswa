@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"log"
+	"net/http"
 	"testing"
 	"time"
 
@@ -41,7 +42,7 @@ func testRunSyntheticTestsFunc(t *testing.T, appData []*a.Application, channel s
 	mockApp := &mockApplication{
 		mockName:               "test",
 		mockURL:                "test",
-		mockExpectedStatusCode: 200,
+		mockExpectedStatusCode: http.StatusOK,
 		mockTimeout:            1 * time.Second,
 		mockExpectedLocation:   "test",
 		mockError:              mockError,
@@ -49,7 +50,7 @@ func testRunSyntheticTestsFunc(t *testing.T, appData []*a.Application, channel s
 
 	mockAppStatus := &mockApplicationStatus{
 		mockApplication:      mockApp,
-		mockActualStatusCode: 200,
+		mockActualStatusCode: http.StatusOK,
 	}
 
 	for _, app := range appData {
@@ -77,11 +78,11 @@ func TestRunSyntheticTests(t *testing.T) {
 		cmdArg      string
 		error       error
 	}{
-		{"Valid test run with cmdArgs", []*a.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "test", nil},
-		{"Valid test run without cmdArgs", []*a.Application{{Name: "test", URL: "test", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "", nil},
-		{"Invalid Test Run Tests No Cmd Args", []*a.Application{{Name: "", URL: "", ExpectedStatusCode: 200, Timeout: 1 * time.Second}}, "", "", "", errors.New("application Name & Url not provided, aborting")},
-		{"Run with invalid slack credentials", []*a.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "collections", "invalid_token", "", errors.New("invalid slack credentials: invalid token")},
-		{"Run with no slack credentials", []*a.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: 304, Timeout: 1 * time.Second}}, "", "", "", nil},
+		{"Valid test run with cmdArgs", []*a.Application{{Name: "test", URL: "test", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "test", nil},
+		{"Valid test run without cmdArgs", []*a.Application{{Name: "test", URL: "test", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Second, ExpectedLocation: "test"}}, "test", "test", "", nil},
+		{"Invalid Test Run Tests No Cmd Args", []*a.Application{{Name: "", URL: "", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Second}}, "", "", "", errors.New("application Name & Url not provided, aborting")},
+		{"Run with invalid slack credentials", []*a.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: http.StatusNotModified, Timeout: 1 * time.Second}}, "collections", "invalid_token", "", errors.New("invalid slack credentials: invalid token")},
+		{"Run with no slack credentials", []*a.Application{{Name: "collections", URL: "www.collections.com", ExpectedStatusCode: http.StatusNotModified, Timeout: 1 * time.Second}}, "", "", "", nil},
 	}
 
 	for _, test := range tests {
