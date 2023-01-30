@@ -2,10 +2,10 @@ package config
 
 import (
 	a "github.com/NYULibraries/aswa/lib/application"
+	"github.com/stretchr/testify/assert"
+	"net/http"
 	"testing"
 	"time"
-
-	"github.com/stretchr/testify/assert"
 )
 
 const configTestPath = "../../config/prod.applications.yml"
@@ -53,7 +53,7 @@ func TestContainApp(t *testing.T) {
 		appName      string
 		expected     bool
 	}{
-		{"Valid application", []*a.Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
+		{"Valid application", []*a.Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
 		{"Valid application", []*a.Application{{Name: "test"}}, "test", true},
 		{"Invalid application", []*a.Application{{Name: "test"}}, "test2", false},
 		{"Invalid application", []*a.Application{{"test", "test", 0, 0, ""}}, "test2", false},
@@ -85,18 +85,18 @@ func TestIsConfigAnyRequiredFieldEmpty(t *testing.T) {
 		application *a.Application
 		expected    bool
 	}{
-		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
-		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, true},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}, true},
 		{"Invalid application", &a.Application{Name: "test"}, false},
 		{"Invalid application", &a.Application{Name: "test"}, false},
 		{"Invalid application", &a.Application{Name: "test", URL: "http://test.com"}, false},
-		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Millisecond}, true},
-		{"Invalid application", &a.Application{Name: "", URL: "http://test.com", ExpectedStatusCode: 200, Timeout: time.Second}, false},
-		{"Invalid application", &a.Application{Name: "test", URL: "", ExpectedStatusCode: 200, Timeout: time.Second, ExpectedLocation: "test"}, false},
+		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Millisecond}, true},
+		{"Invalid application", &a.Application{Name: "", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second}, false},
+		{"Invalid application", &a.Application{Name: "test", URL: "", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}, false},
 		{"Empty application", &a.Application{}, false},
 		{"Empty application", &a.Application{Name: "test"}, false},
 		{"Empty application", &a.Application{Name: "test", URL: "http://test.com"}, false},
-		{"Empty application", &a.Application{Name: "", URL: "", ExpectedStatusCode: 200}, false},
+		{"Empty application", &a.Application{Name: "", URL: "", ExpectedStatusCode: http.StatusOK}, false},
 		{"Empty application", &a.Application{Name: "test", URL: "http://test.com", Timeout: time.Second}, false},
 		{"Empty application", &a.Application{Name: "", URL: "", Timeout: time.Second, ExpectedLocation: "test"}, false},
 	}
