@@ -1,8 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
 	"github.com/slack-go/slack"
+	"io"
 	"log"
+	"net/http"
+	"net/url"
 )
 
 type postMessageClient interface {
@@ -11,6 +17,11 @@ type postMessageClient interface {
 
 type SlackClient struct {
 	api postMessageClient
+}
+
+type AuthTestResponse struct {
+	OK    bool `json:"ok"`
+	Error any  `json:"error,omitempty"`
 }
 
 func NewSlackClient(token string) *SlackClient {
@@ -26,6 +37,46 @@ func (s *SlackClient) PostToSlack(status string, channel string) error {
 	if err != nil {
 		log.Println("Error posting message to Slack!!:", err)
 		return err
+	}
+
+	return nil
+}
+
+func ValidateSlackCredentials(token string) error {
+	data := url.Values{}
+	data.Set("token", token)
+
+	req, err := http.NewRequest("POST", "https://slack.com/api/auth.test", bytes.NewBufferString(data.Encode()))
+	if err != nil {
+		return err
+	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+			log.Println("Error closing response body:", err)
+		}
+	}(res.Body)
+
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, res.Body)
+	if err != nil {
+		return err
+	}
+
+	var authTestResponse AuthTestResponse
+	if err := json.Unmarshal(buf.Bytes(), &authTestResponse); err != nil {
+		return err
+	}
+
+	if !authTestResponse.OK {
+		return fmt.Errorf("slack API error: %s", authTestResponse.Error)
 	}
 
 	return nil

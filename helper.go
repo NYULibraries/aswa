@@ -20,32 +20,32 @@ func postTestResult(test *a.Application, channel string, token string) error {
 		if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
 			return err
 		}
-		timestamp := time.Now().Local().Format(time.ANSIC)
+		timestamp := time.Now().Local().Format(time.RFC1123Z)
 		log.Printf("Message sent to channel %s on %s", channel, timestamp)
 	}
 
 	return nil
 }
 
-func RunSyntheticTests(appData []*a.Application, channel string, token string, cmdArg string) error {
+func RunSyntheticTests(appData []*a.Application, channel string, token string, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
 	for _, app := range appData {
 
-		if cmdArg == "" || cmdArg == app.Name {
+		if targetAppName == "" || targetAppName == app.Name {
 			found = true // The app was found in the config file
 			err := postTestResult(app, channel, token)
 			if err != nil {
 				return err
 			}
 
-			if cmdArg != "" {
+			if targetAppName != "" {
 				break
 			}
 		}
 	}
-	if !found && cmdArg != "" {
+	if !found && targetAppName != "" {
 		// The app was not found in the config file
-		err := fmt.Errorf("app '%s' not found in config file", cmdArg)
+		err := fmt.Errorf("app '%s' not found in config file", targetAppName)
 		log.Println(err)
 		return err
 	}
@@ -66,9 +66,9 @@ func getSlackCredentials() (string, string, error) {
 		return "", "", errors.New("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables must both be set")
 	}
 
-	// Check if the credentials are valid by trying to post a message to Slack
-	slackClient := NewSlackClient(token)
-	if err := slackClient.PostToSlack("Testing slack credentials", channelId); err != nil {
+	// Check if the credentials are valid by checking auth.test
+	err := ValidateSlackCredentials(token)
+	if err != nil {
 		return "", "", fmt.Errorf("invalid slack credentials: %v", err)
 	}
 
