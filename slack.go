@@ -43,10 +43,10 @@ func (s *SlackClient) PostToSlack(status string, channel string) error {
 }
 
 func ValidateSlackCredentials(token string) error {
-	data := url.Values{}
-	data.Set("token", token)
+	slackTokenPayload := url.Values{}
+	slackTokenPayload.Set("token", token)
 
-	req, err := http.NewRequest("POST", "https://slack.com/api/auth.test", bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", "https://slack.com/api/auth.test", bytes.NewBufferString(slackTokenPayload.Encode()))
 	if err != nil {
 		return err
 	}
