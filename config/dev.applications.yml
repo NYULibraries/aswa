@@ -1,0 +1,6 @@
+applications:
+  - name: specialcollections-dev
+    url: 'https://specialcollections-dev.library.nyu.edu/search'
+    expected_status: 200
+
+

@@ -3,7 +3,7 @@ docker-defaults: &docker-defaults
     - image: quay.io/nyulibraries/circleci_docker:20.10.6-dc-1.29.1-0
   working_directory: ~/app
 
-version: 2
+version: 2.1
 jobs:
   build-test:
     <<: *docker-defaults

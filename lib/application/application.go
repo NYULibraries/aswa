@@ -15,18 +15,7 @@ type Application struct {
 	ExpectedLocation   string        `yaml:"expected_location"`
 }
 
-func isCodeNotAsExpected(actualStatusCode int, expectedStatusCode int) bool {
-	return actualStatusCode != expectedStatusCode
-}
-
-func isLocationNotAsExpected(actualLocation string, expectedLocation string) bool {
-	if expectedLocation == "" {
-		return false
-	}
-	return actualLocation != expectedLocation
-}
-
-// NewApplication returns a Application initialized with specified values
+// NewApplication returns an Application initialized with specified values
 func NewApplication(name string, url string, expectedStatusCode int, timeout time.Duration, expectedLocation string) *Application {
 	return &Application{name, url, expectedStatusCode, timeout, expectedLocation}
 }
@@ -37,6 +26,18 @@ type ApplicationStatus struct {
 	Success          bool
 	ActualStatusCode int
 	ActualLocation   string `default:""`
+}
+
+// compareStatusCodes compares the actual and expected status codes.
+// It returns true if they are equal, and false otherwise.
+func compareStatusCodes(actual int, expected int) bool {
+	return actual == expected
+}
+
+// compareLocations compares the actual and expected locations.
+// It returns true if they are equal, and false otherwise.
+func compareLocations(actual string, expected string) bool {
+	return actual == expected
 }
 
 // GetStatus performs an HTTP call for the given Application's url and returns the ApplicationStatus corresponding to those results
@@ -54,21 +55,30 @@ func (test Application) GetStatus() *ApplicationStatus {
 		return &ApplicationStatus{&test, false, 0, ""}
 	}
 
-	if isCodeNotAsExpected(resp.StatusCode, test.ExpectedStatusCode) || isLocationNotAsExpected(resp.Header.Get("Location"), test.ExpectedLocation) {
-		return &ApplicationStatus{&test, false, resp.StatusCode, resp.Header.Get("Location")}
-	}
-
-	return &ApplicationStatus{&test, true, resp.StatusCode, resp.Header.Get("Location")}
+	statusOk := compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) && compareLocations(resp.Header.Get("Location"), test.ExpectedLocation)
+	//statusOk := resp.StatusCode == test.ExpectedStatusCode && resp.Header.Get("Location") == test.ExpectedLocation
+	return &ApplicationStatus{&test, statusOk, resp.StatusCode, resp.Header.Get("Location")}
 }
 
 // String outputs the application status as a single string
 func (results ApplicationStatus) String() string {
+	if results.Success {
+		return successString(results)
+	} else {
+		return failureString(results)
+	}
+}
 
-	if results.Success && results.ActualLocation != "" {
+func successString(results ApplicationStatus) string {
+	if results.ActualLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
-	} else if results.Success {
+	} else {
 		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
-	} else if !results.Success && results.ActualLocation != "" && results.ActualStatusCode == results.Application.ExpectedStatusCode {
+	}
+}
+
+func failureString(results ApplicationStatus) string {
+	if results.ActualLocation != "" && results.ActualStatusCode == results.Application.ExpectedStatusCode {
 		return fmt.Sprintf("Failure: URL %s resolved with %d, but redirect location %s did not match %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation, results.Application.ExpectedLocation)
 	} else {
 		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, %s", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode, results.ActualLocation)
