@@ -89,9 +89,9 @@ func checkMissingSlackEnvVariables(channelProdId, channelDevId, token string) []
 	var missingSlackEnvVars []string
 
 	envVars := map[string]string{
-		"SLACK_CHANNEL_PROD_ID": channelProdId,
-		"SLACK_CHANNEL_DEV_ID":  channelDevId,
-		"SLACK_TOKEN":           token,
+		envSlackChannelProdId: channelProdId,
+		envSlackChannelDevId:  channelDevId,
+		envSlackToken:         token,
 	}
 
 	for key, value := range envVars {
