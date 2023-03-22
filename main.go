@@ -10,16 +10,17 @@ import (
 func main() {
 	logger := log.New(os.Stdout, "", 0)
 
-	inputData, err := c.NewConfig("./config/prod.applications.yml")
+	inputData, err := c.NewConfig("./config/applications.yml")
 	if err != nil {
 		logger.Fatal("Could not load config file; aborting!", err)
 	}
 
 	appData := inputData.Applications
 
-	channel, token, err := getSlackCredentials()
-	if err != nil {
-		logger.Fatal("Error checking Slack environment variables:", err)
+	var channelProdId, channelDevId, token, errorSlack = getSlackCredentials()
+
+	if errorSlack != nil {
+		logger.Fatal("Error checking Slack environment variables:", errorSlack)
 	}
 	// Get the command line argument without using the flag package
 	var cmdArg string
@@ -29,7 +30,7 @@ func main() {
 		cmdArg = os.Args[1]
 	}
 
-	err = RunSyntheticTests(appData, channel, token, cmdArg)
+	err = RunSyntheticTests(appData, channelProdId, channelDevId, token, cmdArg)
 	if err != nil {
 		logger.Fatal("Error running tests:", err)
 	}
