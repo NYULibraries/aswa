@@ -13,11 +13,7 @@ type Application struct {
 	ExpectedStatusCode int           `yaml:"expected_status"`
 	Timeout            time.Duration `yaml:"timeout"`
 	ExpectedLocation   string        `yaml:"expected_location"`
-}
-
-// NewApplication returns an Application initialized with specified values
-func NewApplication(name string, url string, expectedStatusCode int, timeout time.Duration, expectedLocation string) *Application {
-	return &Application{name, url, expectedStatusCode, timeout, expectedLocation}
+	ExpectedCDN        string        `yaml:"expected_cdn"`
 }
 
 // ApplicationStatus represents the results of a synthetic test
