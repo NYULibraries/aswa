@@ -39,7 +39,7 @@ func loadConfig(yamlPath string) (*Config, error) {
 		return nil, err
 	}
 	if config.isConfigAnyRequiredFieldEmpty() {
-		return nil, errors.New("config file is missing required fields")
+		return nil, errors.New("config file is missing one or more required fields: name, url, expected_status code")
 	}
 
 	return &config, nil
