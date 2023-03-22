@@ -60,36 +60,30 @@ applications:
     url: 'https://pds.library.nyu.edu/'
     expected_status: 302
     expected_location: 'http://bobcat.library.nyu.edu'
-#  - name: kibana
-#    url: 'https://kibana.library.nyu.edu/'
-#    expected_status: 401
-#  - name: grafana
-#    url: 'https://grafana.library.nyu.edu/'
-#    expected_status: 302
-#    expected_location: '/login'
-#  - name: libguides-assets
-#    url: 'https://guides.nyu.edu'
-#    expected_status: 200
-#    timeout: 600ms
   - name: libcal-assets
     url: 'https://nyu.libcal.com'
     expected_status: 200
-#  - name: illiad-proxy
-#    url: 'https://ill-proxy.library.nyu.edu/'
-#    expected_status: 200
-#  - name: privileges-guide
-#    url: 'https://privileges.library.nyu.edu/'
-#    expected_status: 302
-#    expected_location: 'https://library.nyu.edu/about/visiting/access-guide/'
-#  - name: status-page-embed
-#    url: 'https://cdn.library.nyu.edu/statuspage-embed/index.min.js/'
-#    expected_status: 403
-#  - name: primo-explore-search-embed
-#    url: 'https://cdn.library.nyu.edu/bess-vue/app.min.js'
-#    expected_status: 403
-#  - name: alephJS
-#    url: 'https://cdn.library.nyu.edu/aleph/application.min.js'
-#    expected_status: 403
+  - name: dev-specialcollections
+    url: 'https://specialcollections-dev.library.nyu.edu/search'
+    expected_status: 200
+  - name: dev-library-nyu-edu
+    url: 'http://dev.library.nyu.edu/'
+    expected_status: 301
+    expected_location: 'https://dev.library.nyu.edu/'
+  - name: dev-bobcat-linker
+    url: 'https://dev.library.nyu.edu/persistent'
+    expected_status: 301
+    expected_location: 'https://app.library.nyu.edu/bobcat-linker'
+  - name: dev-login
+    url: 'https://dev.login.library.nyu.edu/'
+    expected_status: 200
+  - name: dev-getit
+    url: 'https://getit-dev.library.nyu.edu/'
+    expected_status: 301
+    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
+  - name: dev-campus-media-equipment
+    url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
+    expected_status: 200
 
 
 
