@@ -13,7 +13,6 @@ type Application struct {
 	ExpectedStatusCode int           `yaml:"expected_status"`
 	Timeout            time.Duration `yaml:"timeout"`
 	ExpectedLocation   string        `yaml:"expected_location"`
-	ExpectedCDN        string        `yaml:"expected_cdn"`
 }
 
 // ApplicationStatus represents the results of a synthetic test
