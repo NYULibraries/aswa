@@ -69,7 +69,7 @@ func getSlackCredentials() (string, string, string, error) {
 	missingVars := checkMissingSlackEnvVariables(channelProdId, channelDevId, token)
 
 	if len(missingVars) == 3 {
-		log.Println("SLACK_CHANNEL_Prod_ID, SLACK_CHANNEL_Dev_ID, and SLACK_TOKEN environment variables are not set")
+		log.Println("SLACK_CHANNEL_PROD_ID, SLACK_CHANNEL_DEV_ID, and SLACK_TOKEN environment variables are not set")
 		return "", "", "", nil
 	} else if len(missingVars) > 0 {
 		errorMsg := createCustomSlackErrorMessage(missingVars)
