@@ -89,8 +89,8 @@ func checkMissingSlackEnvVariables(channelProdId, channelDevId, token string) []
 	var missingSlackEnvVars []string
 
 	envVars := map[string]string{
-		envSlackChannelProdId: channelProdId,
 		envSlackChannelDevId:  channelDevId,
+		envSlackChannelProdId: channelProdId,
 		envSlackToken:         token,
 	}
 
@@ -115,7 +115,7 @@ func createCustomSlackErrorMessage(missingSlackEnvVars []string) string {
 }
 
 const (
-	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
 	envSlackChannelDevId  = "SLACK_CHANNEL_DEV_ID"
+	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
 	envSlackToken         = "SLACK_TOKEN"
 )
