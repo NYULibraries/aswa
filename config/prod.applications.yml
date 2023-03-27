@@ -36,12 +36,12 @@ applications:
     url: 'https://eshelf.library.nyu.edu/'
     expected_status: 302
     expected_location: 'https://login.library.nyu.edu/login/passive?client_id=bbcf34b029d1b729dee3db58e6e1b13f469ae756c83d99b345dd1689fd6b36ef&return_uri=https%3A%2F%2Feshelf.library.nyu.edu%2F'
-  - name: moloneycollection
-    url: 'https://moloney.library.nyu.edu/'
-    expected_status: 200
-  - name: bravocollection
-    url: 'https://web1.library.nyu.edu/bravo_collection/'
-    expected_status: 200
+#  - name: moloneycollection
+#    url: 'https://moloney.library.nyu.edu/'
+#    expected_status: 200
+#  - name: bravocollection
+#    url: 'https://web1.library.nyu.edu/bravo_collection/'
+#    expected_status: 200
   - name: getit
     url: 'https://getit.library.nyu.edu/'
     expected_status: 301
