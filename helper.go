@@ -21,8 +21,10 @@ func postTestResult(test *a.Application, channelProdId, channelDevId, token stri
 		var targetChannel string
 		if strings.HasPrefix(strings.ToLower(test.Name), "dev") {
 			targetChannel = channelDevId
-		} else {
+		} else if strings.HasPrefix(strings.ToLower(test.Name), "prod") {
 			targetChannel = channelProdId
+		} else {
+			return errors.New("app name does not start with 'dev' or 'prod'")
 		}
 
 		slackClient := NewSlackClient(token)
