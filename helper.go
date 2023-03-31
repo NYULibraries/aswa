@@ -19,10 +19,13 @@ func postTestResult(test *a.Application, channelProdId, channelDevId, token stri
 	if !appStatus.Success {
 		// Determine the channel to post the message
 		var targetChannel string
+		var slackChannelToPost string
 		if strings.HasPrefix(strings.ToLower(test.Name), DEV) {
 			targetChannel = channelDevId
+			slackChannelToPost = DevChannel
 		} else if strings.HasPrefix(strings.ToLower(test.Name), PROD) {
 			targetChannel = channelProdId
+			slackChannelToPost = ProdChannel
 		} else {
 			return errors.New("app name does not start with 'dev' or 'prod'")
 		}
@@ -32,7 +35,7 @@ func postTestResult(test *a.Application, channelProdId, channelDevId, token stri
 			return err
 		}
 		timestamp := time.Now().Local().Format(time.RFC1123Z)
-		log.Printf("Message sent to channel %s on %s", targetChannel, timestamp)
+		log.Printf("Message sent to %s channel on %s", slackChannelToPost, timestamp)
 	}
 
 	return nil
@@ -117,9 +120,13 @@ func createCustomSlackErrorMessage(missingSlackEnvVars []string) string {
 }
 
 const (
-	DEV                   = "dev"
-	PROD                  = "prod"
+	DEV  = "dev"
+	PROD = "prod"
+
 	envSlackChannelDevId  = "SLACK_CHANNEL_DEV_ID"
 	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
 	envSlackToken         = "SLACK_TOKEN"
+
+	DevChannel  = "synthetic-tests-dev"
+	ProdChannel = "synthetic-tests-prod"
 )
