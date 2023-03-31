@@ -1,70 +1,70 @@
 applications:
-  - name: ares-webpages
+  - name: prod-ares-webpages
     url: 'https://ares.library.nyu.edu/'
     expected_status: 200
-  - name: bess
+  - name: prod-bess
     url: https://cdn.library.nyu.edu/bess-vue/app.min.js
     expected_status: 200
-  - name: bobcat-linker
+  - name: prod-bobcat-linker
     url: 'https://library.nyu.edu/persistent'
     expected_status: 301
     expected_location: 'https://app.library.nyu.edu/bobcat-linker'
-  - name: bravocollection
+  - name: prod-bravocollection
     url: 'https://web1.library.nyu.edu/bravo_collection/'
     expected_status: 200
-  - name: campus-media-equipment
+  - name: prod-campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
-  - name: eshelf
+  - name: prod-eshelf
     url: 'https://eshelf.library.nyu.edu/'
     expected_status: 302
     expected_location: 'https://login.library.nyu.edu/login/passive?client_id=bbcf34b029d1b729dee3db58e6e1b13f469ae756c83d99b345dd1689fd6b36ef&return_uri=https%3A%2F%2Feshelf.library.nyu.edu%2F'
-  - name: getit
+  - name: prod-getit
     url: 'https://getit.library.nyu.edu/'
     expected_status: 301
     expected_location: 'http://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
-  - name: libcal-assets
+  - name: prod-libcal-assets
     url: 'https://nyu.libcal.com'
     expected_status: 200
-  - name: libguides-assets
+  - name: prod-libguides-assets
     url: https://cdn.library.nyu.edu/libguides/index.min.js
     expected_status: 200
-  - name: library-nyu-edu
+  - name: prod-library-nyu-edu
     url: 'http://library.nyu.edu/'
     expected_status: 301
     expected_location: 'https://library.nyu.edu/'
-  - name: login
+  - name: prod-login
     url: 'https://login.library.nyu.edu/'
     expected_status: 200
-  - name: marli
+  - name: prod-marli
     url: 'https://marli.library.nyu.edu/'
     expected_status: 302
     expected_location: 'https://login.library.nyu.edu/login/passive?client_id=6376ea3aec8082cc1a2f6afa3d97567db266c8287cac4982e7c35765138be3a3&return_uri=https%3A%2F%2Fmarli.library.nyu.edu%2F&login_path=%2Flogin'
-  - name: moloneycollection
+  - name: prod-moloneycollection
     url: 'https://moloney.library.nyu.edu/'
     expected_status: 200
-  - name: pds-custom
+  - name: prod-pds-custom
     url: 'https://pds.library.nyu.edu/'
     expected_status: 302
     expected_location: 'http://bobcat.library.nyu.edu'
-  - name: primo-explore-views
+  - name: prod-primo-explore-views
     url: 'https://bobcat.library.nyu.edu'
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/primo-explore/search?vid=NYU'
-  - name: pushtocite
+  - name: prod-pushtocite
     url: 'https://cite.library.nyu.edu/'
     expected_status: 400
-  - name: salon
+  - name: prod-salon
     url: 'https://persistent.library.nyu.edu'
     expected_status: 301
     expected_location: 'http://persistent.library.nyu.edu/arch'
-  - name: specialcollections
+  - name: prod-specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
-  - name: statuspage-embed
+  - name: prod-statuspage-embed
     url: https://cdn.library.nyu.edu/statuspage-embed/index.min.js
     expected_status: 200
-  - name: web-proxies
+  - name: prod-web-proxies
     url: 'http://web-pr-proxy1.bobst.nyu.edu/'
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/'
