@@ -19,9 +19,9 @@ func postTestResult(test *a.Application, channelProdId, channelDevId, token stri
 	if !appStatus.Success {
 		// Determine the channel to post the message
 		var targetChannel string
-		if strings.HasPrefix(strings.ToLower(test.Name), "dev") {
+		if strings.HasPrefix(strings.ToLower(test.Name), DEV) {
 			targetChannel = channelDevId
-		} else if strings.HasPrefix(strings.ToLower(test.Name), "prod") {
+		} else if strings.HasPrefix(strings.ToLower(test.Name), PROD) {
 			targetChannel = channelProdId
 		} else {
 			return errors.New("app name does not start with 'dev' or 'prod'")
@@ -117,6 +117,8 @@ func createCustomSlackErrorMessage(missingSlackEnvVars []string) string {
 }
 
 const (
+	DEV                   = "dev"
+	PROD                  = "prod"
 	envSlackChannelDevId  = "SLACK_CHANNEL_DEV_ID"
 	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
 	envSlackToken         = "SLACK_TOKEN"
