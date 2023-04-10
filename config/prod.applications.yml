@@ -45,7 +45,7 @@ applications:
   - name: getit
     url: 'https://getit.library.nyu.edu/'
     expected_status: 301
-    expected_location: 'http://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
+    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
   - name: ares-webpages
     url: 'https://ares.library.nyu.edu/'
     expected_status: 200
