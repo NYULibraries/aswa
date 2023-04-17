@@ -15,18 +15,18 @@ func TestGetStatus(t *testing.T) {
 		expectedActualStatusCode int
 		expectedActualLocation   string
 	}{
-		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
-		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, ""}, false, http.StatusMovedPermanently, ""},
-		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, ""}, true, http.StatusNotFound, ""},
-		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, ""}, true, http.StatusOK, ""},
-		{"Failure: wrong status code expected", &Application{"", "https://httpstat.us/404", http.StatusOK, 800 * time.Millisecond, ""}, false, http.StatusNotFound, ""},
-		{"Failure: application is down", &Application{"", "https://httpstat.us/500", http.StatusOK, 800 * time.Millisecond, ""}, false, http.StatusInternalServerError, ""},
-		{"Success: timeout", &Application{"", "https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond, ""}, true, http.StatusOK, ""},
-		{"Failure: timeout", &Application{"", "httpstat.us/200?sleep=100", http.StatusOK, 1 * time.Millisecond, ""}, false, 0, ""},
-		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
-		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
-		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
-		{"Failure: wrong error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, ""}, false, http.StatusNotFound, ""},
+		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
+		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", ""}, false, http.StatusMovedPermanently, ""},
+		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, "", ""}, true, http.StatusNotFound, ""},
+		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, "", ""}, true, http.StatusOK, ""},
+		{"Failure: wrong status code expected", &Application{"", "https://httpstat.us/404", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusNotFound, ""},
+		{"Failure: application is down", &Application{"", "https://httpstat.us/500", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusInternalServerError, ""},
+		{"Success: timeout", &Application{"", "https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond, "", ""}, true, http.StatusOK, ""},
+		{"Failure: timeout", &Application{"", "httpstat.us/200?sleep=100", http.StatusOK, 1 * time.Millisecond, "", ""}, false, 0, ""},
+		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"},
+		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
+		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"},
+		{"Failure: wrong error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, "", ""}, false, http.StatusNotFound, ""},
 	}
 
 	for _, test := range tests {
@@ -37,7 +37,7 @@ func TestGetStatus(t *testing.T) {
 func testGetStatusFunc(application *Application, expectedSuccess bool, expectedActualStatusCode int) func(*testing.T) {
 	return func(t *testing.T) {
 		status := application.GetStatus()
-		assert.Equal(t, expectedSuccess, status.Success)
+		assert.Equal(t, expectedSuccess, status.StatusOk)
 		assert.Equal(t, expectedActualStatusCode, status.ActualStatusCode)
 	}
 }
@@ -48,10 +48,10 @@ func TestString(t *testing.T) {
 		appStatus      *ApplicationStatus
 		expectedOutput string
 	}{
-		{"Successful status", &ApplicationStatus{&Application{"", "https://library.nyu.edu", http.StatusOK, time.Second, ""}, true, http.StatusOK, ""}, "Success: URL https://library.nyu.edu resolved with 200"},
-		{"Failed status", &ApplicationStatus{&Application{"", "https://library.nyu.edu", http.StatusOK, time.Second, ""}, false, http.StatusNotFound, ""}, "Failure: URL https://library.nyu.edu resolved with 404, expected 200, "},
-		{"Successful status with location", &ApplicationStatus{&Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, time.Second, "https://library.nyu.edu/"}, true, http.StatusMovedPermanently, "https://library.nyu.edu/"}, "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
-		{"Failed status with location", &ApplicationStatus{&Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, time.Second, "http://library.nyu.edu/"}, false, http.StatusMovedPermanently, "https://library.nyu.edu/"}, "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
+		{description: "Successful status", appStatus: &ApplicationStatus{Application: &Application{"", "https://library.nyu.edu", http.StatusOK, time.Second, "", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200}, expectedOutput: "Success: URL https://library.nyu.edu resolved with 200"},
+		{description: "Failed status", appStatus: &ApplicationStatus{Application: &Application{URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second}, StatusContentOk: true, ActualStatusCode: 400}, expectedOutput: "Failure: URL https://library.nyu.edu resolved with 404, expected 200, "},
+		{description: "Successful status with location", appStatus: &ApplicationStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "https://library.nyu.edu/"}, StatusOk: true, StatusContentOk: true, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
+		{description: "Failed status with location", appStatus: &ApplicationStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "http://library.nyu.edu/"}, StatusContentOk: true, ActualStatusCode: 301}, expectedOutput: "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
 	}
 
 	for _, test := range tests {
