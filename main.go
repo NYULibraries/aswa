@@ -17,7 +17,7 @@ func main() {
 
 	appData := inputData.Applications
 
-	var channelProdId, channelDevId, token, errorSlack = getSlackCredentials()
+	var channelDevId, channelProdId, channelSaasId, token, errorSlack = getSlackCredentials()
 
 	if errorSlack != nil {
 		logger.Fatal("Error checking Slack environment variables:", errorSlack)
@@ -30,7 +30,7 @@ func main() {
 		cmdArg = os.Args[1]
 	}
 
-	err = RunSyntheticTests(appData, channelProdId, channelDevId, token, cmdArg)
+	err = RunSyntheticTests(appData, channelDevId, channelProdId, channelSaasId, token, cmdArg)
 	if err != nil {
 		logger.Fatal("Error running tests:", err)
 	}
