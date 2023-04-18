@@ -60,6 +60,14 @@ func (test Application) GetStatus() *ApplicationStatus {
 	respHead, err := client.Head(test.URL)
 	if err != nil {
 		log.Println("Error performing HEAD request:", err)
+		return &ApplicationStatus{
+			Application:      &test,
+			StatusOk:         false,
+			StatusContentOk:  false,
+			ActualStatusCode: 0,
+			ActualLocation:   "",
+			ActualContent:    "",
+		}
 	}
 
 	statusOk := compareStatusCodes(respHead.StatusCode, test.ExpectedStatusCode) &&
@@ -76,6 +84,14 @@ func (test Application) GetStatus() *ApplicationStatus {
 	respGet, err := client.Get(clientUrl)
 	if err != nil {
 		log.Println("Error performing GET request:", err)
+		return &ApplicationStatus{
+			Application:      &test,
+			StatusOk:         statusOk,
+			StatusContentOk:  false,
+			ActualStatusCode: respHead.StatusCode,
+			ActualLocation:   respHead.Header.Get("Location"),
+			ActualContent:    "",
+		}
 	}
 	defer func(Body io.ReadCloser) {
 		err := Body.Close()
