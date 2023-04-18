@@ -16,21 +16,22 @@ type FailingSyntheticTest struct {
 }
 
 // postTestResult posts the result of the given test to Slack.
-func postTestResult(test *a.Application, appStatus a.ApplicationStatus, channelDevId, channelProdId, channelSaasId, token string) error {
+func postTestResult(appStatus a.ApplicationStatus, category, channelDevId, channelProdId, channelSaasId, token string) error {
 	// Determine the channel to post the message
 	var targetChannel string
 	var slackChannelToPost string
-	if strings.HasPrefix(strings.ToLower(test.Name), DEV) {
+	switch category {
+	case DEV:
 		targetChannel = channelDevId
 		slackChannelToPost = DevChannel
-	} else if strings.HasPrefix(strings.ToLower(test.Name), PROD) {
+	case PROD:
 		targetChannel = channelProdId
 		slackChannelToPost = ProdChannel
-	} else if strings.HasPrefix(strings.ToLower(test.Name), SAAS) {
+	case SAAS:
 		targetChannel = channelSaasId
 		slackChannelToPost = SaasChannel
-	} else {
-		return errors.New("app name does not start with 'dev', 'prod' or 'saas")
+	default:
+		return errors.New("app name does not start with 'dev', 'prod', or 'saas'")
 	}
 
 	slackClient := NewSlackClient(token)
@@ -43,22 +44,24 @@ func postTestResult(test *a.Application, appStatus a.ApplicationStatus, channelD
 	return nil
 }
 
-func RunSyntheticTests(appData []*a.Application, channelDevId, channelProdId, channelSaasId, token, targetAppName string) error {
+func RunSyntheticTests(appData map[string][]*a.Application, channelDevId, channelProdId, channelSaasId, token, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
 
 	var failingSyntheticTests []FailingSyntheticTest
 
-	for _, app := range appData {
-		if targetAppName == "" || targetAppName == app.Name {
-			found = true // The app was found in the config file
-			appStatus := app.GetStatus()
-			log.Println(appStatus)
-			if !appStatus.StatusOk || !appStatus.StatusContentOk {
-				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
-			}
+	for _, apps := range appData {
+		for _, app := range apps {
+			if targetAppName == "" || targetAppName == app.Name {
+				found = true // The app was found in the config file
+				appStatus := app.GetStatus()
+				log.Println(appStatus)
+				if !appStatus.StatusOk || !appStatus.StatusContentOk {
+					failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+				}
 
-			if targetAppName != "" {
-				break
+				if targetAppName != "" {
+					break
+				}
 			}
 		}
 	}
@@ -72,12 +75,26 @@ func RunSyntheticTests(appData []*a.Application, channelDevId, channelProdId, ch
 
 	// Post failing test results after running tests on all applications
 	for _, failingTest := range failingSyntheticTests {
-		err := postTestResult(failingTest.App, failingTest.AppStatus, channelDevId, channelProdId, channelSaasId, token)
+		category, _ := extractCategory(failingTest.App.Name)
+		err := postTestResult(failingTest.AppStatus, category, channelDevId, channelProdId, channelSaasId, token)
 		if err != nil {
 			return err
 		}
 	}
 	return nil
+}
+
+func extractCategory(appName string) (string, error) {
+	appNameLower := strings.ToLower(appName)
+	if strings.HasPrefix(appNameLower, DEV) {
+		return DEV, nil
+	} else if strings.HasPrefix(appNameLower, PROD) {
+		return PROD, nil
+	} else if strings.HasPrefix(appNameLower, SAAS) {
+		return SAAS, nil
+	} else {
+		return "", errors.New("app name does not start with 'dev', 'prod', or 'saas'")
+	}
 }
 
 func getSlackCredentials() (string, string, string, string, error) {
