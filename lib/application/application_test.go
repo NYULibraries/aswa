@@ -1,13 +1,29 @@
 package application
 
 import (
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 	"time"
 )
 
 func TestGetStatus(t *testing.T) {
+	// Create mock server
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/html":
+			_, _ = fmt.Fprint(w, "<html><body><h1>Herman Melville</h1></body></html>")
+		case "/notfound":
+			w.WriteHeader(http.StatusNotFound)
+		case "/timeout":
+			time.Sleep(200 * time.Millisecond)
+			w.WriteHeader(http.StatusOK)
+		}
+	}))
+	defer mockServer.Close()
+
 	var tests = []struct {
 		description              string
 		application              *Application
@@ -29,8 +45,8 @@ func TestGetStatus(t *testing.T) {
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, ""},
 		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, ""},
 		{"Failure: wrong error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, "", ""}, false, http.StatusNotFound, "", true, ""},
-		{"Success: expected content found", &Application{"", "https://httpbin.org/html", http.StatusOK, 800 * time.Millisecond, "", "Herman Melville - Moby-Dick"}, true, http.StatusOK, "", true, "Herman Melville - Moby-Dick"},
-		{"Failure: expected content not found", &Application{"", "https://httpbin.org/html", http.StatusOK, 800 * time.Millisecond, "", "Jules Verne - 20,000 Leagues Under the Sea"}, true, http.StatusOK, "", false, ""},
+		{"Success: expected content found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Herman Melville"}, true, http.StatusOK, "", true, "Herman Melville"},
+		{"Failure: expected content not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Jules Verne - 20,000 Leagues Under the Sea"}, true, http.StatusOK, "", false, ""},
 	}
 
 	for _, test := range tests {
