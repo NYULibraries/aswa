@@ -73,41 +73,48 @@ func (test Application) GetStatus() *ApplicationStatus {
 	statusOk := compareStatusCodes(respHead.StatusCode, test.ExpectedStatusCode) &&
 		compareLocations(respHead.Header.Get("Location"), test.ExpectedLocation)
 
-	var clientUrl string
+	var actualContent string
+	var statusContentOk bool
 
-	if test.ExpectedLocation != "" {
-		clientUrl = test.ExpectedLocation
-	} else {
-		clientUrl = test.URL
-	}
+	if test.ExpectedContent != "" {
+		var clientUrl string
 
-	respGet, err := client.Get(clientUrl)
-	if err != nil {
-		log.Println("Error performing GET request:", err)
-		return &ApplicationStatus{
-			Application:      &test,
-			StatusOk:         statusOk,
-			StatusContentOk:  false,
-			ActualStatusCode: respHead.StatusCode,
-			ActualLocation:   respHead.Header.Get("Location"),
-			ActualContent:    "",
+		if test.ExpectedLocation != "" {
+			clientUrl = test.ExpectedLocation
+		} else {
+			clientUrl = test.URL
 		}
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
+
+		respGet, err := client.Get(clientUrl)
 		if err != nil {
-			log.Println("Error closing response body:", err)
+			log.Println("Error performing GET request:", err)
+			return &ApplicationStatus{
+				Application:      &test,
+				StatusOk:         statusOk,
+				StatusContentOk:  false,
+				ActualStatusCode: respHead.StatusCode,
+				ActualLocation:   respHead.Header.Get("Location"),
+				ActualContent:    "",
+			}
 		}
-	}(respGet.Body)
+		defer func(Body io.ReadCloser) {
+			err := Body.Close()
+			if err != nil {
+				log.Println("Error closing response body:", err)
+			}
+		}(respGet.Body)
 
-	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, respGet.Body)
-	if err != nil {
-		log.Println("Error copying response body:", err)
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, respGet.Body)
+		if err != nil {
+			log.Println("Error copying response body:", err)
+		}
+
+		actualContent = buf.String()
+		statusContentOk = compareContent(actualContent, test.ExpectedContent)
+	} else {
+		statusContentOk = true
 	}
-
-	actualContent := buf.String()
-	statusContentOk := compareContent(actualContent, test.ExpectedContent)
 
 	return &ApplicationStatus{
 		Application:      &test,
