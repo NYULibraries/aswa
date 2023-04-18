@@ -30,7 +30,7 @@ func postTestResult(test *a.Application, appStatus a.ApplicationStatus, channelD
 		targetChannel = channelSaasId
 		slackChannelToPost = SaasChannel
 	} else {
-		return errors.New("app name does not start with 'dev' or 'prod'")
+		return errors.New("app name does not start with 'dev', 'prod' or 'saas")
 	}
 
 	slackClient := NewSlackClient(token)
