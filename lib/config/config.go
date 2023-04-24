@@ -9,7 +9,7 @@ import (
 
 // Config struct to replace environment variables
 type Config struct {
-	Applications map[string][]*a.Application
+	Applications []*a.Application
 }
 
 // Check if any required App field is empty
@@ -19,11 +19,9 @@ func hasEmptyRequiredFields(app *a.Application) bool {
 
 // Loop through all categories and applications, check if any required field is empty
 func (list *Config) isConfigAnyRequiredFieldEmpty() bool {
-	for _, apps := range list.Applications {
-		for _, app := range apps {
-			if hasEmptyRequiredFields((*a.Application)(app)) {
-				return true
-			}
+	for _, app := range list.Applications {
+		if hasEmptyRequiredFields((*a.Application)(app)) {
+			return true
 		}
 	}
 	return false
