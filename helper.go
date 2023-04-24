@@ -6,7 +6,6 @@ import (
 	a "github.com/NYULibraries/aswa/lib/application"
 	"log"
 	"os"
-	"strings"
 	"time"
 )
 
@@ -16,52 +15,34 @@ type FailingSyntheticTest struct {
 }
 
 // postTestResult posts the result of the given test to Slack.
-func postTestResult(appStatus a.ApplicationStatus, category, channelDevId, channelProdId, channelSaasId, token string) error {
-	// Determine the channel to post the message
-	var targetChannel string
-	var slackChannelToPost string
-	switch category {
-	case DEV:
-		targetChannel = channelDevId
-		slackChannelToPost = DevChannel
-	case PROD:
-		targetChannel = channelProdId
-		slackChannelToPost = ProdChannel
-	case SAAS:
-		targetChannel = channelSaasId
-		slackChannelToPost = SaasChannel
-	default:
-		return errors.New("app name does not start with 'dev', 'prod', or 'saas'")
-	}
+func postTestResult(appStatus a.ApplicationStatus, channel string, token string) error {
 
 	slackClient := NewSlackClient(token)
-	if err := slackClient.PostToSlack(appStatus.String(), targetChannel); err != nil {
+	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
 		return err
 	}
 	timestamp := time.Now().Local().Format(time.RFC1123Z)
-	log.Printf("Message sent to %s channel on %s", slackChannelToPost, timestamp)
+	log.Printf("Message sent to %s channel on %s", channel, timestamp)
 
 	return nil
 }
 
-func RunSyntheticTests(appData map[string][]*a.Application, channelDevId, channelProdId, channelSaasId, token, targetAppName string) error {
+func RunSyntheticTests(appData []*a.Application, channel string, token string, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
 
 	var failingSyntheticTests []FailingSyntheticTest
 
-	for _, apps := range appData {
-		for _, app := range apps {
-			if targetAppName == "" || targetAppName == app.Name {
-				found = true // The app was found in the config file
-				appStatus := app.GetStatus()
-				log.Println(appStatus)
-				if !appStatus.StatusOk || !appStatus.StatusContentOk {
-					failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
-				}
+	for _, app := range appData {
+		if targetAppName == "" || targetAppName == app.Name {
+			found = true // The app was found in the config file
+			appStatus := app.GetStatus()
+			log.Println(appStatus)
+			if !appStatus.StatusOk || !appStatus.StatusContentOk {
+				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+			}
 
-				if targetAppName != "" {
-					break
-				}
+			if targetAppName != "" {
+				break
 			}
 		}
 	}
@@ -75,8 +56,7 @@ func RunSyntheticTests(appData map[string][]*a.Application, channelDevId, channe
 
 	// Post failing test results after running tests on all applications
 	for _, failingTest := range failingSyntheticTests {
-		category, _ := extractCategory(failingTest.App.Name)
-		err := postTestResult(failingTest.AppStatus, category, channelDevId, channelProdId, channelSaasId, token)
+		err := postTestResult(failingTest.AppStatus, channel, token)
 		if err != nil {
 			return err
 		}
@@ -84,85 +64,29 @@ func RunSyntheticTests(appData map[string][]*a.Application, channelDevId, channe
 	return nil
 }
 
-func extractCategory(appName string) (string, error) {
-	appNameLower := strings.ToLower(appName)
-	if strings.HasPrefix(appNameLower, DEV) {
-		return DEV, nil
-	} else if strings.HasPrefix(appNameLower, PROD) {
-		return PROD, nil
-	} else if strings.HasPrefix(appNameLower, SAAS) {
-		return SAAS, nil
-	} else {
-		return "", errors.New("app name does not start with 'dev', 'prod', or 'saas'")
-	}
-}
-
-func getSlackCredentials() (string, string, string, string, error) {
-	channelDevId := os.Getenv(envSlackChannelDevId)
-	channelProdId := os.Getenv(envSlackChannelProdId)
-	channelSaasId := os.Getenv(envSlackChannelSaasId)
+func getSlackCredentials() (string, string, error) {
+	channelId := os.Getenv(envSlackChannelId)
 	token := os.Getenv(envSlackToken)
-
-	missingVars := checkMissingSlackEnvVariables(channelDevId, channelProdId, channelSaasId, token)
-
-	if len(missingVars) == 4 {
-		log.Println("SLACK_CHANNEL_DEV_ID, SLACK_CHANNEL_PROD_ID, SLACK_CHANNEL_SAAS_ID and SLACK_TOKEN environment variables are not set")
-		return "", "", "", "", nil
-	} else if len(missingVars) > 0 {
-		errorMsg := createCustomSlackErrorMessage(missingVars)
-		return "", "", "", "", errors.New(errorMsg)
+	if channelId == "" || token == "" {
+		if channelId == "" && token == "" {
+			// if both are not set, log a warning and return with no error
+			log.Println("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables are not set")
+			return "", "", nil
+		}
+		// if only one of the variables is set, return an error
+		return "", "", errors.New("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables must both be set")
 	}
 
 	// Check if the credentials are valid by checking auth.test
 	err := ValidateSlackCredentials(token)
 	if err != nil {
-		return "", "", "", "", fmt.Errorf("invalid slack credentials: %v", err)
+		return "", "", fmt.Errorf("invalid slack credentials: %v", err)
 	}
 
-	return channelDevId, channelProdId, channelSaasId, token, nil
-}
-
-func checkMissingSlackEnvVariables(channelDevId, channelProdId, channelSaasId, token string) []string {
-	var missingSlackEnvVars []string
-
-	envVars := map[string]string{
-		envSlackChannelDevId:  channelDevId,
-		envSlackChannelProdId: channelProdId,
-		envSlackChannelSaasId: channelSaasId,
-		envSlackToken:         token,
-	}
-
-	for key, value := range envVars {
-		if value == "" {
-			missingSlackEnvVars = append(missingSlackEnvVars, key)
-		}
-	}
-
-	return missingSlackEnvVars
-}
-
-func createCustomSlackErrorMessage(missingSlackEnvVars []string) string {
-	errorSlackMsg := "The following environment variables must be set: "
-	for i, missingSlackEnvVar := range missingSlackEnvVars {
-		if i > 0 {
-			errorSlackMsg += ", "
-		}
-		errorSlackMsg += missingSlackEnvVar
-	}
-	return errorSlackMsg
+	return channelId, token, nil
 }
 
 const (
-	DEV  = "dev"
-	PROD = "prod"
-	SAAS = "saas"
-
-	envSlackChannelDevId  = "SLACK_CHANNEL_DEV_ID"
-	envSlackChannelProdId = "SLACK_CHANNEL_PROD_ID"
-	envSlackChannelSaasId = "SLACK_CHANNEL_SAAS_ID"
-	envSlackToken         = "SLACK_TOKEN"
-
-	DevChannel  = "synthetic-tests-dev"
-	ProdChannel = "synthetic-tests-prod"
-	SaasChannel = "synthetic-tests-saas"
+	envSlackChannelId = "SLACK_CHANNEL_ID"
+	envSlackToken     = "SLACK_TOKEN"
 )
