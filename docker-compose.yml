@@ -10,9 +10,7 @@ services:
     environment:
       - SLACK_TOKEN=${SLACK_TOKEN}
       - SLACK_CHANNEL_ID=${SLACK_CHANNEL_ID}
-      - SLACK_CHANNEL_DEV_ID=${SLACK_CHANNEL_DEV_ID}
-      - SLACK_CHANNEL_PROD_ID=${SLACK_CHANNEL_PROD_ID}
-      - SLACK_CHANNEL_SAAS_ID=${SLACK_CHANNEL_SAAS_ID}
+      - YAML_PATH=${YAML_PATH}
   test:
     image: aswa_test
     build:
