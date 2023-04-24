@@ -1,0 +1,35 @@
+applications:
+  - name: bess
+    url: 'https://cdn-dev.library.nyu.edu/bess-vue/app.min.js'
+    expected_status: 200
+  - name: bobcat-linker
+    url: 'https://dev.library.nyu.edu/persistent'
+    expected_status: 301
+    expected_location: 'https://app.library.nyu.edu/bobcat-linker'
+  - name: campus-media-equipment
+    url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
+    expected_status: 200
+  - name: getit
+    url: 'https://getit-dev.library.nyu.edu/'
+    expected_status: 301
+    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
+  - name: libcal-assets
+    url: 'https://cdn-dev.library.nyu.edu/libcal/index.min.js'
+    expected_status: 200
+  - name: libguides-assets
+    url: 'https://cdn-dev.library.nyu.edu/libguides/index.min.js'
+    expected_status: 200
+  - name: library-nyu-edu
+    url: 'http://dev.library.nyu.edu/'
+    expected_status: 301
+    expected_location: 'https://dev.library.nyu.edu/'
+  - name: login
+    url: 'https://dev.login.library.nyu.edu/'
+    expected_status: 200
+  - name: specialcollections
+    url: 'https://specialcollections-dev.library.nyu.edu/search'
+    expected_status: 200
+  - name: statuspage-embed
+    url: 'https://cdn-dev.library.nyu.edu/statuspage-embed/index.min.js'
+    expected_status: 200
+
