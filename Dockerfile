@@ -12,5 +12,5 @@ COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/config /config
 COPY --from=builder /app/app /aswa
 
-ENTRYPOINT [ "/aswa" ]
+CMD [ "/aswa" ]
 

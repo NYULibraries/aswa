@@ -17,7 +17,7 @@ func hasEmptyRequiredFields(app *a.Application) bool {
 	return app.Name == "" || app.URL == "" || app.ExpectedStatusCode == 0
 }
 
-// Loop through all applications and check if any required field is empty
+// Loop through all categories and applications, check if any required field is empty
 func (list *Config) isConfigAnyRequiredFieldEmpty() bool {
 	for _, app := range list.Applications {
 		if hasEmptyRequiredFields((*a.Application)(app)) {
@@ -39,7 +39,7 @@ func loadConfig(yamlPath string) (*Config, error) {
 		return nil, err
 	}
 	if config.isConfigAnyRequiredFieldEmpty() {
-		return nil, errors.New("config file is missing required fields")
+		return nil, errors.New("config file is missing one or more required fields: name, url, expected_status code")
 	}
 
 	return &config, nil

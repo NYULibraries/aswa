@@ -9,33 +9,36 @@ import (
 	"time"
 )
 
-// postTestResult posts the result of the given test to Slack.
-func postTestResult(test *a.Application, channel string, token string) error {
-	appStatus := test.GetStatus()
-	log.Println(appStatus)
+type FailingSyntheticTest struct {
+	App       *a.Application
+	AppStatus a.ApplicationStatus
+}
 
-	// check if the status is not successful
-	if !appStatus.Success {
-		slackClient := NewSlackClient(token)
-		if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
-			return err
-		}
-		timestamp := time.Now().Local().Format(time.RFC1123Z)
-		log.Printf("Message sent to channel %s on %s", channel, timestamp)
+// postTestResult posts the result of the given test to Slack.
+func postTestResult(appStatus a.ApplicationStatus, channel string, token string) error {
+
+	slackClient := NewSlackClient(token)
+	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
+		return err
 	}
+	timestamp := time.Now().Local().Format(time.RFC1123Z)
+	log.Printf("Message sent to %s channel on %s", channel, timestamp)
 
 	return nil
 }
 
 func RunSyntheticTests(appData []*a.Application, channel string, token string, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
-	for _, app := range appData {
 
+	var failingSyntheticTests []FailingSyntheticTest
+
+	for _, app := range appData {
 		if targetAppName == "" || targetAppName == app.Name {
 			found = true // The app was found in the config file
-			err := postTestResult(app, channel, token)
-			if err != nil {
-				return err
+			appStatus := app.GetStatus()
+			log.Println(appStatus)
+			if !appStatus.StatusOk || !appStatus.StatusContentOk {
+				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
 			}
 
 			if targetAppName != "" {
@@ -43,6 +46,7 @@ func RunSyntheticTests(appData []*a.Application, channel string, token string, t
 			}
 		}
 	}
+
 	if !found && targetAppName != "" {
 		// The app was not found in the config file
 		err := fmt.Errorf("app '%s' not found in config file", targetAppName)
@@ -50,6 +54,13 @@ func RunSyntheticTests(appData []*a.Application, channel string, token string, t
 		return err
 	}
 
+	// Post failing test results after running tests on all applications
+	for _, failingTest := range failingSyntheticTests {
+		err := postTestResult(failingTest.AppStatus, channel, token)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }
 
