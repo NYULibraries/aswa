@@ -20,6 +20,13 @@ func TestGetStatus(t *testing.T) {
 		case "/timeout":
 			time.Sleep(200 * time.Millisecond)
 			w.WriteHeader(http.StatusOK)
+		case "/wrongstatus":
+			w.WriteHeader(http.StatusNotFound)
+		case "/500":
+			w.WriteHeader(http.StatusInternalServerError)
+		case "/slowresponse":
+			time.Sleep(200 * time.Millisecond)
+			w.WriteHeader(http.StatusOK)
 		}
 	}))
 	defer mockServer.Close()
@@ -37,10 +44,10 @@ func TestGetStatus(t *testing.T) {
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", ""}, false, http.StatusMovedPermanently, "", true, ""},
 		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, "", ""}, true, http.StatusNotFound, "", true, ""},
 		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, "", ""}, true, http.StatusOK, "", true, ""},
-		{"Failure: wrong status code expected", &Application{"", "https://httpstat.us/404", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusNotFound, "", true, ""},
-		{"Failure: application is down", &Application{"", "https://httpstat.us/500", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusInternalServerError, "", true, ""},
+		{"Failure: wrong status code expected", &Application{"", mockServer.URL + "/wrongstatus", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusNotFound, "", true, ""},
+		{"Failure: application is down", &Application{"", mockServer.URL + "/500", http.StatusOK, 800 * time.Millisecond, "", ""}, false, http.StatusInternalServerError, "", true, ""},
 		{"Success: timeout", &Application{"", "https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond, "", ""}, true, http.StatusOK, "", true, ""},
-		{"Failure: timeout", &Application{"", "httpstat.us/200?sleep=100", http.StatusOK, 1 * time.Millisecond, "", ""}, false, 0, "", false, ""},
+		{"Failure: timeout", &Application{"", mockServer.URL + "/slowresponse", http.StatusOK, 1 * time.Millisecond, "", ""}, false, 0, "", false, ""},
 		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, ""},
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, ""},
 		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, ""},
