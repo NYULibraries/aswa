@@ -48,8 +48,8 @@ func compareContent(actual string, expected string) (bool, string) {
 	if index == -1 {
 		return false, ""
 	}
+	// The slice actual[index : index+len(expected)] starts at the index where the expected string is found and ends at the index after the last character of the expected string.
 	return true, actual[index : index+len(expected)]
-	//return strings.Contains(actual, expected)
 }
 
 // GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
