@@ -43,8 +43,13 @@ func compareLocations(actual string, expected string) bool {
 }
 
 // compareContent compares the actual and expected content.
-func compareContent(actual string, expected string) bool {
-	return strings.Contains(actual, expected)
+func compareContent(actual string, expected string) (bool, string) {
+	index := strings.Index(actual, expected)
+	if index == -1 {
+		return false, ""
+	}
+	return true, actual[index : index+len(expected)]
+	//return strings.Contains(actual, expected)
 }
 
 // GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
@@ -74,6 +79,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 		compareLocations(respHead.Header.Get("Location"), test.ExpectedLocation)
 
 	var actualContent string
+	var matchedContent string
 	var statusContentOk bool
 
 	if test.ExpectedContent != "" {
@@ -111,7 +117,10 @@ func (test Application) GetStatus() *ApplicationStatus {
 		}
 
 		actualContent = buf.String()
-		statusContentOk = compareContent(actualContent, test.ExpectedContent)
+		statusContentOk, matchedContent = compareContent(actualContent, test.ExpectedContent)
+		if statusContentOk {
+			actualContent = matchedContent
+		}
 	} else {
 		statusContentOk = true
 	}
