@@ -1,7 +1,4 @@
 applications:
-  - name: ares-webpages
-    url: 'https://ares.library.nyu.edu/'
-    expected_status: 200
   - name: bess
     url: 'https://cdn.library.nyu.edu/bess-vue/app.min.js'
     expected_status: 200
@@ -20,12 +17,6 @@ applications:
     url: 'https://getit.library.nyu.edu/'
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
-  - name: libcal-assets
-    url: 'https://nyu.libcal.com'
-    expected_status: 200
-  - name: libcal-assets-cdn
-    url: 'https://cdn.library.nyu.edu/libcal/index.min.js'
-    expected_status: 200
   - name: libguides-assets
     url: 'https://cdn.library.nyu.edu/libguides/index.min.js'
     expected_status: 200
@@ -65,10 +56,7 @@ applications:
     url: 'http://web-pr-proxy1.bobst.nyu.edu/'
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/'
-  - name: ebookcentral
-    url: 'https://getit.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
-    expected_status: 200
-    expected_content: 'ebookcentral.proquest.com'
+
 
 
 
