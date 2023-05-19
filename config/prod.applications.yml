@@ -6,6 +6,9 @@ applications:
     url: 'https://library.nyu.edu/persistent'
     expected_status: 301
     expected_location: 'https://app.library.nyu.edu/bobcat-linker'
+  - name: bobcat-standard
+    url: 'https://aleph.library.nyu.edu'
+    expected_status: 200
   - name: campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
@@ -47,12 +50,14 @@ applications:
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/primo-explore/search?vid=NYU'
   - name: pushtocite
-    url: 'https://cite.library.nyu.edu/'
-    expected_status: 400
+    url: 'https://cite.library.nyu.edu/healthcheck'
+    expected_status: 200
   - name: salon
-    url: 'https://persistent.library.nyu.edu'
-    expected_status: 301
-    expected_location: 'http://persistent.library.nyu.edu/arch'
+    url: 'https://persistent.library.nyu.edu/arch/'
+    expected_status: 404
+  - name: sfx
+    url: 'http://sfx.library.nyu.edu/sfxlcl41'
+    expected_status: 200
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
