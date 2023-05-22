@@ -61,8 +61,8 @@ applications:
     url: 'https://cite.library.nyu.edu/healthcheck'
     expected_status: 200
   - name: salon
-    url: 'https://persistent.library.nyu.edu/arch/'
-    expected_status: 404
+    url: 'https://persistent.library.nyu.edu/arch/does-not-ever-exist'
+    expected_status: 400
   - name: sfx
     url: 'http://sfx.library.nyu.edu/sfxlcl41'
     expected_status: 200
