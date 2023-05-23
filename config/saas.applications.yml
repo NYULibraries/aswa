@@ -2,7 +2,7 @@ applications:
   - name: alerts
     url: 'https://alerts.library.nyu.edu'
     expected_status: 200
-    expected_content: 'All Systems Operational'
+    expected_content: 'About This Site'
   - name: ares-webpages
     url: 'https://ares.library.nyu.edu/'
     expected_status: 200
