@@ -6,17 +6,23 @@ applications:
     url: 'https://dev.library.nyu.edu/persistent'
     expected_status: 301
     expected_location: 'https://app.library.nyu.edu/bobcat-linker'
+  - name: bobcat-standard
+    url: 'https://alephstage.library.nyu.edu'
+    expected_status: 200
   - name: campus-media-equipment
     url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
   - name: getit
-    url: 'https://getit-dev.library.nyu.edu/'
+    url: 'https://getit-dev.library.nyu.edu'
     expected_status: 301
     expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
   - name: getit-ebooks
     url: 'https://getit-dev.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
     expected_status: 200
     expected_content: 'ebookcentral.proquest.com'
+  - name: illiad
+    url: 'https://dev.ill.library.nyu.edu'
+    expected_status: 200
   - name: libcal-assets
     url: 'https://cdn-dev.library.nyu.edu/libcal/index.min.js'
     expected_status: 200
@@ -24,19 +30,19 @@ applications:
     url: 'https://cdn-dev.library.nyu.edu/libguides/index.min.js'
     expected_status: 200
   - name: library-nyu-edu
-    url: 'http://dev.library.nyu.edu/'
+    url: 'http://dev.library.nyu.edu'
     expected_status: 301
     expected_location: 'https://dev.library.nyu.edu/'
   - name: login
-    url: 'https://dev.login.library.nyu.edu/'
+    url: 'https://dev.login.library.nyu.edu'
     expected_status: 200
+  - name: salon
+    url: 'https://persistent-dev.library.nyu.edu/arch/does-not-ever-exist'
+    expected_status: 400
   - name: specialcollections
     url: 'https://specialcollections-dev.library.nyu.edu/search'
     expected_status: 200
   - name: statuspage-embed
     url: 'https://cdn-dev.library.nyu.edu/statuspage-embed/index.min.js'
     expected_status: 200
-  - name: ebookcentral
-    url: 'https://getit-dev.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
-    expected_status: 200
-    expected_content: 'ebookcentral.proquest.com'
+
