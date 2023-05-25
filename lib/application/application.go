@@ -62,75 +62,78 @@ func (test Application) GetStatus() *ApplicationStatus {
 		Timeout: test.Timeout,
 	}
 
-	respHead, err := client.Head(test.URL)
-	if err != nil {
-		log.Println("Error performing HEAD request:", err)
-		return &ApplicationStatus{
-			Application:      &test,
-			StatusOk:         false,
-			StatusContentOk:  false,
-			ActualStatusCode: 0,
-			ActualLocation:   "",
-			ActualContent:    "",
-		}
-	}
-
-	statusOk := compareStatusCodes(respHead.StatusCode, test.ExpectedStatusCode) &&
-		compareLocations(respHead.Header.Get("Location"), test.ExpectedLocation)
-
+	var resp *http.Response
+	var err error
 	var actualContent string
 	var matchedContent string
-	var statusContentOk bool
+	var statusContentOk = true
 
 	if test.ExpectedContent != "" {
 		var clientUrl string
-
 		if test.ExpectedLocation != "" {
 			clientUrl = test.ExpectedLocation
 		} else {
 			clientUrl = test.URL
 		}
 
-		respGet, err := client.Get(clientUrl)
+		resp, err = client.Get(clientUrl)
 		if err != nil {
 			log.Println("Error performing GET request:", err)
 			return &ApplicationStatus{
 				Application:      &test,
-				StatusOk:         statusOk,
+				StatusOk:         false,
 				StatusContentOk:  false,
-				ActualStatusCode: respHead.StatusCode,
-				ActualLocation:   respHead.Header.Get("Location"),
+				ActualStatusCode: resp.StatusCode,
+				ActualLocation:   resp.Header.Get("Location"),
+				ActualContent:    "",
+			}
+		} else {
+			defer func(Body io.ReadCloser) {
+				err := Body.Close()
+				if err != nil {
+					log.Println("Error closing response body:", err)
+				}
+			}(resp.Body)
+
+			buf := new(bytes.Buffer)
+			_, err = io.Copy(buf, resp.Body)
+			if err != nil {
+				log.Println("Error copying response body:", err)
+			}
+
+			actualContent = buf.String()
+			statusContentOk, matchedContent = compareContent(actualContent, test.ExpectedContent)
+			if statusContentOk {
+				actualContent = matchedContent
+			}
+		}
+	} else {
+		resp, err = client.Head(test.URL)
+		if err != nil {
+			log.Println("Error performing HEAD request:", err)
+			return &ApplicationStatus{
+				Application:      &test,
+				StatusOk:         false,
+				StatusContentOk:  false,
+				ActualStatusCode: 0,
+				ActualLocation:   "",
 				ActualContent:    "",
 			}
 		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.Println("Error closing response body:", err)
-			}
-		}(respGet.Body)
+	}
 
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, respGet.Body)
-		if err != nil {
-			log.Println("Error copying response body:", err)
-		}
-
-		actualContent = buf.String()
-		statusContentOk, matchedContent = compareContent(actualContent, test.ExpectedContent)
-		if statusContentOk {
-			actualContent = matchedContent
-		}
-	} else {
-		statusContentOk = true
+	statusOk := false
+	if err == nil {
+		statusOk = compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) &&
+			compareLocations(resp.Header.Get("Location"), test.ExpectedLocation)
 	}
 
 	return &ApplicationStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
-		ActualStatusCode: respHead.StatusCode,
-		ActualLocation:   respHead.Header.Get("Location"),
+		ActualStatusCode: resp.StatusCode,
+		ActualLocation:   resp.Header.Get("Location"),
 		ActualContent:    actualContent,
 	}
 }
