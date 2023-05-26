@@ -200,18 +200,33 @@ func successString(results ApplicationStatus) string {
 }
 
 func failureString(results ApplicationStatus) string {
-	if results.ActualStatusCode != results.Application.ExpectedStatusCode && results.ActualLocation != results.Application.ExpectedLocation {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, and redirect location %s did not match %s", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode, results.ActualLocation, results.Application.ExpectedLocation)
-	} else if results.ActualLocation != results.Application.ExpectedLocation && results.ActualStatusCode == results.Application.ExpectedStatusCode {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, but redirect location %s did not match %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation, results.Application.ExpectedLocation)
-	} else if results.ActualStatusCode != results.Application.ExpectedStatusCode && results.ActualLocation == results.Application.ExpectedLocation {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, but redirect location matched", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode)
-	} else if results.ActualStatusCode != results.Application.ExpectedStatusCode {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode)
+	actualStatusCode := results.ActualStatusCode
+	expectedStatusCode := results.Application.ExpectedStatusCode
+	actualLocation := results.ActualLocation
+	expectedLocation := results.Application.ExpectedLocation
+	url := results.Application.URL
+
+	statusMatch := actualStatusCode == expectedStatusCode
+	locationMatch := actualLocation == expectedLocation
+
+	var mismatchDetails string
+
+	if expectedLocation != "" {
+		if !statusMatch && !locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, and redirect location %s did not match %s", actualStatusCode, expectedStatusCode, actualLocation, expectedLocation)
+		} else if statusMatch && !locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, but redirect location %s did not match %s", actualStatusCode, actualLocation, expectedLocation)
+		} else if !statusMatch && locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, but redirect location matched", actualStatusCode, expectedStatusCode)
+		}
+	} else if !statusMatch {
+		mismatchDetails = fmt.Sprintf("resolved with %d, expected %d", actualStatusCode, expectedStatusCode)
 	} else {
 		// Should not be reached under normal circumstances
-		return fmt.Sprintf("Unknown failure for URL %s", results.Application.URL)
+		return fmt.Sprintf("Unknown failure for URL %s", url)
 	}
+
+	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
 }
 
 func contentSuccessString(results ApplicationStatus) string {
