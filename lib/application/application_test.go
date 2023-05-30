@@ -1,6 +1,7 @@
 package application
 
 import (
+	"errors"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"net/http"
@@ -70,6 +71,145 @@ func testGetStatusFunc(application *Application, expectedSuccess bool, expectedA
 		if expectedContentSuccess {
 			assert.Contains(t, status.ActualContent, actualContent)
 		}
+	}
+}
+
+// This is a custom type that implements the http.RoundTripper interface: https://pkg.go.dev/net/http#RoundTripper
+// It will be used to simulate a network error for your tests.
+type errorTransport struct{}
+
+// The RoundTrip method is what's called by http.Client when it makes a request.
+// By always returning an error here, we can simulate network issues.
+func (t *errorTransport) RoundTrip(_ *http.Request) (*http.Response, error) {
+	return nil, errors.New("simulated network error")
+}
+
+func TestCreateApplicationStatus(t *testing.T) {
+	// Create mock server
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		switch r.URL.Path {
+		case "/successful":
+			if r.Method == http.MethodGet {
+				_, _ = fmt.Fprint(w, "Successful Request")
+			}
+		case "/failed":
+			w.WriteHeader(http.StatusNotFound)
+		default:
+			w.WriteHeader(http.StatusInternalServerError)
+		}
+	}))
+	defer mockServer.Close()
+
+	// Define an application for testing
+	app := Application{
+		URL:                mockServer.URL + "/successful",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            500 * time.Millisecond,
+		ExpectedLocation:   "",
+		ExpectedContent:    "Successful Request",
+	}
+
+	tests := []struct {
+		description         string
+		app                 Application
+		statusOk            bool
+		statusContentOk     bool
+		isGet               bool
+		expectedApplication *ApplicationStatus
+	}{
+		{
+			description:     "GET request with network error",
+			app:             app,
+			statusOk:        false,
+			statusContentOk: false,
+			isGet:           true,
+			expectedApplication: &ApplicationStatus{
+				Application:      &app,
+				StatusOk:         false,
+				StatusContentOk:  false,
+				ActualStatusCode: 0,
+				ActualLocation:   "",
+				ActualContent:    "",
+			},
+		},
+		{
+			description:     "HEAD request with network error",
+			app:             app,
+			statusOk:        false,
+			statusContentOk: false,
+			isGet:           false,
+			expectedApplication: &ApplicationStatus{
+				Application:      &app,
+				StatusOk:         false,
+				StatusContentOk:  false,
+				ActualStatusCode: 0,
+				ActualLocation:   "",
+				ActualContent:    "",
+			},
+		},
+		{
+			description:     "Successful GET request",
+			app:             app,
+			statusOk:        true,
+			statusContentOk: true,
+			isGet:           true,
+			expectedApplication: &ApplicationStatus{
+				Application:      &app,
+				StatusOk:         true,
+				StatusContentOk:  true,
+				ActualStatusCode: http.StatusOK,
+				ActualLocation:   "",
+				ActualContent:    "Successful Request",
+			},
+		},
+		{
+			description:     "Successful HEAD request",
+			app:             app,
+			statusOk:        true,
+			statusContentOk: false,
+			isGet:           false,
+			expectedApplication: &ApplicationStatus{
+				Application:      &app,
+				StatusOk:         true,
+				StatusContentOk:  false,
+				ActualStatusCode: http.StatusOK,
+				ActualLocation:   "",
+				ActualContent:    "",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			// Here we create the http.Client to use in the tests.
+			// If the test is supposed to simulate a network error, use the errorTransport defined above.
+			// Otherwise, use a regular http.Client.
+			var client *http.Client
+			if test.description == "GET request with network error" || test.description == "HEAD request with network error" {
+				client = &http.Client{
+					Transport: &errorTransport{},
+					Timeout:   test.app.Timeout,
+				}
+			} else {
+				client = &http.Client{
+					Timeout: test.app.Timeout,
+				}
+			}
+
+			var resp *http.Response
+			var err error
+			var actualContent string
+			var statusContentOk bool
+
+			if test.isGet {
+				resp, err, actualContent, statusContentOk = performGetRequest(test.app, client)
+			} else {
+				resp, err = performHeadRequest(test.app, client)
+			}
+
+			result := createApplicationStatus(test.app, test.statusOk, statusContentOk, resp, err, test.isGet, actualContent)
+			assert.Equal(t, test.expectedApplication, result)
+		})
 	}
 }
 
