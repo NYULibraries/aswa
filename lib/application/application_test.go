@@ -166,12 +166,12 @@ func TestCreateApplicationStatus(t *testing.T) {
 			description:     "Successful HEAD request",
 			app:             app,
 			statusOk:        true,
-			statusContentOk: false,
+			statusContentOk: true,
 			isGet:           false,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         true,
-				StatusContentOk:  false,
+				StatusContentOk:  true,
 				ActualStatusCode: http.StatusOK,
 				ActualLocation:   "",
 				ActualContent:    "",
@@ -199,15 +199,14 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var resp *http.Response
 			var err error
 			var actualContent string
-			var statusContentOk bool
 
 			if test.isGet {
-				resp, err, actualContent, statusContentOk = performGetRequest(test.app, client)
+				resp, err, actualContent, _ = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 			}
 
-			result := createApplicationStatus(test.app, test.statusOk, statusContentOk, resp, err, test.isGet, actualContent)
+			result := createApplicationStatus(test.app, resp, err, test.isGet, actualContent)
 			assert.Equal(t, test.expectedApplication, result)
 		})
 	}
