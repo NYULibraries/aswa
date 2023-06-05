@@ -61,19 +61,19 @@ func (test Application) GetStatus() *ApplicationStatus {
 	var err error
 	var actualContent string
 
-	if test.ExpectedContent != "" {
+	if test.IsGet() {
 		resp, err, actualContent, _ = performGetRequest(test, client)
 		if err != nil {
-			return createApplicationStatus(test, resp, err, true, "")
+			return createApplicationStatus(test, resp, err, "")
 		}
 	} else {
 		resp, err = performHeadRequest(test, client)
 		if err != nil {
-			return createApplicationStatus(test, resp, err, false, "")
+			return createApplicationStatus(test, resp, err, "")
 		}
 	}
 
-	return createApplicationStatus(test, resp, nil, true, actualContent)
+	return createApplicationStatus(test, resp, nil, actualContent)
 }
 
 func createClient(timeout time.Duration) *http.Client {
@@ -91,6 +91,10 @@ func getClientUrl(test Application) string {
 	}
 
 	return test.URL
+}
+
+func (test Application) IsGet() bool {
+	return test.ExpectedContent != ""
 }
 
 func closeResponseBody(Body io.ReadCloser) {
@@ -132,7 +136,7 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, isGet bool, actualContent string) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
 	statusOk := false
 	statusContentOk := true
 	actualStatusCode := 0
@@ -145,17 +149,16 @@ func createApplicationStatus(test Application, resp *http.Response, err error, i
 	} else if resp != nil {
 		actualStatusCode = resp.StatusCode
 		actualLocation = resp.Header.Get("Location")
-		if !isGet {
-			actualContent = ""
-		}
 
 		// Determine the statusOk
 		statusOk = compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) &&
 			compareLocations(actualLocation, test.ExpectedLocation)
 
 		// Determine the statusContentOk
-		if test.ExpectedContent != "" && isGet {
+		if test.IsGet() {
 			statusContentOk, actualContent = compareContent(actualContent, test.ExpectedContent)
+		} else {
+			actualContent = ""
 		}
 	}
 
