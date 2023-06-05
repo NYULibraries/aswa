@@ -55,82 +55,116 @@ func compareContent(actual string, expected string) (bool, string) {
 // GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
 // If the expected content is not empty, the function will also perform a GET request to retrieve and compare the content.
 func (test Application) GetStatus() *ApplicationStatus {
-	client := &http.Client{
+	client := createClient(test.Timeout)
+
+	var resp *http.Response
+	var err error
+	var actualContent string
+
+	if test.ExpectedContent != "" {
+		resp, err, actualContent, _ = performGetRequest(test, client)
+		if err != nil {
+			return createApplicationStatus(test, resp, err, true, "")
+		}
+	} else {
+		resp, err = performHeadRequest(test, client)
+		if err != nil {
+			return createApplicationStatus(test, resp, err, false, "")
+		}
+	}
+
+	return createApplicationStatus(test, resp, nil, true, actualContent)
+}
+
+func createClient(timeout time.Duration) *http.Client {
+	return &http.Client{
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
 		},
-		Timeout: test.Timeout,
+		Timeout: timeout,
+	}
+}
+
+func getClientUrl(test Application) string {
+	if test.ExpectedLocation != "" {
+		return test.ExpectedLocation
 	}
 
-	respHead, err := client.Head(test.URL)
+	return test.URL
+}
+
+func closeResponseBody(Body io.ReadCloser) {
+	err := Body.Close()
 	if err != nil {
-		log.Println("Error performing HEAD request:", err)
-		return &ApplicationStatus{
-			Application:      &test,
-			StatusOk:         false,
-			StatusContentOk:  false,
-			ActualStatusCode: 0,
-			ActualLocation:   "",
-			ActualContent:    "",
-		}
+		log.Println("Error closing response body:", err)
+	}
+}
+
+func performGetRequest(test Application, client *http.Client) (*http.Response, error, string, bool) {
+	clientUrl := getClientUrl(test)
+	resp, err := client.Get(clientUrl)
+	if err != nil {
+		return nil, err, "", false
 	}
 
-	statusOk := compareStatusCodes(respHead.StatusCode, test.ExpectedStatusCode) &&
-		compareLocations(respHead.Header.Get("Location"), test.ExpectedLocation)
+	defer closeResponseBody(resp.Body)
 
-	var actualContent string
-	var matchedContent string
-	var statusContentOk bool
+	buf := new(bytes.Buffer)
+	_, err = io.Copy(buf, resp.Body)
+	if err != nil {
+		log.Println("Error copying response body:", err)
+	}
 
-	if test.ExpectedContent != "" {
-		var clientUrl string
+	actualContent := buf.String()
+	statusContentOk, matchedContent := compareContent(actualContent, test.ExpectedContent)
+	if statusContentOk {
+		actualContent = matchedContent
+	}
 
-		if test.ExpectedLocation != "" {
-			clientUrl = test.ExpectedLocation
-		} else {
-			clientUrl = test.URL
+	return resp, nil, actualContent, statusContentOk
+}
+
+func performHeadRequest(test Application, client *http.Client) (*http.Response, error) {
+	resp, err := client.Head(test.URL)
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
+}
+
+func createApplicationStatus(test Application, resp *http.Response, err error, isGet bool, actualContent string) *ApplicationStatus {
+	statusOk := false
+	statusContentOk := true
+	actualStatusCode := 0
+	actualLocation := ""
+
+	if err != nil {
+		log.Println("Error performing request:", err)
+		actualContent = ""
+		statusContentOk = false
+	} else if resp != nil {
+		actualStatusCode = resp.StatusCode
+		actualLocation = resp.Header.Get("Location")
+		if !isGet {
+			actualContent = ""
 		}
 
-		respGet, err := client.Get(clientUrl)
-		if err != nil {
-			log.Println("Error performing GET request:", err)
-			return &ApplicationStatus{
-				Application:      &test,
-				StatusOk:         statusOk,
-				StatusContentOk:  false,
-				ActualStatusCode: respHead.StatusCode,
-				ActualLocation:   respHead.Header.Get("Location"),
-				ActualContent:    "",
-			}
-		}
-		defer func(Body io.ReadCloser) {
-			err := Body.Close()
-			if err != nil {
-				log.Println("Error closing response body:", err)
-			}
-		}(respGet.Body)
+		// Determine the statusOk
+		statusOk = compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) &&
+			compareLocations(actualLocation, test.ExpectedLocation)
 
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, respGet.Body)
-		if err != nil {
-			log.Println("Error copying response body:", err)
+		// Determine the statusContentOk
+		if test.ExpectedContent != "" && isGet {
+			statusContentOk, actualContent = compareContent(actualContent, test.ExpectedContent)
 		}
-
-		actualContent = buf.String()
-		statusContentOk, matchedContent = compareContent(actualContent, test.ExpectedContent)
-		if statusContentOk {
-			actualContent = matchedContent
-		}
-	} else {
-		statusContentOk = true
 	}
 
 	return &ApplicationStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
-		ActualStatusCode: respHead.StatusCode,
-		ActualLocation:   respHead.Header.Get("Location"),
+		ActualStatusCode: actualStatusCode,
+		ActualLocation:   actualLocation,
 		ActualContent:    actualContent,
 	}
 }
@@ -170,11 +204,33 @@ func successString(results ApplicationStatus) string {
 }
 
 func failureString(results ApplicationStatus) string {
-	if results.ActualLocation != "" && results.ActualStatusCode == results.Application.ExpectedStatusCode {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, but redirect location %s did not match %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation, results.Application.ExpectedLocation)
+	actualStatusCode := results.ActualStatusCode
+	expectedStatusCode := results.Application.ExpectedStatusCode
+	actualLocation := results.ActualLocation
+	expectedLocation := results.Application.ExpectedLocation
+	url := results.Application.URL
+
+	statusMatch := actualStatusCode == expectedStatusCode
+	locationMatch := actualLocation == expectedLocation
+
+	var mismatchDetails string
+
+	if expectedLocation != "" {
+		if !statusMatch && !locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, and redirect location %s did not match %s", actualStatusCode, expectedStatusCode, actualLocation, expectedLocation)
+		} else if statusMatch && !locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, but redirect location %s did not match %s", actualStatusCode, actualLocation, expectedLocation)
+		} else if !statusMatch && locationMatch {
+			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, but redirect location matched", actualStatusCode, expectedStatusCode)
+		}
+	} else if !statusMatch {
+		mismatchDetails = fmt.Sprintf("resolved with %d, expected %d", actualStatusCode, expectedStatusCode)
 	} else {
-		return fmt.Sprintf("Failure: URL %s resolved with %d, expected %d, %s", results.Application.URL, results.ActualStatusCode, results.Application.ExpectedStatusCode, results.ActualLocation)
+		// Should not be reached under normal circumstances
+		return fmt.Sprintf("Unknown failure for URL %s", url)
 	}
+
+	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
 }
 
 func contentSuccessString(results ApplicationStatus) string {

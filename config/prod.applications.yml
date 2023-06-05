@@ -24,10 +24,10 @@ applications:
     url: 'https://getit.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
     expected_status: 200
     expected_content: 'ebookcentral.proquest.com'
-#  - name: getit-ebook-primo-api
-#    url: 'https://bobcat.library.nyu.edu/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?inst=NYU&limit=50&offset=0&q=isbn%2Cexact%2C9780190280390&scope=all&vid=NYU'
-#    expected_status: 200
-#    expected_content: 'academic.oup.com'
+  - name: getit-ebook-primo-api
+    url: 'https://bobcat.library.nyu.edu/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?inst=NYU&limit=50&offset=0&q=isbn%2Cexact%2C9780190280390&scope=all&vid=NYU'
+    expected_status: 200
+    expected_content: 'academic.oup.com'
   - name: getit-ebook-sfx-api
     url: 'http://sfx.library.nyu.edu/sfxlcl41?genre=bookitem&atitle=&aulast=&date=20180101&isbn=9780190280390&issn=&issue=&pid=XCHD8493320180101Chicano+Database&rfr_id=EBSCO%3AChicano+Database&sfx.doi_url=http%3A%2F%2Fdx.doi.org&sfx.response_type=multi_obj_xml&spage=&title=Our+Lady+of+everyday+life%3A+la+Virgen+de+Guadalupe+and+the+Catholic+imagination+of+Mexican+women+in+America&url_ctx_fmt=info%3Aofi%2Ffmt%3Axml%3Axsd%3Actx&volume='
     expected_status: 200
