@@ -109,12 +109,19 @@ func TestCreateApplicationStatus(t *testing.T) {
 		ExpectedContent:    "Successful Request",
 	}
 
+	appWithoutContent := Application{
+		URL:                mockServer.URL + "/successful",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            500 * time.Millisecond,
+		ExpectedLocation:   "",
+		ExpectedContent:    "",
+	}
+
 	tests := []struct {
 		description         string
 		app                 Application
 		statusOk            bool
 		statusContentOk     bool
-		isGet               bool
 		expectedApplication *ApplicationStatus
 	}{
 		{
@@ -122,7 +129,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        false,
 			statusContentOk: false,
-			isGet:           true,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         false,
@@ -137,7 +143,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        false,
 			statusContentOk: false,
-			isGet:           false,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         false,
@@ -152,7 +157,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        true,
 			statusContentOk: true,
-			isGet:           true,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         true,
@@ -164,12 +168,11 @@ func TestCreateApplicationStatus(t *testing.T) {
 		},
 		{
 			description:     "Successful HEAD request",
-			app:             app,
+			app:             appWithoutContent,
 			statusOk:        true,
 			statusContentOk: true,
-			isGet:           false,
 			expectedApplication: &ApplicationStatus{
-				Application:      &app,
+				Application:      &appWithoutContent,
 				StatusOk:         true,
 				StatusContentOk:  true,
 				ActualStatusCode: http.StatusOK,
@@ -200,13 +203,13 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var err error
 			var actualContent string
 
-			if test.isGet {
+			if test.app.IsGet() {
 				resp, err, actualContent, _ = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 			}
 
-			result := createApplicationStatus(test.app, resp, err, test.isGet, actualContent)
+			result := createApplicationStatus(test.app, resp, err, actualContent)
 			assert.Equal(t, test.expectedApplication, result)
 		})
 	}
