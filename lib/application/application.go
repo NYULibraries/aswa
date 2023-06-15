@@ -243,8 +243,8 @@ func contentSuccessString(results ApplicationStatus) string {
 
 func contentFailureString(results ApplicationStatus) string {
 	if results.ActualContent != "" {
-		if results.Application.Name == "alerts" {
-			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent for application 'alerts'", results.Application.ExpectedContent)
+		if results.Application.Name != "circleCI" {
+			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent", results.Application.ExpectedContent)
 		} else {
 			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 		}
