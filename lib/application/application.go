@@ -46,7 +46,7 @@ func compareLocations(actual string, expected string) bool {
 func compareContent(actual string, expected string) (bool, string) {
 	index := strings.Index(actual, expected)
 	if index == -1 {
-		return false, ""
+		return false, actual
 	}
 	// The slice actual[index : index+len(expected)] starts at the index where the expected string is found and ends at the index after the last character of the expected string.
 	return true, actual[index : index+len(expected)]
