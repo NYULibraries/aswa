@@ -46,7 +46,7 @@ func compareLocations(actual string, expected string) bool {
 func compareContent(actual string, expected string) (bool, string) {
 	index := strings.Index(actual, expected)
 	if index == -1 {
-		return false, ""
+		return false, actual
 	}
 	// The slice actual[index : index+len(expected)] starts at the index where the expected string is found and ends at the index after the last character of the expected string.
 	return true, actual[index : index+len(expected)]
@@ -243,8 +243,8 @@ func contentSuccessString(results ApplicationStatus) string {
 
 func contentFailureString(results ApplicationStatus) string {
 	if results.ActualContent != "" {
-		if results.Application.Name == "alerts" {
-			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent for application 'alerts'", results.Application.ExpectedContent)
+		if results.Application.Name != "circleCI" {
+			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent", results.Application.ExpectedContent)
 		} else {
 			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 		}
