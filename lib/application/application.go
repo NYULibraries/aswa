@@ -252,6 +252,6 @@ func contentFailureString(results ApplicationStatus) string {
 			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 		}
 	} else {
-		return fmt.Sprintf("No content to compare")
+		return fmt.Sprintf("Failure: No content to compare")
 	}
 }
