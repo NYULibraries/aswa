@@ -75,16 +75,25 @@ type FailingSyntheticTest struct {
 }
 
 // postTestResult posts the result of the given test to Slack.
-func postTestResult(appStatus a.ApplicationStatus, channel string, token string) error {
+//func postTestResult(appStatus a.ApplicationStatus, channel string, token string) error {
+//
+//	slackClient := NewSlackClient(token)
+//	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
+//		return err
+//	}
+//	timestamp := time.Now().Local().Format(time.RFC1123Z)
+//	log.Printf("Message sent to %s channel on %s", channel, timestamp)
+//
+//	return nil
+//}
 
-	slackClient := NewSlackClient(token)
-	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
-		return err
-	}
+// postTestResult constructs a string containing the result of the given test.
+func postTestResult(appStatus a.ApplicationStatus) (string, error) {
+	result := appStatus.String()
 	timestamp := time.Now().Local().Format(time.RFC1123Z)
-	log.Printf("Message sent to %s channel on %s", channel, timestamp)
+	log.Printf("Test result generated on %s", timestamp)
 
-	return nil
+	return result, nil
 }
 
 // RunSyntheticTests runs synthetic tests on the provided applications and posts results to Slack.
@@ -117,10 +126,11 @@ func RunSyntheticTests(appData []*a.Application, channel string, token string, t
 
 	// Post failing test results after running tests on all applications
 	for _, failingTest := range failingSyntheticTests {
-		err := postTestResult(failingTest.AppStatus, channel, token)
+		result, err := postTestResult(failingTest.AppStatus)
 		if err != nil {
 			return err
 		}
+		fmt.Println(result)
 	}
 	return nil
 }
