@@ -9,7 +9,6 @@ package main
 // 5. Constants were grouped together, and functions were ordered consistently for easier navigation.
 
 import (
-	"errors"
 	"fmt"
 	a "github.com/NYULibraries/aswa/lib/application"
 	c "github.com/NYULibraries/aswa/lib/config"
@@ -20,14 +19,14 @@ import (
 
 // Constants for environment variables
 const (
-	envSlackChannelId = "SLACK_CHANNEL_ID"
-	envSlackToken     = "SLACK_TOKEN"
-	envYamlPath       = "YAML_PATH"
+	envClusterInfo     = "CLUSTER_INFO"
+	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
+	envYamlPath        = "YAML_PATH"
 )
 
-// ###########################
+// #############################
 // Check Struct & Initialization
-// ###########################
+// #############################
 
 // Check struct encapsulates the main logic and associated state (e.g., the logger)
 // for running synthetic tests and posting results to Slack.
@@ -74,19 +73,6 @@ type FailingSyntheticTest struct {
 	AppStatus a.ApplicationStatus
 }
 
-// postTestResult posts the result of the given test to Slack.
-//func postTestResult(appStatus a.ApplicationStatus, channel string, token string) error {
-//
-//	slackClient := NewSlackClient(token)
-//	if err := slackClient.PostToSlack(appStatus.String(), channel); err != nil {
-//		return err
-//	}
-//	timestamp := time.Now().Local().Format(time.RFC1123Z)
-//	log.Printf("Message sent to %s channel on %s", channel, timestamp)
-//
-//	return nil
-//}
-
 // postTestResult constructs a string containing the result of the given test.
 func postTestResult(appStatus a.ApplicationStatus) (string, error) {
 	result := appStatus.String()
@@ -97,7 +83,7 @@ func postTestResult(appStatus a.ApplicationStatus) (string, error) {
 }
 
 // RunSyntheticTests runs synthetic tests on the provided applications and posts results to Slack.
-func RunSyntheticTests(appData []*a.Application, channel string, token string, targetAppName string) error {
+func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
 
 	var failingSyntheticTests []FailingSyntheticTest
@@ -135,31 +121,28 @@ func RunSyntheticTests(appData []*a.Application, channel string, token string, t
 	return nil
 }
 
-// ##########################
-// Slack Credentials & Auth
-// ##########################
+// ################################
+// Slack WebHook Url & Cluster Info
+// ################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
-func getSlackCredentials() (string, string, error) {
-	channelId := os.Getenv(envSlackChannelId)
-	token := os.Getenv(envSlackToken)
-	if channelId == "" || token == "" {
-		if channelId == "" && token == "" {
-			// if both are not set, log a warning and return with no error
-			log.Println("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables are not set")
-			return "", "", nil
-		}
-		// if only one of the variables is set, return an error
-		return "", "", errors.New("SLACK_CHANNEL_ID and SLACK_TOKEN environment variables must both be set")
+func getSlackWebhookUrl() (string, error) {
+	slackWebhookUrl := os.Getenv(envSlackWebhookUrl)
+	if slackWebhookUrl == "" {
+		log.Println("SLACK_WEBHOOK_URL is not set")
+		return "", nil
 	}
+	return slackWebhookUrl, nil
+}
 
-	// Check if the credentials are valid by checking auth.test
-	err := ValidateSlackCredentials(token)
-	if err != nil {
-		return "", "", fmt.Errorf("invalid slack credentials: %v", err)
+// getClusterInfo retrieves the cluster info from environment variables.
+func getClusterInfo() (string, error) {
+	clusterInfo := os.Getenv(envClusterInfo)
+	if clusterInfo == "" {
+		log.Println("CLUSTER_INFO is not set")
+		return "", nil
 	}
-
-	return channelId, token, nil
+	return clusterInfo, nil
 }
 
 // ###############
@@ -177,12 +160,17 @@ func (ch *Check) Do() error {
 
 	appData := inputData.Applications
 
-	channelId, token, err := getSlackCredentials()
+	_, err = getSlackWebhookUrl()
+	if err != nil {
+		return err
+	}
+
+	_, err = getClusterInfo()
 	if err != nil {
 		return err
 	}
 
 	cmdArg := getCmdArg()
 
-	return RunSyntheticTests(appData, channelId, token, cmdArg)
+	return RunSyntheticTests(appData, cmdArg)
 }
