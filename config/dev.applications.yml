@@ -33,7 +33,7 @@ applications:
     url: 'http://dev.library.nyu.edu'
     expected_status: 301
     expected_location: 'https://dev.library.nyu.edu/'
-  - name: login
+  - name: dev-login
     url: 'https://dev.login.library.nyu.edu'
     expected_status: 200
   - name: salon
