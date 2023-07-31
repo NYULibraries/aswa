@@ -1,13 +1,5 @@
 package main
 
-// This code has been refactored to improve readability, maintainability, and adhere to best practices.
-// The following changes were made:
-// 1. The main function has been simplified by extracting logic into separate helper functions.
-// 2. The Check struct was introduced to encapsulate the main logic and associated state (e.g., the logger).
-// 3. The Do() method was added to the Check struct to provide a single entry point for the main logic.
-// 4. Package-level variables were used for shared instances, like the Check instance with its logger.
-// 5. Constants were grouped together, and functions were ordered consistently for easier navigation.
-
 import (
 	"fmt"
 	a "github.com/NYULibraries/aswa/lib/application"
@@ -126,23 +118,23 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 // ################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
-func getSlackWebhookUrl() (string, error) {
+func getSlackWebhookUrl() string {
 	slackWebhookUrl := os.Getenv(envSlackWebhookUrl)
 	if slackWebhookUrl == "" {
 		log.Println("SLACK_WEBHOOK_URL is not set")
-		return "", nil
+		return ""
 	}
-	return slackWebhookUrl, nil
+	return slackWebhookUrl
 }
 
 // getClusterInfo retrieves the cluster info from environment variables.
-func getClusterInfo() (string, error) {
+func getClusterInfo() string {
 	clusterInfo := os.Getenv(envClusterInfo)
 	if clusterInfo == "" {
 		log.Println("CLUSTER_INFO is not set")
-		return "", nil
+		return ""
 	}
-	return clusterInfo, nil
+	return clusterInfo
 }
 
 // ###############
@@ -160,15 +152,8 @@ func (ch *Check) Do() error {
 
 	appData := inputData.Applications
 
-	_, err = getSlackWebhookUrl()
-	if err != nil {
-		return err
-	}
-
-	_, err = getClusterInfo()
-	if err != nil {
-		return err
-	}
+	getSlackWebhookUrl()
+	getClusterInfo()
 
 	cmdArg := getCmdArg()
 

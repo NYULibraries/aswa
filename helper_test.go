@@ -56,39 +56,55 @@ func TestGetCmdArg(t *testing.T) {
 }
 
 func TestGetSlackWebhookUrl(t *testing.T) {
-	expected := "https://hooks.slack.com/services/XXXXXXXXX/XXXXXXXXX/XXXXXXXXXXXXXXXXXXXXXXXX"
-	err := os.Setenv(envSlackWebhookUrl, expected)
-	if err != nil {
-		return
+	tests := []struct {
+		name               string
+		envSlackWebhookUrl string
+		want               string
+	}{
+		{"envSlackWebhookUrl is set", "https://hooks.slack.com/test-url", "https://hooks.slack.com/test-url"},
+		{"envSlackWebhookUrl is not set", "", ""},
 	}
-	defer func() {
-		err := os.Unsetenv(envSlackWebhookUrl)
-		if err != nil {
-			return
-		}
-	}()
 
-	got, err := getSlackWebhookUrl()
-	assert.NoError(t, err, "getSlackWebhookUrl() should not return an error")
-	assert.Equal(t, expected, got, "getSlackWebhookUrl() should return correct Slack webhook URL")
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			os.Setenv(envSlackWebhookUrl, tt.envSlackWebhookUrl)
+
+			got := getSlackWebhookUrl()
+
+			assert.Equal(t, tt.want, got, "getSlackWebhookUrl() should return correct Slack webhook URL")
+
+			os.Unsetenv(envSlackWebhookUrl)
+		})
+	}
 }
 
 func TestGetClusterInfo(t *testing.T) {
-	expected := "cluster-info"
-	err := os.Setenv(envClusterInfo, expected)
-	if err != nil {
-		return
+	tests := []struct {
+		name           string
+		envClusterInfo string
+		want           string
+	}{
+		{"envClusterInfo is set", "test-cluster", "test-cluster"},
+		{"envClusterInfo is not set", "", ""},
 	}
-	defer func() {
-		err := os.Unsetenv(envClusterInfo)
-		if err != nil {
 
-		}
-	}()
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
 
-	got, err := getClusterInfo()
-	assert.NoError(t, err, "getClusterInfo() should not return an error")
-	assert.Equal(t, expected, got, "getClusterInfo() should return correct cluster info")
+			// Set up environment variable
+			os.Setenv(envClusterInfo, tt.envClusterInfo)
+
+			// Call function under test
+			got := getClusterInfo()
+
+			// Assert that the function returns the expected result
+			assert.Equal(t, tt.want, got, "getClusterInfo() should return correct cluster info")
+
+			// Unset environment variable for next test
+			os.Unsetenv(envClusterInfo)
+		})
+	}
 }
 
 func TestRunSyntheticTests(t *testing.T) {
