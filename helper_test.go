@@ -30,29 +30,49 @@ func (m *MockApplication) GetStatus() *MockApplicationStatus {
 }
 
 func TestGetYamlPath(t *testing.T) {
-	// Test when the environment variable is set
-	err := os.Setenv(envYamlPath, "test-path")
-	if err != nil {
-		t.Fatal(err)
+	tests := []struct {
+		name        string
+		envYamlPath string
+		want        string
+	}{
+		{"envYamlPath is set", "test-path", "test-path"},
+		{"envYamlPath is not set", "", ""},
 	}
-	assert.Equal(t, "test-path", getYamlPath(log.New(os.Stdout, "", 0)))
 
-	// Test when the environment variable is not set
-	err = os.Unsetenv(envYamlPath)
-	if err != nil {
-		t.Fatal(err)
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			os.Setenv(envYamlPath, tt.envYamlPath)
+
+			got := getYamlPath(log.New(os.Stdout, "", 0))
+
+			assert.Equal(t, tt.want, got, "getYamlPath() should return correct yaml path")
+
+			os.Unsetenv(envYamlPath)
+		})
 	}
-	assert.Equal(t, "", getYamlPath(log.New(os.Stdout, "", 0)))
 }
 
 func TestGetCmdArg(t *testing.T) {
-	// Test when there's no argument
-	os.Args = []string{"test"}
-	assert.Equal(t, "", getCmdArg())
+	tests := []struct {
+		name   string
+		osArgs []string
+		want   string
+	}{
+		{"No argument", []string{"test"}, ""},
+		{"With argument", []string{"test", "arg1"}, "arg1"},
+	}
 
-	// Test when there's an argument
-	os.Args = []string{"test", "arg1"}
-	assert.Equal(t, "arg1", getCmdArg())
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			os.Args = tt.osArgs
+
+			got := getCmdArg()
+
+			assert.Equal(t, tt.want, got, "getCmdArg() should return correct command argument")
+		})
+	}
 }
 
 func TestGetSlackWebhookUrl(t *testing.T) {
