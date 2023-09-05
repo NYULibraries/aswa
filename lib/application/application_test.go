@@ -109,12 +109,19 @@ func TestCreateApplicationStatus(t *testing.T) {
 		ExpectedContent:    "Successful Request",
 	}
 
-	tests := []struct {
+	appWithoutContent := Application{
+		URL:                mockServer.URL + "/successful",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            500 * time.Millisecond,
+		ExpectedLocation:   "",
+		ExpectedContent:    "",
+	}
+
+	var tests = []struct {
 		description         string
 		app                 Application
 		statusOk            bool
 		statusContentOk     bool
-		isGet               bool
 		expectedApplication *ApplicationStatus
 	}{
 		{
@@ -122,7 +129,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        false,
 			statusContentOk: false,
-			isGet:           true,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         false,
@@ -137,7 +143,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        false,
 			statusContentOk: false,
-			isGet:           false,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         false,
@@ -152,7 +157,6 @@ func TestCreateApplicationStatus(t *testing.T) {
 			app:             app,
 			statusOk:        true,
 			statusContentOk: true,
-			isGet:           true,
 			expectedApplication: &ApplicationStatus{
 				Application:      &app,
 				StatusOk:         true,
@@ -164,12 +168,11 @@ func TestCreateApplicationStatus(t *testing.T) {
 		},
 		{
 			description:     "Successful HEAD request",
-			app:             app,
+			app:             appWithoutContent,
 			statusOk:        true,
 			statusContentOk: true,
-			isGet:           false,
 			expectedApplication: &ApplicationStatus{
-				Application:      &app,
+				Application:      &appWithoutContent,
 				StatusOk:         true,
 				StatusContentOk:  true,
 				ActualStatusCode: http.StatusOK,
@@ -200,13 +203,13 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var err error
 			var actualContent string
 
-			if test.isGet {
+			if test.app.IsGet() {
 				resp, err, actualContent, _ = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 			}
 
-			result := createApplicationStatus(test.app, resp, err, test.isGet, actualContent)
+			result := createApplicationStatus(test.app, resp, err, actualContent)
 			assert.Equal(t, test.expectedApplication, result)
 		})
 	}
@@ -229,6 +232,74 @@ func TestString(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.description, func(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, test.appStatus.String())
+		})
+	}
+}
+
+func TestCompareContent(t *testing.T) {
+	var tests = []struct {
+		description string
+		actual      string
+		expected    string
+		wantBool    bool
+		wantStr     string
+	}{
+		{description: "Expected content is found at the beginning of the actual string", actual: "hello world", expected: "hello", wantBool: true, wantStr: "hello"},
+		{description: "Expected content is found at the end of the actual string", actual: "hello world", expected: "world", wantBool: true, wantStr: "world"},
+		{description: "Expected content is not found in the actual string", actual: "hello world", expected: "earth", wantBool: false, wantStr: "hello world"},
+		{description: "Expected content is found in the middle of the actual string", actual: "hello beautiful world", expected: "beautiful", wantBool: true, wantStr: "beautiful"},
+		{description: "Actual content is empty", actual: "", expected: "world", wantBool: false, wantStr: ""},
+		{description: "Expected content is empty", actual: "hello world", expected: "", wantBool: true, wantStr: ""},
+		{description: "Both actual content and expected content are empty", actual: "", expected: "", wantBool: true, wantStr: ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			gotBool, gotStr := compareContent(tt.actual, tt.expected)
+			assert.Equal(t, tt.wantBool, gotBool)
+			assert.Equal(t, tt.wantStr, gotStr)
+		})
+	}
+}
+
+func TestCompareLocations(t *testing.T) {
+	var tests = []struct {
+		description string
+		actual      string
+		expected    string
+		wantBool    bool
+	}{
+		{description: "Identical locations", actual: "New York", expected: "New York", wantBool: true},
+		{description: "Different locations", actual: "New York", expected: "San Francisco", wantBool: false},
+		{description: "Empty expected location", actual: "New York", expected: "", wantBool: false},
+		{description: "Empty actual location", actual: "", expected: "San Francisco", wantBool: false},
+		{description: "Both locations empty", actual: "", expected: "", wantBool: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			assert.Equal(t, tt.wantBool, compareLocations(tt.actual, tt.expected), tt.description)
+		})
+	}
+}
+
+func TestCompareStatusCodes(t *testing.T) {
+	var tests = []struct {
+		description string
+		actual      int
+		expected    int
+		want        bool
+	}{
+		{description: "Identical status codes", actual: 200, expected: 200, want: true},
+		{description: "Different status codes", actual: 200, expected: 404, want: false},
+		{description: "Zero actual status code", actual: 0, expected: 200, want: false},
+		{description: "Zero expected status code", actual: 200, expected: 0, want: false},
+		{description: "Both status codes zero", actual: 0, expected: 0, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.description, func(t *testing.T) {
+			assert.Equal(t, tt.want, compareStatusCodes(tt.actual, tt.expected), tt.description)
 		})
 	}
 }
