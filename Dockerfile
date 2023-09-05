@@ -8,8 +8,8 @@ RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflag
 
 FROM alpine:latest
 
-# Update package list and install curl
-RUN apk update && apk add curl
+# Update package list and install curl and jq
+RUN apk update && apk add curl jq
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /app/config /config
