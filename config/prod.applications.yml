@@ -9,6 +9,10 @@ applications:
   - name: bobcat-standard
     url: 'https://aleph.library.nyu.edu'
     expected_status: 200
+  - name: bobcat-search
+    url: 'https://bobcat.library.nyu.edu/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?blendFacetsSeparately=false&getMore=0&inst=NYU&lang=en_US&limit=10&newspapersActive=false&newspapersSearch=false&offset=0&pcAvailability=true&q=any,contains,test&qExclude=&qInclude=&refEntryActive=false&rtaLinks=true&scope=all&searchInFulltextUserSelection=true&skipDelivery=Y&sort=rank&tab=all&vid=NYU'
+    expected_status: 200
+    expected_content: 'test'
   - name: campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
