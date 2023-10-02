@@ -36,7 +36,7 @@ func TestGetYamlPath(t *testing.T) {
 		want        string
 	}{
 		{"envYamlPath is set", "test-path", "test-path"},
-		{"envYamlPath is not set", "", ""},
+		{"envYamlPath is not set", "", "config/dev.applications.yml"},
 	}
 
 	for _, tt := range tests {

@@ -43,7 +43,8 @@ func init() {
 func getYamlPath(logger *log.Logger) string {
 	yamlPath := os.Getenv(envYamlPath)
 	if yamlPath == "" {
-		logger.Println("WARNING: Environment variable YAML_PATH is not set")
+		logger.Println("Environment variable for YAML path not found, using default")
+		yamlPath = "config/dev.applications.yml"
 	}
 	return yamlPath
 }
