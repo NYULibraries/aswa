@@ -1,6 +1,10 @@
-FROM golang:1.18 as builder
+FROM golang:1.21.2 as builder
 
 RUN update-ca-certificates
+
+RUN addgroup --gid 1000 docker && \
+    adduser --uid 1000 --ingroup docker --disabled-password --gecos "" docker
+
 
 WORKDIR /app
 COPY . .
@@ -16,5 +20,6 @@ COPY --from=builder /app/config /config
 COPY --from=builder /app/app /aswa
 COPY --from=builder /app/entrypoint.sh /entrypoint.sh
 
+USER docker
 ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "/aswa" ]
