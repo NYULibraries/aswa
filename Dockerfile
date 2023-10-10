@@ -18,6 +18,10 @@ COPY --from=builder /app/config /config
 COPY --from=builder /app/app /aswa
 COPY --from=builder /app/entrypoint.sh /entrypoint.sh
 
+RUN chown -R docker:docker /config && \
+    chown docker:docker /aswa && \
+    chown docker:docker /entrypoint.sh
+
 USER docker
 ENTRYPOINT ["/entrypoint.sh"]
 CMD [ "/aswa" ]
