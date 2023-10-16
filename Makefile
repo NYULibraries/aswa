@@ -1,7 +1,6 @@
 # Makefile
 
 # Variables
-SLACK_TOKEN ?=
 SLACK_CHANNEL_ID ?=
 SKIP_BUILD ?= 0
 
@@ -46,7 +45,6 @@ run-app: conditional-build
 
 # Check if the required environment variables are set
 check_env:
-	@if [ -z "$(SLACK_TOKEN)" ]; then echo "SLACK_TOKEN is not set. Please set it and try again."; exit 1; fi
 	@if [ -z "$(SLACK_CHANNEL_ID)" ]; then echo "SLACK_CHANNEL_ID is not set. Please set it and try again."; exit 1; fi
 
 # Initialize the project by checking if the environment variables are set
