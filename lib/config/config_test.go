@@ -4,6 +4,7 @@ import (
 	a "github.com/NYULibraries/aswa/lib/application"
 	"github.com/stretchr/testify/assert"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 )
@@ -37,7 +38,11 @@ func TestNewConfig(t *testing.T) {
 
 func testNewConfigFunc(path string, expectedErr string) func(*testing.T) {
 	return func(t *testing.T) {
+		// Set environment variable to true for this test
+		os.Setenv(EnvSkipWhitelistCheck, "true")
 		_, err := NewConfig(path)
+
+		os.Unsetenv(EnvSkipWhitelistCheck)
 		if expectedErr == "" {
 			assert.Nil(t, err)
 		} else {
