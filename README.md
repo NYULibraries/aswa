@@ -6,6 +6,12 @@ This enables real-time, automated verification of service availability and data 
 
 ## Usage
 
+ASWA supports three types of application environments:
+
+* Development (dev): For testing and development purposes.
+* Production (prod): For monitoring live, production-level services.
+* Software-as-a-Service (saas): For third-party or cloud-based services.
+
 You can specify which config file to load (dev, prod, saas) by setting the `YAML_PATH` environment variable. 
 If no config file is specified, it will default to `dev.applications.yml`
 
