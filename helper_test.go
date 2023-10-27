@@ -8,6 +8,7 @@ import (
 	"time"
 
 	a "github.com/NYULibraries/aswa/lib/application"
+	c "github.com/NYULibraries/aswa/lib/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -277,6 +278,8 @@ func TestCheckDo(t *testing.T) {
 			os.Setenv(envYamlPath, tt.envYamlPath)
 			os.Setenv(envSlackWebhookUrl, tt.envSlackUrl)
 			os.Setenv(envClusterInfo, tt.envClusterInfo)
+			// Set environment variable to true for this test
+			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
 
 			// Initialize Check struct with a logger that outputs to stdout.
@@ -297,6 +300,7 @@ func TestCheckDo(t *testing.T) {
 			os.Unsetenv(envYamlPath)
 			os.Unsetenv(envSlackWebhookUrl)
 			os.Unsetenv(envClusterInfo)
+			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
 }

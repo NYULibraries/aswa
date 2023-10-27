@@ -5,7 +5,19 @@ import (
 	a "github.com/NYULibraries/aswa/lib/application"
 	"gopkg.in/yaml.v3"
 	"os"
+	"path/filepath"
+	"strconv"
 )
+
+// Define whitelist using a map with empty struct as values.
+// Simulate a set using a map with empty structs as values, which take up zero bytes. This way, the lookup is both quick and memory-efficient
+var allowedConfigPaths = map[string]struct{}{
+	"config/dev.applications.yml":  {},
+	"config/prod.applications.yml": {},
+	"config/saas.applications.yml": {},
+}
+
+const EnvSkipWhitelistCheck = "SKIP_WHITELIST_CHECK"
 
 // Config struct to replace environment variables
 type Config struct {
@@ -28,6 +40,12 @@ func (list *Config) isConfigAnyRequiredFieldEmpty() bool {
 }
 
 func loadConfig(yamlPath string) (*Config, error) {
+	skipCheck, _ := strconv.ParseBool(os.Getenv(EnvSkipWhitelistCheck))
+	if !skipCheck {
+		if _, ok := allowedConfigPaths[filepath.Clean(yamlPath)]; !ok {
+			return nil, errors.New("config file path is not allowed")
+		}
+	}
 	data, err := os.ReadFile(yamlPath)
 	if err != nil {
 		return nil, err
