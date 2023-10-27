@@ -1,5 +1,9 @@
 # ASWA (Application Status Watch Agent)
 
+ASWA is a specialized monitoring tool designed to perform HTTP-based health checks on a variety of web endpoints.
+It is engineered to ping specified URLs and validate their HTTP status codes and content against pre-configured expectations.
+This enables real-time, automated verification of service availability and data integrity.
+
 ## Usage
 
 You can specify which config file to load (dev, prod, saas) by setting the `YAML_PATH` environment variable. 
