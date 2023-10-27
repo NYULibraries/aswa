@@ -53,3 +53,11 @@ applications:
     expected_status: 200
     timeout: 600ms
 ~~~
+
+### Notifications
+ASWA posts the results of its checks to respective Slack channels (dev, prod, saas) based on the environment. 
+To enable this feature, set the `SLACK_WEBHOOK_URL` environment variable with your Slack webhook URL.
+
+### Deployment
+ASWA is designed to run as a cron job in a Kubernetes (K8s) cluster. 
+To include cluster information in the output, set the `CLUSTER_INFO` environment variable.
