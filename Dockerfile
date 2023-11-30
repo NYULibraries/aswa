@@ -4,7 +4,7 @@ RUN update-ca-certificates
 
 WORKDIR /app
 COPY . .
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o app .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o app ./cmd
 
 FROM alpine:latest
 

@@ -7,8 +7,8 @@ import (
 	"testing"
 	"time"
 
-	a "github.com/NYULibraries/aswa/lib/application"
-	c "github.com/NYULibraries/aswa/lib/config"
+	a "github.com/NYULibraries/aswa/pkg/application"
+	c "github.com/NYULibraries/aswa/pkg/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -267,7 +267,7 @@ func TestCheckDo(t *testing.T) {
 	}{
 		// Add test cases here
 		{"valid case, but missing app", "test-path", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "arg"}, true},
-		{"valid case with existing app", "testdata/expect_valid.yml", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "specialcollections"}, false},
+		{"valid case with existing app", "../testdata/expect_valid.yml", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "specialcollections"}, false},
 		{"missing yaml path", "", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "arg"}, true},
 	}
 

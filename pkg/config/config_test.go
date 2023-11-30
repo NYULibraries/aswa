@@ -1,7 +1,7 @@
 package config
 
 import (
-	a "github.com/NYULibraries/aswa/lib/application"
+	a "github.com/NYULibraries/aswa/pkg/application"
 	"github.com/stretchr/testify/assert"
 	"net/http"
 	"os"
