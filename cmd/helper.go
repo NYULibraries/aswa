@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	a "github.com/NYULibraries/aswa/lib/application"
-	c "github.com/NYULibraries/aswa/lib/config"
+	a "github.com/NYULibraries/aswa/pkg/application"
+	c "github.com/NYULibraries/aswa/pkg/config"
 	"log"
 	"os"
 	"time"

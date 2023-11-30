@@ -2,7 +2,7 @@ package config
 
 import (
 	"errors"
-	a "github.com/NYULibraries/aswa/lib/application"
+	a "github.com/NYULibraries/aswa/pkg/application"
 	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
