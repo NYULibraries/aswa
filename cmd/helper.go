@@ -86,7 +86,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			found = true // The app was found in the config file
 			appStatus := app.GetStatus()
 			log.Println(appStatus)
-			if !appStatus.StatusOk || !appStatus.StatusContentOk {
+			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
 			}
 
