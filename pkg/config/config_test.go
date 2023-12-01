@@ -61,7 +61,7 @@ func TestContainApp(t *testing.T) {
 		{"Valid application", []*a.Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
 		{"Valid application", []*a.Application{{Name: "test"}}, "test", true},
 		{"Invalid application", []*a.Application{{Name: "test"}}, "test2", false},
-		{"Invalid application", []*a.Application{{"test", "test", 0, 0, "", ""}}, "test2", false},
+		{"Invalid application", []*a.Application{{"test", "test", 0, 0, "", "", ""}}, "test2", false},
 		{"Empty application", []*a.Application{}, "test", false},
 		{"Empty application", []*a.Application{{Name: "test"}}, "", false},
 		{"Empty application", []*a.Application{}, "", false},
