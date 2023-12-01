@@ -18,6 +18,7 @@ type Application struct {
 	Timeout            time.Duration `yaml:"timeout"`
 	ExpectedLocation   string        `yaml:"expected_location"`
 	ExpectedContent    string        `yaml:"expected_content"`
+	ExpectedCSP        string        `yaml:"expected_csp"`
 }
 
 // ApplicationStatus represents the results of a synthetic test
@@ -25,9 +26,11 @@ type ApplicationStatus struct {
 	Application      *Application
 	StatusOk         bool
 	StatusContentOk  bool
+	StatusCSPOk      bool
 	ActualStatusCode int
 	ActualLocation   string `default:""`
 	ActualContent    string `default:""`
+	ActualCSP        string `default:""`
 }
 
 // compareStatusCodes compares the actual and expected status codes.
@@ -50,6 +53,14 @@ func compareContent(actual string, expected string) (bool, string) {
 	}
 	// The slice actual[index : index+len(expected)] starts at the index where the expected string is found and ends at the index after the last character of the expected string.
 	return true, actual[index : index+len(expected)]
+}
+
+// compareCSP compares the actual and expected CSP.
+func compareCSP(actual string, expected string) bool {
+	if expected == "" {
+		return true // No CSP check required
+	}
+	return actual == expected
 }
 
 // GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
@@ -139,13 +150,16 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
 	statusOk := false
 	statusContentOk := true
+	statusCSPOk := true
 	actualStatusCode := 0
 	actualLocation := ""
+	actualCSP := ""
 
 	if err != nil {
 		log.Println("Error performing request:", err)
 		actualContent = ""
 		statusContentOk = false
+		statusCSPOk = false
 	} else if resp != nil {
 		actualStatusCode = resp.StatusCode
 		actualLocation = resp.Header.Get("Location")
@@ -160,15 +174,24 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 		} else {
 			actualContent = ""
 		}
+		// Determine the statusCSPOk
+		if test.ExpectedCSP != "" {
+			actualCSP = resp.Header.Get("Content-Security-Policy")
+			statusCSPOk = compareCSP(actualCSP, test.ExpectedCSP)
+		} else {
+			actualCSP = ""
+		}
 	}
 
 	return &ApplicationStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
+		StatusCSPOk:      statusCSPOk,
 		ActualStatusCode: actualStatusCode,
 		ActualLocation:   actualLocation,
 		ActualContent:    actualContent,
+		ActualCSP:        actualCSP,
 	}
 }
 
@@ -176,6 +199,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 func (results ApplicationStatus) String() string {
 	statusString := ""
 	contentString := ""
+	cspString := ""
 
 	if results.StatusOk {
 		statusString = successString(results)
@@ -191,8 +215,17 @@ func (results ApplicationStatus) String() string {
 		}
 	}
 
-	if contentString != "" {
-		return statusString + "\n" + contentString
+	// Handling the CSP check status
+	if results.Application.ExpectedCSP != "" {
+		if results.StatusCSPOk {
+			cspString = cspSuccessString(results)
+		} else {
+			cspString = cspFailureString(results)
+		}
+	}
+
+	if contentString != "" || cspString != "" {
+		return statusString + "\n" + contentString + "\n" + cspString
 	} else {
 		return statusString
 	}
@@ -253,5 +286,20 @@ func contentFailureString(results ApplicationStatus) string {
 		}
 	} else {
 		return fmt.Sprintf("Failure: No content to compare")
+	}
+}
+
+func cspSuccessString(results ApplicationStatus) string {
+	if results.ActualCSP != "" {
+		return fmt.Sprintf("Sucess: Expected Primo VE CSP header matched Actual CSP header")
+	}
+	return ""
+}
+
+func cspFailureString(results ApplicationStatus) string {
+	if results.ActualCSP != "" {
+		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
+	} else {
+		return fmt.Sprintf("Failure: No Primo VE CSP header to compare")
 	}
 }
