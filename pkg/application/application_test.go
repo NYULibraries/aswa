@@ -13,6 +13,9 @@ import (
 func TestGetStatus(t *testing.T) {
 	// Create mock server
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add the CSP header to the response
+		w.Header().Set("Content-Security-Policy", "default-src 'self'")
+
 		switch r.URL.Path {
 		case "/html":
 			_, _ = fmt.Fprint(w, "<html><body><h1>Herman Melville</h1></body></html>")
@@ -40,40 +43,44 @@ func TestGetStatus(t *testing.T) {
 		expectedActualLocation   string
 		expectedContentSuccess   bool
 		expectedActualContent    string
-		//expectedCSPSuccess       bool
-		expectedActualCSP string
+		expectedCSPSuccess       bool
+		expectedActualCSP        string
 	}{
-		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", ""},
-		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusMovedPermanently, "", true, "", ""},
-		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, "", "", ""}, true, http.StatusNotFound, "", true, "", ""},
-		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, "", "", ""}, true, http.StatusOK, "", true, "", ""},
-		{"Failure: wrong status code expected", &Application{"", mockServer.URL + "/wrongstatus", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", ""},
-		{"Failure: application is down", &Application{"", mockServer.URL + "/500", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusInternalServerError, "", true, "", ""},
-		{"Success: timeout", &Application{"", "https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond, "", "", ""}, true, http.StatusOK, "", true, "", ""},
-		{"Failure: timeout", &Application{"", mockServer.URL + "/slowresponse", http.StatusOK, 1 * time.Millisecond, "", "", ""}, false, 0, "", false, "", ""},
-		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", ""},
-		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", "", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", ""},
-		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", "", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", ""},
-		{"Failure: wrong error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", ""},
-		{"Success: expected content found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Herman Melville", ""}, true, http.StatusOK, "", true, "Herman Melville", ""},
-		{"Failure: expected content not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Jules Verne - 20,000 Leagues Under the Sea", ""}, true, http.StatusOK, "", false, "", ""},
-		{"Success: expected CSP header found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'self'"}, true, http.StatusOK, "", true, "", "default-src 'self'"},
-		{"Failure: expected CSP header not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'none'"}, true, http.StatusOK, "", true, "", ""},
+		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
+		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusMovedPermanently, "", true, "", true, ""},
+		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, "", "", ""}, true, http.StatusNotFound, "", true, "", true, ""},
+		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, "", "", ""}, true, http.StatusOK, "", true, "", true, ""},
+		{"Failure: wrong status code expected", &Application{"", mockServer.URL + "/wrongstatus", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", true, ""},
+		{"Failure: application is down", &Application{"", mockServer.URL + "/500", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusInternalServerError, "", true, "", true, ""},
+		{"Success: timeout", &Application{"", "https://library.nyu.edu", http.StatusOK, 200 * time.Millisecond, "", "", ""}, true, http.StatusOK, "", true, "", true, ""},
+		{"Failure: timeout", &Application{"", mockServer.URL + "/slowresponse", http.StatusOK, 1 * time.Millisecond, "", "", ""}, false, 0, "", false, "", false, ""},
+		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
+		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", "", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
+		{"Failure: wrong redirect location expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "http://library.nyu.edu/", "", ""}, false, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
+		{"Failure: wrong error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", true, ""},
+		{"Success: expected content found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Herman Melville", ""}, true, http.StatusOK, "", true, "Herman Melville", true, ""},
+		{"Failure: expected content not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Jules Verne - 20,000 Leagues Under the Sea", ""}, true, http.StatusOK, "", false, "", true, ""},
+		{"Success: expected CSP header found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'self'"}, true, http.StatusOK, "", true, "", true, "default-src 'self'"},
+		{"Failure: expected CSP header not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'none'"}, true, http.StatusOK, "", true, "", false, ""},
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, testGetStatusFunc(test.application, test.expectedSuccess, test.expectedActualStatusCode, test.expectedContentSuccess, test.expectedActualContent))
+		t.Run(test.description, testGetStatusFunc(test.application, test.expectedSuccess, test.expectedActualStatusCode, test.expectedContentSuccess, test.expectedActualContent, test.expectedCSPSuccess, test.expectedActualCSP))
 	}
 }
 
-func testGetStatusFunc(application *Application, expectedSuccess bool, expectedActualStatusCode int, expectedContentSuccess bool, actualContent string) func(*testing.T) {
+func testGetStatusFunc(application *Application, expectedSuccess bool, expectedActualStatusCode int, expectedContentSuccess bool, actualContent string, expectedCSPSuccess bool, actualCSP string) func(*testing.T) {
 	return func(t *testing.T) {
 		status := application.GetStatus()
 		assert.Equal(t, expectedSuccess, status.StatusOk)
 		assert.Equal(t, expectedActualStatusCode, status.ActualStatusCode)
 		assert.Equal(t, expectedContentSuccess, status.StatusContentOk)
+		assert.Equal(t, expectedCSPSuccess, status.StatusCSPOk)
 		if expectedContentSuccess {
 			assert.Contains(t, status.ActualContent, actualContent)
+		}
+		if expectedCSPSuccess {
+			assert.Contains(t, status.ActualCSP, actualCSP)
 		}
 	}
 }
