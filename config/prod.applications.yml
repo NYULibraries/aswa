@@ -50,6 +50,10 @@ applications:
     url: 'http://library.nyu.edu/'
     expected_status: 301
     expected_location: 'https://library.nyu.edu/'
+  - name: primo-ve
+    url: 'https://nyu.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
+    expected_status: 200
+    expected_csp: "object-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net www.youtube.com search.library.nyu.edu; worker-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net www.youtube.com search.library.nyu.edu; report-uri /infra/CSPReportEndpoint.jsp; report-to csp-report-endpoint;"
   - name: prod-login
     url: 'https://login.library.nyu.edu/'
     expected_status: 200
