@@ -45,6 +45,7 @@ Optional Fields
 * `expected_content`: A string to match against the content returned by the URL.
 * `expected_location`: The expected final URL after all redirects, if any.
 * `timeout`: The maximum time to wait for a response, in milliseconds.
+* `expected_csp`: The expected Content Security Policy (CSP) header value.
 
 ~~~ {.yml}
 applications:
