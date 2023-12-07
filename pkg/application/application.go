@@ -291,7 +291,7 @@ func contentFailureString(results ApplicationStatus) string {
 
 func cspSuccessString(results ApplicationStatus) string {
 	if results.ActualCSP != "" {
-		return fmt.Sprintf("Sucess: Expected Primo VE CSP header matched Actual CSP header")
+		return fmt.Sprintf("Success: Expected Primo VE CSP header matched Actual CSP header")
 	}
 	return ""
 }
