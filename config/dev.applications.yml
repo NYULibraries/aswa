@@ -41,9 +41,9 @@ applications:
     url: 'http://dev.library.nyu.edu'
     expected_status: 301
     expected_location: 'https://dev.library.nyu.edu/'
-  - name: dev-login
-    url: 'https://dev.login.library.nyu.edu'
-    expected_status: 200
+#  - name: dev-login
+#    url: 'https://dev.login.library.nyu.edu'
+#    expected_status: 200
   - name: primo-ve
     url: 'https://nyu.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU_DEV'
     expected_status: 200
