@@ -20,10 +20,10 @@ applications:
   - name: campus-media-equipment
     url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
-#  - name: getit
-#    url: 'https://getit-dev.library.nyu.edu'
-#    expected_status: 301
-#    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
+  - name: getit
+    url: 'https://getit-dev.library.nyu.edu'
+    expected_status: 302
+    expected_location: 'https://search.library.nyu.edu/discovery/citationlinker?vid=01NYU_INST:NYU'
 #  - name: getit-ebooks
 #    url: 'https://getit-dev.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
 #    expected_status: 200
