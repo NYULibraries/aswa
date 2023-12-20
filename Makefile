@@ -1,7 +1,7 @@
 # Variables
 SLACK_CHANNEL_ID ?=
-SKIP_BUILD ?= 0 # Set to 1 to skip building the images
-
+SKIP_BUILD ?= 0
+# Set to 1 to skip building the images
 # Targets
 .PHONY: all build container run run-app check_env init test conditional-build
 
