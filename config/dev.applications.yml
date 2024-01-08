@@ -1,8 +1,4 @@
 applications:
-  - name: aleph-x-services
-    url: 'https://aleph.library.nyu.edu/X'
-    expected_status: 200
-    expected_content: 'Missing op'
   - name: bess
     url: 'https://cdn-dev.library.nyu.edu/bess-vue/app.min.js'
     expected_status: 200
