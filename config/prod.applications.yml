@@ -13,29 +13,13 @@ applications:
   - name: bobcat-standard
     url: 'https://aleph.library.nyu.edu'
     expected_status: 200
-  - name: bobcat-search
-    url: 'https://bobcat.library.nyu.edu/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?blendFacetsSeparately=false&getMore=0&inst=NYU&lang=en_US&limit=10&newspapersActive=false&newspapersSearch=false&offset=0&pcAvailability=true&q=any,contains,test&qExclude=&qInclude=&refEntryActive=false&rtaLinks=true&scope=all&searchInFulltextUserSelection=true&skipDelivery=Y&sort=rank&tab=all&vid=NYU'
-    expected_status: 200
-    expected_content: 'test'
   - name: campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 200
-  - name: eshelf
-    url: 'https://eshelf.library.nyu.edu/'
-    expected_status: 302
-    expected_location: 'https://login.library.nyu.edu/login/passive?client_id=bbcf34b029d1b729dee3db58e6e1b13f469ae756c83d99b345dd1689fd6b36ef&return_uri=https%3A%2F%2Feshelf.library.nyu.edu%2F'
   - name: getit
     url: 'https://getit.library.nyu.edu/'
-    expected_status: 301
-    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/citationlinker?vid=NYU'
-  - name: getit-ebooks
-    url: 'https://getit.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
-    expected_status: 200
-    expected_content: 'ebookcentral.proquest.com'
-  - name: getit-ebook-primo-api
-    url: 'https://bobcat.library.nyu.edu/primo_library/libweb/webservices/rest/primo-explore/v1/pnxs?inst=NYU&limit=50&offset=0&q=isbn%2Cexact%2C9780190280390&scope=all&vid=NYU'
-    expected_status: 200
-    expected_content: 'academic.oup.com'
+    expected_status: 302
+    expected_location: 'https://search.library.nyu.edu/discovery/citationlinker?vid=01NYU_INST:NYU'
   - name: getit-ebook-sfx-api
     url: 'http://sfx.library.nyu.edu/sfxlcl41?genre=bookitem&atitle=&aulast=&date=20180101&isbn=9780190280390&issn=&issue=&pid=XCHD8493320180101Chicano+Database&rfr_id=EBSCO%3AChicano+Database&sfx.doi_url=http%3A%2F%2Fdx.doi.org&sfx.response_type=multi_obj_xml&spage=&title=Our+Lady+of+everyday+life%3A+la+Virgen+de+Guadalupe+and+the+Catholic+imagination+of+Mexican+women+in+America&url_ctx_fmt=info%3Aofi%2Ffmt%3Axml%3Axsd%3Actx&volume='
     expected_status: 200
@@ -54,9 +38,6 @@ applications:
     url: 'https://nyu.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
     expected_csp: "object-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net https://youtube.com artic.contentdm.oclc.org search.library.nyu.edu; worker-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net https://youtube.com artic.contentdm.oclc.org search.library.nyu.edu; upgrade-insecure-requests; report-uri /infra/CSPReportEndpoint.jsp; report-to csp-report-endpoint;"
-  - name: prod-login
-    url: 'https://login.library.nyu.edu/'
-    expected_status: 200
   - name: marli
     url: 'https://marli.library.nyu.edu/'
     expected_status: 302
@@ -65,10 +46,6 @@ applications:
     url: 'https://pds.library.nyu.edu/'
     expected_status: 302
     expected_location: 'http://bobcat.library.nyu.edu'
-  - name: primo-explore-views
-    url: 'https://bobcat.library.nyu.edu'
-    expected_status: 301
-    expected_location: 'https://bobcat.library.nyu.edu/primo-explore/search?vid=NYU'
   - name: pushtocite
     url: 'https://cite.library.nyu.edu/healthcheck'
     expected_status: 200
