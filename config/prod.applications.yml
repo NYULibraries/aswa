@@ -11,7 +11,8 @@ applications:
     expected_status: 200
   - name: campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
-    expected_status: 200
+    expected_status: 301
+    expected_location: 'https://www.appsheet.com/start/014cf30a-fbbc-454b-9fd8-b5bde95eb0d3'
   - name: getit
     url: 'https://getit.library.nyu.edu/'
     expected_status: 302
