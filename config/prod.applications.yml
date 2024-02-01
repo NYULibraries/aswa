@@ -52,9 +52,9 @@ applications:
     expected_status: 200
     expected_content: 'harvard-kings-college-london'
   - name: primo-ve-search-hamlet
-    url: 'https://search.library.nyu.edu/discovery/search?query=any,contains,hamlet&tab=Unified_Slot&search_scope=CI_NYU_CONSORTIA&vid=01NYU_INST:NYU&offset=0'
+    url: 'https://search.library.nyu.edu/primaws/rest/pub/pnxs?acTriggered=false&blendFacetsSeparately=false&citationTrailFilterByAvailability=true&disableCache=false&getMore=0&inst=01NYU_INST&isCDSearch=false&lang=en&limit=10&newspapersActive=false&newspapersSearch=false&offset=0&otbRanking=false&pcAvailability=false&q=any,contains,hamlet&qExclude=&qInclude=&rapido=false&refEntryActive=true&rtaLinks=true&scope=CI_NYU_CONSORTIA&searchInFulltextUserSelection=false&skipDelivery=Y&sort=rank&tab=Unified_Slot&vid=01NYU_INST:NYU'
     expected_status: 200
-#    expected_content: 'Hamlet'
+    expected_content: 'Hamlet'
   - name: pushtocite
     url: 'https://cite.library.nyu.edu/healthcheck'
     expected_status: 200
