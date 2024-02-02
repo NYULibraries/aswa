@@ -12,9 +12,10 @@ import (
 // Define whitelist using a map with empty struct as values.
 // Simulate a set using a map with empty structs as values, which take up zero bytes. This way, the lookup is both quick and memory-efficient
 var allowedConfigPaths = map[string]struct{}{
-	"config/dev.applications.yml":  {},
-	"config/prod.applications.yml": {},
-	"config/saas.applications.yml": {},
+	"config/dev.applications.yml":      {},
+	"config/primo_ve.applications.yml": {},
+	"config/prod.applications.yml":     {},
+	"config/saas.applications.yml":     {},
 }
 
 const EnvSkipWhitelistCheck = "SKIP_WHITELIST_CHECK"
