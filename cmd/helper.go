@@ -145,6 +145,7 @@ func getClusterInfo() string {
 // Do method on Check struct.
 func (ch *Check) Do() error {
 	yamlPath := getYamlPath(ch.Logger)
+	a.SetIsPrimoVE(yamlPath)
 
 	inputData, err := c.NewConfig(yamlPath)
 	if err != nil {
