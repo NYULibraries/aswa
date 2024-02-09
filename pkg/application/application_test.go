@@ -316,3 +316,83 @@ func TestCompareStatusCodes(t *testing.T) {
 		})
 	}
 }
+
+func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
+
+	originalIsPrimoVE := IsPrimoVE
+	originalDebugMode := DebugMode
+	defer func() {
+		IsPrimoVE = originalIsPrimoVE
+		DebugMode = originalDebugMode
+	}()
+
+	var tests = []struct {
+		description    string
+		appStatus      *ApplicationStatus
+		isPrimoVE      bool
+		debugMode      bool
+		expectedOutput string
+	}{
+		{
+			description: "Successful status, IsPrimoVE=false, DebugMode=false",
+			isPrimoVE:   false,
+			debugMode:   false,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				StatusOk:    true, StatusContentOk: true,
+				ActualStatusCode: 200, ActualContent: "Example Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+		},
+		{
+			description: "Successful status, IsPrimoVE=true, DebugMode=true, with detailed content",
+			isPrimoVE:   true,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				StatusOk:    true, StatusContentOk: true,
+				ActualStatusCode: 200, ActualContent: "Example Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=false",
+			isPrimoVE:   false,
+			debugMode:   false,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
+			isPrimoVE:   true,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content Some Actual Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
+			isPrimoVE:   false,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			IsPrimoVE = test.isPrimoVE
+			DebugMode = test.debugMode
+
+			assert.Equal(t, test.expectedOutput, test.appStatus.String())
+		})
+	}
+}
