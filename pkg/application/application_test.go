@@ -239,7 +239,7 @@ func TestString(t *testing.T) {
 		{description: "Successful status with location", appStatus: &ApplicationStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "https://library.nyu.edu/"}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
 		{description: "Failed status with location", appStatus: &ApplicationStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "http://library.nyu.edu/"}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
 		{description: "Successful status with expected content", appStatus: &ApplicationStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Example Domain", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain\n"},
-		{description: "Failed status with unexpected content", appStatus: &ApplicationStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Wrong Content", ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match ActualContent\n"},
+		{description: "Failed status with unexpected content", appStatus: &ApplicationStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Wrong Content", ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content\n"},
 	}
 
 	for _, test := range tests {
@@ -313,6 +313,86 @@ func TestCompareStatusCodes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.description, func(t *testing.T) {
 			assert.Equal(t, tt.want, compareStatusCodes(tt.actual, tt.expected), tt.description)
+		})
+	}
+}
+
+func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
+
+	originalIsPrimoVE := IsPrimoVE
+	originalDebugMode := DebugMode
+	defer func() {
+		IsPrimoVE = originalIsPrimoVE
+		DebugMode = originalDebugMode
+	}()
+
+	var tests = []struct {
+		description    string
+		appStatus      *ApplicationStatus
+		isPrimoVE      bool
+		debugMode      bool
+		expectedOutput string
+	}{
+		{
+			description: "Successful status, IsPrimoVE=false, DebugMode=false",
+			isPrimoVE:   false,
+			debugMode:   false,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				StatusOk:    true, StatusContentOk: true,
+				ActualStatusCode: 200, ActualContent: "Example Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+		},
+		{
+			description: "Successful status, IsPrimoVE=true, DebugMode=true, with detailed content",
+			isPrimoVE:   true,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				StatusOk:    true, StatusContentOk: true,
+				ActualStatusCode: 200, ActualContent: "Example Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=false",
+			isPrimoVE:   false,
+			debugMode:   false,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
+			isPrimoVE:   true,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content Some Actual Content\n",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
+			isPrimoVE:   false,
+			debugMode:   true,
+			appStatus: &ApplicationStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.description, func(t *testing.T) {
+			IsPrimoVE = test.isPrimoVE
+			DebugMode = test.debugMode
+
+			assert.Equal(t, test.expectedOutput, test.appStatus.String())
 		})
 	}
 }

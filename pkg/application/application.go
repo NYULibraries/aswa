@@ -6,8 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+)
+
+const envDebugMode = "DEBUG_MODE"
+
+var (
+	DebugMode = os.Getenv(envDebugMode) == "true"
+	IsPrimoVE bool
 )
 
 // Application represents a synthetic test on an external url to perform
@@ -31,6 +39,11 @@ type ApplicationStatus struct {
 	ActualLocation   string `default:""`
 	ActualContent    string `default:""`
 	ActualCSP        string `default:""`
+}
+
+// SetIsPrimoVE sets the IsPrimoVE flag based on the yamlPath.
+func SetIsPrimoVE(yamlPath string) {
+	IsPrimoVE = yamlPath == "config/primo_ve.applications.yml"
 }
 
 // compareStatusCodes compares the actual and expected status codes.
@@ -280,7 +293,12 @@ func contentSuccessString(results ApplicationStatus) string {
 func contentFailureString(results ApplicationStatus) string {
 	if results.ActualContent != "" {
 		if results.Application.Name != "circleCI" {
-			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent", results.Application.ExpectedContent)
+			if IsPrimoVE && DebugMode {
+				// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
+				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
+			} else {
+				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
+			}
 		} else {
 			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 		}
