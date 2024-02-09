@@ -43,7 +43,7 @@ type ApplicationStatus struct {
 
 // SetIsPrimoVE sets the IsPrimoVE flag based on the yamlPath.
 func SetIsPrimoVE(yamlPath string) {
-	IsPrimoVE = yamlPath == "config/primo_VE.applications.yml"
+	IsPrimoVE = yamlPath == "config/primo_ve.applications.yml"
 }
 
 // compareStatusCodes compares the actual and expected status codes.
@@ -295,7 +295,7 @@ func contentFailureString(results ApplicationStatus) string {
 		if results.Application.Name != "circleCI" {
 			if IsPrimoVE && DebugMode {
 				// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
-				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s - Debug Actual Content: %s", results.Application.ExpectedContent, results.ActualContent, results.ActualContent)
+				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
 			} else {
 				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
 			}
