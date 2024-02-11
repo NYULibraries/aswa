@@ -291,6 +291,7 @@ func contentSuccessString(results ApplicationStatus) string {
 }
 
 func contentFailureString(results ApplicationStatus) string {
+	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
 	if results.ActualContent != "" {
 		if results.Application.Name != "circleCI" {
 			if IsPrimoVE && DebugMode {
