@@ -43,7 +43,7 @@ type ApplicationStatus struct {
 
 // SetIsPrimoVE sets the IsPrimoVE flag based on the yamlPath.
 func SetIsPrimoVE(yamlPath string) {
-	IsPrimoVE = yamlPath == "./config/primo_ve.applications.yml"
+	IsPrimoVE = yamlPath == "config/primo_ve.applications.yml"
 }
 
 // compareStatusCodes compares the actual and expected status codes.
