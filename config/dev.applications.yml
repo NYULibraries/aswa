@@ -6,6 +6,10 @@ applications:
     url: 'https://dev.library.nyu.edu/persistent'
     expected_status: 301
     expected_location: 'https://app.library.nyu.edu/bobcat-linker'
+  - name: bobcat-permalink
+    url: 'https://bobcatdev.library.nyu.edu/permalink/f/ci13eu/nyu_aleph009700570'
+    expected_status: 303
+    expected_location: 'https://search.library.nyu.edu/discovery/fulldisplay?docid=alma990097005700107871&context=L&vid=01NYU_INST:NYU'
   - name: bobcat-standard
     url: 'https://alephstage.library.nyu.edu'
     expected_status: 200
