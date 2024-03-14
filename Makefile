@@ -1,33 +1,22 @@
+# Makefile for ASWA project
+
 # Variables
+CLUSTER_INFO ?=
+DOCKER_COMPOSE_CMD ?= docker compose run --rm
 SLACK_CHANNEL_ID ?=
 SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
-# Targets
-.PHONY: all build container run run-app check_env init test conditional-build
 
-# Default target: build the binary, run the app
-all: build run
+# Targets
+.PHONY: all build check_env clean conditional-build container container-run go-run init run run-app test
+
+# Default target: build the images, run tests and run the app in a container
+all: container test container-run
 
 # Build binary for aswa
 build:
+	@echo "Building aswa binary..."
 	go build -o aswa ./cmd
-
-# Build images for the aswa app and the test container
-container:
-	docker compose build
-
-# Run the aswa app
-run:
-	./aswa
-
-# Run the synthetic test on the app with the given name in a container
-run-app: conditional-build
-	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then echo "Error: Please provide an app name. Usage: make run-app your_app_name_here"; exit 1; fi
-	docker compose run --rm aswa /aswa $(filter-out $@,$(MAKECMDGOALS))
-
-# Ignore any targets that are not files
-%:
-	@:
 
 # Check if the required environment variables are set
 check_env:
@@ -40,13 +29,53 @@ check_env:
 	    exit 1; \
 	fi
 
-# Initialize the project by checking if the environment variables are set
-init: check_env
-
-# Run tests using the aswa_test container and ensure images are built before running
-test: conditional-build
-	docker compose run --rm test
+# Clean up the project
+clean:
+	@echo "Cleaning up..."
+	rm -f aswa
+	docker compose down --rmi all --volumes --remove-orphans
+	@echo "Remember to manually unset YAML_PATH if it was exported in your shell."
 
 # Conditionally run the build target based on the value of SKIP_BUILD
 conditional-build:
 	@if [ "$(SKIP_BUILD)" = "0" ]; then $(MAKE) container; fi
+
+# Build images for the aswa app and the test container
+container:
+	@echo "Building images..."
+	docker compose build
+
+# Run the aswa app in a Docker container
+container-run: conditional-build
+	@echo "Running aswa in a Docker container..."
+	$(DOCKER_COMPOSE_CMD) aswa
+
+# Run the aswa app with 'go run'
+go-run:
+	@echo "Running aswa with 'go run'..."
+	go run ./cmd
+
+# Initialize the project by checking if the environment variables are set
+init: check_env
+
+# Run aswa using the built binary
+run: build
+	@echo "Running aswa..."
+	./aswa
+
+# Run the synthetic test on the app with the given name in a container
+run-app: conditional-build
+	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then echo "Error: Please provide an app name. Usage: make run-app your_app_name_here"; exit 1; fi
+	$(DOCKER_COMPOSE_CMD) aswa /aswa $(filter-out $@,$(MAKECMDGOALS))
+
+# Ignore any targets that are not files
+%:
+	@:
+
+# Run tests using the aswa_test container and ensure images are built before running
+test: conditional-build
+	@echo "Running tests..."
+	$(DOCKER_COMPOSE_CMD) test
+
+
+
