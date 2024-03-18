@@ -10,6 +10,7 @@ services:
     environment:
       - YAML_PATH=${YAML_PATH:-config/dev.applications.yml}
       - CLUSTER_INFO=${CLUSTER_INFO}
+      - PUSHGATEWAY_URL=${PUSHGATEWAY_URL}
       - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
       - DEBUG_MODE=${DEBUG_MODE:-false}
   test:
