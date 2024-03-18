@@ -1,8 +1,10 @@
 package main
 
 import (
+	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 	"time"
@@ -124,6 +126,87 @@ func TestGetClusterInfo(t *testing.T) {
 
 			// Unset environment variable for next test
 			os.Unsetenv(envClusterInfo)
+		})
+	}
+}
+
+func TestGetPushgatewayUrl(t *testing.T) {
+	tests := []struct {
+		name              string
+		envPushgatewayUrl string
+		want              string
+	}{
+		{"envPushgatewayUrl is set", "test-pushgateway-url", "test-pushgateway-url"},
+		{"envPushgatewayUrl is not set", "", ""},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+
+			os.Setenv(envPushgatewayUrl, tt.envPushgatewayUrl)
+
+			got := getPushgatewayUrl()
+
+			assert.Equal(t, tt.want, got, "getPushgatewayUrl() should return correct pushgateway URL")
+
+			os.Unsetenv(envPushgatewayUrl)
+		})
+	}
+
+}
+
+func TestPrometheusPusher_Push(t *testing.T) {
+	// Define your test cases
+	tests := []struct {
+		name          string
+		mockResponse  func(w http.ResponseWriter, r *http.Request)
+		expectedError bool
+	}{
+		{
+			name: "Successful push",
+			mockResponse: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			},
+			expectedError: false,
+		},
+		{
+			name: "Failed push with non-200 response",
+			mockResponse: func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusInternalServerError)
+			},
+			expectedError: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Setup mock HTTP server for this test case
+			server := httptest.NewServer(http.HandlerFunc(tt.mockResponse))
+			defer server.Close()
+
+			pusher := &PrometheusPusher{
+				url:       server.URL, // Use mock server URL
+				namespace: "testNamespace",
+			}
+
+			// Mock a Prometheus counter
+			counter := prometheus.NewCounter(prometheus.CounterOpts{
+				Name: "test_counter",
+				Help: "Just a test counter",
+			})
+			counter.Add(1)
+
+			err := pusher.Push("testApp", counter)
+
+			if tt.expectedError {
+				if err == nil {
+					t.Errorf("Expected an error but got none")
+				}
+			} else {
+				if err != nil {
+					t.Errorf("Did not expect an error but got: %v", err)
+				}
+			}
 		})
 	}
 }
