@@ -1,9 +1,16 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
+	"github.com/prometheus/client_golang/prometheus"
+	dto "github.com/prometheus/client_model/go"
+	"io"
+	"net/http"
+	"strings"
+
 	"log"
 	"os"
 	"time"
@@ -12,9 +19,79 @@ import (
 // Constants for environment variables
 const (
 	envClusterInfo     = "CLUSTER_INFO"
+	envPushgatewayUrl  = "PUSHGATEWAY_URL"
 	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
 	envYamlPath        = "YAML_PATH"
 )
+
+// ###############################################################
+// Define a Prometheus counter to count the number of failed tests
+// ###############################################################
+
+var (
+	failedTests = prometheus.NewCounterVec(
+		prometheus.CounterOpts{
+			Name: "aswa_failed_tests_total",
+			Help: "Total number of failed synthetic tests.",
+		},
+		[]string{"app"},
+	)
+)
+
+// init function to increment the failed tests counter
+func incrementFailedTestsCounter(appName string) {
+	failedTests.With(prometheus.Labels{"app": appName}).Inc()
+}
+
+// Create a struct that implements the interface using the push package
+type PrometheusPusher struct {
+	url       string
+	namespace string
+	collector prometheus.Collector
+	appName   string
+	counter   int
+}
+
+// Push sends a Prometheus counter metric for a specific application to a Pushgateway.
+// It formats the metric in Prometheus exposition format, constructs a POST request to the Pushgateway,
+// and handles the response. Errors during metric serialization, request creation, or server response
+// are returned to the caller.
+func (p *PrometheusPusher) Push(appName string, counter prometheus.Counter) error {
+	metricFamily := &dto.Metric{}
+	if err := counter.Write(metricFamily); err != nil {
+		log.Fatalf("Could not write Metric: %v", err)
+	}
+
+	// Convert the metric to the Prometheus exposition format
+	metricData := fmt.Sprintf("%s{%s=\"%s\"} %f\n", p.namespace+"FailedTests", "app", appName, *metricFamily.Counter.Value)
+
+	// Create a new HTTP request
+	req, err := http.NewRequest("POST", p.url+"/metrics/job/"+p.namespace, strings.NewReader(metricData))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "text/plain")
+
+	// Send the request using the http.DefaultClient
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return err
+	}
+	defer func(Body io.ReadCloser) {
+		err := Body.Close()
+		if err != nil {
+
+		}
+	}(resp.Body)
+
+	// Check the response
+	if resp.StatusCode != http.StatusOK {
+		buf := new(bytes.Buffer)
+		_, err = io.Copy(buf, resp.Body)
+		return fmt.Errorf("response Status: %s, Response Body: %s", resp.Status, buf.String())
+	}
+	return nil
+}
 
 // #############################
 // Check Struct & Initialization
@@ -136,6 +213,16 @@ func getClusterInfo() string {
 		return ""
 	}
 	return clusterInfo
+}
+
+// getPushgatewayUrl retrieves the pushgateway url from environment variables.
+func getPushgatewayUrl() string {
+	pushgatewayUrl := os.Getenv(envPushgatewayUrl)
+	if pushgatewayUrl == "" {
+		log.Println("PUSHGATEWAY_URL is not set")
+		return ""
+	}
+	return pushgatewayUrl
 }
 
 // ###############
