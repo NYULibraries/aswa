@@ -13,7 +13,6 @@ import (
 
 	"log"
 	"os"
-	"time"
 )
 
 // Constants for environment variables
@@ -143,15 +142,6 @@ type FailingSyntheticTest struct {
 	AppStatus a.ApplicationStatus
 }
 
-// postTestResult constructs a string containing the result of the given test.
-func postTestResult(appStatus a.ApplicationStatus) (string, error) {
-	result := appStatus.String()
-	timestamp := time.Now().Local().Format(time.RFC1123Z)
-	log.Printf("Test result generated on %s", timestamp)
-
-	return result, nil
-}
-
 // RunSyntheticTests runs synthetic tests on the provided applications and posts results to Slack.
 func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
@@ -165,6 +155,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+				incrementFailedTestsCounter(app.Name)
 			}
 
 			if targetAppName != "" {
@@ -182,18 +173,29 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 
 	// Post failing test results after running tests on all applications
 	for _, failingTest := range failingSyntheticTests {
-		result, err := postTestResult(failingTest.AppStatus)
+		appCounter, err := failedTests.GetMetricWithLabelValues(failingTest.App.Name)
 		if err != nil {
-			return err
+			log.Printf("Failed to get the counter for app: %s", failingTest.App.Name)
+			continue
 		}
-		fmt.Println(result)
+		pusher := &PrometheusPusher{
+			url:       getPushgatewayUrl(),
+			namespace: "aswa",
+			collector: failedTests,
+		}
+
+		if errorProm := pusher.Push(failingTest.App.Name, appCounter); errorProm != nil {
+			log.Printf("could not push to Prom Pushgateway: %v", errorProm)
+			continue
+		}
+		log.Printf("Success!Pushed failed test count for app: %s to Prom Pushgateway", failingTest.App.Name)
 	}
 	return nil
 }
 
-// ################################
-// Slack WebHook Url & Cluster Info
-// ################################
+// ##################################################
+// Slack WebHook Url & Cluster Info & Pushgateway Url
+// ##################################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
 func getSlackWebhookUrl() string {
