@@ -180,15 +180,15 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		}
 		pusher := &PrometheusPusher{
 			url:       getPushgatewayUrl(),
-			namespace: "aswa",
+			namespace: "monitoring",
 			collector: failedTests,
 		}
 
 		if errorProm := pusher.Push(failingTest.App.Name, appCounter); errorProm != nil {
-			log.Printf("could not push to Prom Pushgateway: %v", errorProm)
+			log.Printf("could not push to Pushgateway: %v", errorProm)
 			continue
 		}
-		log.Printf("Success!Pushed failed test count for app: %s to Prom Pushgateway", failingTest.App.Name)
+		log.Printf("Success!Pushed failed test count for app: %s to Pushgateway", failingTest.App.Name)
 	}
 	return nil
 }
