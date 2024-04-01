@@ -51,7 +51,8 @@ applications:
     expected_status: 400
   - name: sfx
     url: 'http://sfx.library.nyu.edu/sfxlcl41'
-    expected_status: 200
+    expected_status: 301
+    expected_location: 'https://sfx.library.nyu.edu/sfxlcl41'
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
