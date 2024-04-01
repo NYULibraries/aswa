@@ -129,26 +129,26 @@ func TestGetClusterInfo(t *testing.T) {
 	}
 }
 
-func TestGetPushgatewayUrl(t *testing.T) {
+func TestGetPromAggregationGatewayUrl(t *testing.T) {
 	tests := []struct {
-		name              string
-		envPushgatewayUrl string
-		want              string
+		name                         string
+		envPromAggregationGatewayUrl string
+		want                         string
 	}{
-		{"envPushgatewayUrl is set", "test-pushgateway-url", "test-pushgateway-url"},
-		{"envPushgatewayUrl is not set", "", ""},
+		{"envPromAggregationGatewayUrl is set", "test-promaggregationgateway-url", "test-promaggregationgateway-url"},
+		{"envPromAggregationGatewayUrl is not set", "", ""},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			os.Setenv(envPushgatewayUrl, tt.envPushgatewayUrl)
+			os.Setenv(envPromAggregationGatewayUrl, tt.envPromAggregationGatewayUrl)
 
-			got := getPushgatewayUrl()
+			got := getPromAggregationgatewayUrl()
 
 			assert.Equal(t, tt.want, got, "getPushgatewayUrl() should return correct pushgateway URL")
 
-			os.Unsetenv(envPushgatewayUrl)
+			os.Unsetenv(envPromAggregationGatewayUrl)
 		})
 	}
 
@@ -183,8 +183,8 @@ func TestPushMetrics(t *testing.T) {
 			defer server.Close()
 
 			// Setup environment variable to mock the pushgateway URL
-			os.Setenv(envPushgatewayUrl, server.URL)
-			defer os.Unsetenv(envPushgatewayUrl)
+			os.Setenv(envPromAggregationGatewayUrl, server.URL)
+			defer os.Unsetenv(envPromAggregationGatewayUrl)
 
 			// Increment a test counter to simulate metrics that would be pushed
 			incrementFailedTestsCounter("testApp")
@@ -316,15 +316,15 @@ func TestRunSyntheticTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			// Setup mock HTTP server to simulate the pushgateway
-			mockPushgateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			// Setup mock HTTP server to simulate the pag
+			mockPromAggregationGateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				w.WriteHeader(http.StatusOK)
 			}))
-			defer mockPushgateway.Close()
+			defer mockPromAggregationGateway.Close()
 
-			// Set the PUSHGATEWAY_URL to the mock server's URL
-			os.Setenv(envPushgatewayUrl, mockPushgateway.URL)
-			defer os.Unsetenv(envPushgatewayUrl)
+			// Set the PROM_AGGREGATION_GATEWAY_URL to the mock server's URL
+			os.Setenv(envPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
+			defer os.Unsetenv(envPromAggregationGatewayUrl)
 
 			// Convert MockApplications to real ones
 			var appData []*a.Application
@@ -379,7 +379,7 @@ func TestCheckDo(t *testing.T) {
 			os.Setenv(envYamlPath, tt.envYamlPath)
 			os.Setenv(envSlackWebhookUrl, tt.envSlackUrl)
 			os.Setenv(envClusterInfo, tt.envClusterInfo)
-			os.Setenv(envPushgatewayUrl, mockPushgateway.URL)
+			os.Setenv(envPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
@@ -402,7 +402,7 @@ func TestCheckDo(t *testing.T) {
 			os.Unsetenv(envYamlPath)
 			os.Unsetenv(envSlackWebhookUrl)
 			os.Unsetenv(envClusterInfo)
-			os.Unsetenv(envPushgatewayUrl)
+			os.Unsetenv(envPromAggregationGatewayUrl)
 			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
