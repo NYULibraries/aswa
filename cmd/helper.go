@@ -110,6 +110,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+				incrementFailedTestsCounter(app.Name)
 			}
 
 			if targetAppName != "" {

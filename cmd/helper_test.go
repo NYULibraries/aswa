@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/prometheus/client_golang/prometheus"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -155,8 +154,7 @@ func TestGetPushgatewayUrl(t *testing.T) {
 
 }
 
-func TestPrometheusPusher_Push(t *testing.T) {
-	// Define your test cases
+func TestPushMetrics(t *testing.T) {
 	tests := []struct {
 		name          string
 		mockResponse  func(w http.ResponseWriter, r *http.Request)
@@ -184,33 +182,29 @@ func TestPrometheusPusher_Push(t *testing.T) {
 			server := httptest.NewServer(http.HandlerFunc(tt.mockResponse))
 			defer server.Close()
 
-			pusher := &PrometheusPusher{
-				url:       server.URL, // Use mock server URL
-				namespace: "testNamespace",
-			}
+			// Setup environment variable to mock the pushgateway URL
+			os.Setenv(envPushgatewayUrl, server.URL)
+			defer os.Unsetenv(envPushgatewayUrl)
 
-			// Mock a Prometheus counter
-			counter := prometheus.NewCounter(prometheus.CounterOpts{
-				Name: "test_counter",
-				Help: "Just a test counter",
-			})
-			counter.Add(1)
+			// Increment a test counter to simulate metrics that would be pushed
+			incrementFailedTestsCounter("testApp")
 
-			err := pusher.Push("testApp", counter)
+			// Call PushMetrics to attempt to push the test counter to the mock server
+			err := PushMetrics()
 
+			// Assert that an error occurred only if one was expected
 			if tt.expectedError {
 				if err == nil {
-					t.Errorf("Expected an error but got none")
+					t.Errorf("TestPushMetrics %s: expected an error but got none", tt.name)
 				}
 			} else {
 				if err != nil {
-					t.Errorf("Did not expect an error but got: %v", err)
+					t.Errorf("TestPushMetrics %s: did not expect an error but got: %v", tt.name, err)
 				}
 			}
 		})
 	}
 }
-
 func TestRunSyntheticTests(t *testing.T) {
 	// Convert MockApplication to a.Application
 	toApplication := func(ma *MockApplication) *a.Application {
@@ -322,24 +316,48 @@ func TestRunSyntheticTests(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			// Setup mock HTTP server to simulate the pushgateway
+			mockPushgateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				w.WriteHeader(http.StatusOK)
+			}))
+			defer mockPushgateway.Close()
+
+			// Set the PUSHGATEWAY_URL to the mock server's URL
+			os.Setenv(envPushgatewayUrl, mockPushgateway.URL)
+			defer os.Unsetenv(envPushgatewayUrl)
+
+			// Convert MockApplications to real ones
 			var appData []*a.Application
 			for _, app := range tt.apps {
 				appData = append(appData, toApplication(app))
 			}
 
+			// Mock the network calls (assuming there is a method to mock network calls for app.GetStatus)
+			// mockNetworkCalls(appData)
+
+			// Call the RunSyntheticTests function
 			err := RunSyntheticTests(appData, tt.targetAppName)
 
+			// Handle the assertions based on expected errors
 			if tt.wantErr {
-				assert.Error(t, err, "Expected error but got none")
-				assert.Equal(t, tt.wantErrMessage, err.Error(), "Expected error message does not match")
+				assert.Error(t, err)
+				if err != nil {
+					assert.Equal(t, tt.wantErrMessage, err.Error())
+				}
 			} else {
-				assert.NoError(t, err, "Expected no error but got one")
+				assert.NoError(t, err)
 			}
 		})
 	}
 }
 
 func TestCheckDo(t *testing.T) {
+	// Define a mock server to simulate the Pushgateway
+	mockPushgateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK) // simulate a successful push to the Pushgateway
+	}))
+	defer mockPushgateway.Close()
+
 	tests := []struct {
 		name           string
 		envYamlPath    string
@@ -361,6 +379,7 @@ func TestCheckDo(t *testing.T) {
 			os.Setenv(envYamlPath, tt.envYamlPath)
 			os.Setenv(envSlackWebhookUrl, tt.envSlackUrl)
 			os.Setenv(envClusterInfo, tt.envClusterInfo)
+			os.Setenv(envPushgatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
@@ -383,6 +402,7 @@ func TestCheckDo(t *testing.T) {
 			os.Unsetenv(envYamlPath)
 			os.Unsetenv(envSlackWebhookUrl)
 			os.Unsetenv(envClusterInfo)
+			os.Unsetenv(envPushgatewayUrl)
 			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
