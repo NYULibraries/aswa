@@ -41,7 +41,7 @@ func incrementFailedTestsCounter(appName string) {
 func PushMetrics() error {
 	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring")
 	if err := pusher.Collector(failedTests).Push(); err != nil {
-		return fmt.Errorf("could not push to Prom-Aggregation-Gateway: %v", err)
+		return err
 	}
 	return nil
 }
