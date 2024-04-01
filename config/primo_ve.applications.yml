@@ -9,7 +9,7 @@ applications:
     expected_location: 'mng/login'
   - name: primo-ve-search-file
     url: 'https://search.library.nyu.edu/primaws/rest/pub/cslFiles/vid/01NYU_INST:NYU'
-    expected_status: 200
+    expected_status: 301
     expected_content: 'harvard-kings-college-london'
   - name: primo-ve-search-hamlet
     url: 'https://search.library.nyu.edu/primaws/rest/pub/pnxs?acTriggered=false&blendFacetsSeparately=false&citationTrailFilterByAvailability=true&disableCache=false&getMore=0&inst=01NYU_INST&isCDSearch=false&lang=en&limit=10&newspapersActive=false&newspapersSearch=false&offset=0&otbRanking=false&pcAvailability=false&q=any,contains,hamlet&qExclude=&qInclude=&rapido=false&refEntryActive=true&rtaLinks=true&scope=CI_NYU_CONSORTIA&searchInFulltextUserSelection=false&skipDelivery=Y&sort=rank&tab=Unified_Slot&vid=01NYU_INST:NYU'
@@ -18,6 +18,6 @@ applications:
   - name: primo-ve-search-html
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: '<script src="lib/bundle.js?version=08256d36e9">'
+    expected_content: '<script src="lib/bundle.js?version=09256d36e9">'
 
  
