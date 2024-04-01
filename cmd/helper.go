@@ -25,7 +25,7 @@ const (
 var (
 	failedTests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "aswa_failed_test",
+			Name: "aswa_checks",
 			Help: "Failed synthetic test.",
 		},
 		[]string{"app"},
