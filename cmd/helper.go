@@ -12,10 +12,10 @@ import (
 
 // Constants for environment variables
 const (
-	envClusterInfo     = "CLUSTER_INFO"
-	envPushgatewayUrl  = "PUSHGATEWAY_URL"
-	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
-	envYamlPath        = "YAML_PATH"
+	envClusterInfo               = "CLUSTER_INFO"
+	envPromAggregationGatewayUrl = "PROM_AGGREGATION_GATEWAY_URL"
+	envSlackWebhookUrl           = "SLACK_WEBHOOK_URL"
+	envYamlPath                  = "YAML_PATH"
 )
 
 // ###############################################################
@@ -37,11 +37,11 @@ func incrementFailedTestsCounter(appName string) {
 	failedTests.With(prometheus.Labels{"app": appName}).Inc()
 }
 
-// PushMetrics pushes all collected metrics to the Pushgateway.
+// PushMetrics pushes all collected metrics to the pag.
 func PushMetrics() error {
-	pusher := push.New(getPushgatewayUrl(), "monitoring")
+	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring")
 	if err := pusher.Collector(failedTests).Push(); err != nil {
-		return fmt.Errorf("could not push to Pushgateway: %v", err)
+		return fmt.Errorf("could not push to Prom-Aggregation-Gateway: %v", err)
 	}
 	return nil
 }
@@ -133,16 +133,16 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 
 	// Push metrics after tests are run for all applications
 	if errorProm := PushMetrics(); errorProm != nil {
-		log.Printf("could not push to Pushgateway: %v", errorProm)
+		log.Printf("could not push to Prom-Aggregation-Gateway: %v", errorProm)
 		return errorProm // return the error to handle it accordingly
 	}
-	log.Println("Success! Pushed failed test count for all apps to Pushgateway")
+	log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
 
 	return nil
 }
 
 // ##################################################
-// Slack WebHook Url & Cluster Info & Pushgateway Url
+// Slack WebHook Url & Cluster Info & Prom-Aggregation-Gateway Url
 // ##################################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
@@ -165,14 +165,14 @@ func getClusterInfo() string {
 	return clusterInfo
 }
 
-// getPushgatewayUrl retrieves the pushgateway url from environment variables.
-func getPushgatewayUrl() string {
-	pushgatewayUrl := os.Getenv(envPushgatewayUrl)
-	if pushgatewayUrl == "" {
-		log.Println("PUSHGATEWAY_URL is not set")
+// getPromAggregationgatewayUrl retrieves the pag url from environment variables.
+func getPromAggregationgatewayUrl() string {
+	promAggregationGatewayUrl := os.Getenv(envPromAggregationGatewayUrl)
+	if promAggregationGatewayUrl == "" {
+		log.Println("PROM_AGGREGATION_GATEWAY_URL is not set")
 		return ""
 	}
-	return pushgatewayUrl
+	return promAggregationGatewayUrl
 }
 
 // ###############
