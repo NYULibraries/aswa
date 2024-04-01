@@ -39,7 +39,7 @@ func incrementFailedTestsCounter(appName string) {
 
 // PushMetrics pushes all collected metrics to the pag.
 func PushMetrics() error {
-	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring")
+	pusher := push.New("http://prom-aggregation-gateway.monitoring.svc.cluster.local:8080/metrics/", "monitoring")
 	if err := pusher.Collector(failedTests).Push(); err != nil {
 		return fmt.Errorf("could not push to Prom-Aggregation-Gateway: %v", err)
 	}
