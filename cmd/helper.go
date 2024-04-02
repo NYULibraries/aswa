@@ -6,6 +6,7 @@ import (
 	c "github.com/NYULibraries/aswa/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
+	"github.com/prometheus/common/expfmt"
 	"log"
 	"os"
 )
@@ -37,10 +38,13 @@ func incrementFailedTestsCounter(appName string) {
 	failedTests.With(prometheus.Labels{"app": appName}).Inc()
 }
 
-// PushMetrics pushes all collected metrics to the pag.
+// PushMetrics pushes all collected metrics to the PAG.
 func PushMetrics() error {
-	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring")
-	if err := pusher.Collector(failedTests).Push(); err != nil {
+	textFormat := expfmt.NewFormat(expfmt.TypeTextPlain)
+	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring").
+		Collector(failedTests).
+		Format(textFormat)
+	if err := pusher.Push(); err != nil {
 		return err
 	}
 	return nil
