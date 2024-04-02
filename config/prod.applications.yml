@@ -10,9 +10,6 @@ applications:
     url: 'https://bobcat.library.nyu.edu/permalink/f/ci13eu/nyu_aleph009700570'
     expected_status: 303
     expected_location: 'https://search.library.nyu.edu/discovery/fulldisplay?docid=alma990097005700107871&context=L&vid=01NYU_INST:NYU'
-  - name: bobcat-standard
-    url: 'https://aleph.library.nyu.edu'
-    expected_status: 200
   - name: campus-media-equipment
     url: 'https://library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 301
@@ -22,9 +19,9 @@ applications:
     expected_status: 302
     expected_location: 'https://search.library.nyu.edu/discovery/citationlinker?vid=01NYU_INST:NYU'
   - name: getit-ebook-sfx-api
-    url: 'http://sfx.library.nyu.edu/sfxlcl41?genre=bookitem&atitle=&aulast=&date=20180101&isbn=9780190280390&issn=&issue=&pid=XCHD8493320180101Chicano+Database&rfr_id=EBSCO%3AChicano+Database&sfx.doi_url=http%3A%2F%2Fdx.doi.org&sfx.response_type=multi_obj_xml&spage=&title=Our+Lady+of+everyday+life%3A+la+Virgen+de+Guadalupe+and+the+Catholic+imagination+of+Mexican+women+in+America&url_ctx_fmt=info%3Aofi%2Ffmt%3Axml%3Axsd%3Actx&volume='
-    expected_status: 200
-    expected_content: 'ill.library.nyu.edu'
+    url: "https://sfx.library.nyu.edu/sfxlcl41?genre=bookitem&atitle=&aulast=&date=20180101&isbn=9780190280390&issn=&issue=&pid=XCHD8493320180101Chicano+Database&rfr_id=EBSCO%3AChicano+Database&sfx.doi_url=http%3A%2F%2Fdx.doi.org&sfx.response_type=multi_obj_xml&spage=&title=Our+Lady+of+everyday+life%3A+la+Virgen+de+Guadalupe+and+the+Catholic+imagination+of+Mexican+women+in+America&url_ctx_fmt=info%3Aofi%2Ffmt%3Axml%3Axsd%3Actx&volume="
+    expected_status: 301
+    expected_location: "https://getit.library.nyu.edu/resolve?genre=bookitem&atitle=&aulast=&date=20180101&isbn=9780190280390&issn=&issue=&pid=XCHD8493320180101Chicano+Database&rfr_id=EBSCO%3AChicano+Database&sfx.doi_url=http%3A%2F%2Fdx.doi.org&sfx.response_type=multi_obj_xml&spage=&title=Our+Lady+of+everyday+life%3A+la+Virgen+de+Guadalupe+and+the+Catholic+imagination+of+Mexican+women+in+America&url_ctx_fmt=info%3Aofi%2Ffmt%3Axml%3Axsd%3Actx&volume="
   - name: libcal-assets
     url: 'https://cdn.library.nyu.edu/libcal/index.min.js'
     expected_status: 200
@@ -39,10 +36,6 @@ applications:
     url: 'https://marli.library.nyu.edu/'
     expected_status: 302
     expected_location: 'https://library.nyu.edu/services/borrowing/from-non-nyu-libraries/marli/'
-  - name: pds-custom
-    url: 'https://pds.library.nyu.edu/'
-    expected_status: 302
-    expected_location: 'http://bobcat.library.nyu.edu'
   - name: pushtocite
     url: 'https://cite.library.nyu.edu/healthcheck'
     expected_status: 200
@@ -51,7 +44,8 @@ applications:
     expected_status: 400
   - name: sfx
     url: 'http://sfx.library.nyu.edu/sfxlcl41'
-    expected_status: 200
+    expected_status: 301
+    expected_location: 'https://sfx.library.nyu.edu/sfxlcl41'
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
