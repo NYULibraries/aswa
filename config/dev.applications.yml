@@ -10,9 +10,6 @@ applications:
     url: 'https://bobcatdev.library.nyu.edu/permalink/f/ci13eu/nyu_aleph009700570'
     expected_status: 303
     expected_location: 'https://search.library.nyu.edu/discovery/fulldisplay?docid=alma990097005700107871&context=L&vid=01NYU_INST:NYU'
-  - name: bobcat-standard
-    url: 'https://alephstage.library.nyu.edu'
-    expected_status: 200
   - name: campus-media-equipment
     url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
     expected_status: 301
