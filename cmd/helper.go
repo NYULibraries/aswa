@@ -126,11 +126,6 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		return err
 	}
 
-	// Use the Prometheus client's push package directly
-	for _, failingTest := range failingSyntheticTests {
-		incrementFailedTestsCounter(failingTest.App.Name)
-	}
-
 	// Push metrics after tests are run for all applications
 	if errorProm := PushMetrics(); errorProm != nil {
 		log.Printf("Error encountered during metrics push: %v", errorProm)
