@@ -36,10 +36,6 @@ applications:
     url: 'https://marli.library.nyu.edu/'
     expected_status: 302
     expected_location: 'https://library.nyu.edu/services/borrowing/from-non-nyu-libraries/marli/'
-#  - name: pds-custom
-#    url: 'https://pds.library.nyu.edu/'
-#    expected_status: 302
-#    expected_location: 'http://bobcat.library.nyu.edu'
   - name: pushtocite
     url: 'https://cite.library.nyu.edu/healthcheck'
     expected_status: 200
