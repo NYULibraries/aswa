@@ -4,51 +4,17 @@ import (
 	"fmt"
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
-	"github.com/prometheus/client_golang/prometheus"
-	"github.com/prometheus/client_golang/prometheus/push"
-	"github.com/prometheus/common/expfmt"
+	m "github.com/NYULibraries/aswa/pkg/metrics"
 	"log"
 	"os"
 )
 
 // Constants for environment variables
 const (
-	envClusterInfo               = "CLUSTER_INFO"
-	envPromAggregationGatewayUrl = "PROM_AGGREGATION_GATEWAY_URL"
-	envSlackWebhookUrl           = "SLACK_WEBHOOK_URL"
-	envYamlPath                  = "YAML_PATH"
+	envClusterInfo     = "CLUSTER_INFO"
+	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
+	envYamlPath        = "YAML_PATH"
 )
-
-// ###############################################################
-// Define a Prometheus counter to count the number of failed tests
-// ###############################################################
-
-var (
-	failedTests = prometheus.NewCounterVec(
-		prometheus.CounterOpts{
-			Name: "aswa_checks",
-			Help: "Failed synthetic test.",
-		},
-		[]string{"app"},
-	)
-)
-
-// init function to increment the failed tests counter
-func incrementFailedTestsCounter(appName string) {
-	failedTests.With(prometheus.Labels{"app": appName}).Inc()
-}
-
-// PushMetrics pushes all collected metrics to the PAG.
-func PushMetrics() error {
-	textFormat := expfmt.NewFormat(expfmt.TypeTextPlain)
-	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring").
-		Collector(failedTests).
-		Format(textFormat)
-	if err := pusher.Push(); err != nil {
-		return err
-	}
-	return nil
-}
 
 // #############################
 // Check Struct & Initialization
@@ -67,7 +33,6 @@ var check *Check
 func init() {
 	logger := log.New(os.Stdout, "", 0)
 	check = &Check{Logger: logger}
-	prometheus.MustRegister(failedTests)
 }
 
 // ########################
@@ -114,7 +79,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
-				incrementFailedTestsCounter(app.Name)
+				m.IncrementFailedTestsCounter(app.Name)
 			}
 
 			if targetAppName != "" {
@@ -132,7 +97,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 
 	// Push metrics only if there are failed tests
 	if len(failingSyntheticTests) > 0 {
-		if errorProm := PushMetrics(); errorProm != nil {
+		if errorProm := m.PushMetrics(); errorProm != nil {
 			log.Printf("Error encountered during metrics push: %v", errorProm)
 			return errorProm // return the error to handle it accordingly
 		}
@@ -166,16 +131,6 @@ func getClusterInfo() string {
 		return ""
 	}
 	return clusterInfo
-}
-
-// getPromAggregationgatewayUrl retrieves the pag url from environment variables.
-func getPromAggregationgatewayUrl() string {
-	promAggregationGatewayUrl := os.Getenv(envPromAggregationGatewayUrl)
-	if promAggregationGatewayUrl == "" {
-		log.Println("PROM_AGGREGATION_GATEWAY_URL is not set")
-		return ""
-	}
-	return promAggregationGatewayUrl
 }
 
 // ###############

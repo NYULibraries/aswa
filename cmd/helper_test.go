@@ -10,6 +10,7 @@ import (
 
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
+	m "github.com/NYULibraries/aswa/pkg/metrics"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -129,82 +130,6 @@ func TestGetClusterInfo(t *testing.T) {
 	}
 }
 
-func TestGetPromAggregationGatewayUrl(t *testing.T) {
-	tests := []struct {
-		name                         string
-		envPromAggregationGatewayUrl string
-		want                         string
-	}{
-		{"envPromAggregationGatewayUrl is set", "test-promaggregationgateway-url", "test-promaggregationgateway-url"},
-		{"envPromAggregationGatewayUrl is not set", "", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			os.Setenv(envPromAggregationGatewayUrl, tt.envPromAggregationGatewayUrl)
-
-			got := getPromAggregationgatewayUrl()
-
-			assert.Equal(t, tt.want, got, "getPushgatewayUrl() should return correct pushgateway URL")
-
-			os.Unsetenv(envPromAggregationGatewayUrl)
-		})
-	}
-
-}
-
-func TestPushMetrics(t *testing.T) {
-	tests := []struct {
-		name          string
-		mockResponse  func(w http.ResponseWriter, r *http.Request)
-		expectedError bool
-	}{
-		{
-			name: "Successful push",
-			mockResponse: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusOK)
-			},
-			expectedError: false,
-		},
-		{
-			name: "Failed push with non-200 response",
-			mockResponse: func(w http.ResponseWriter, r *http.Request) {
-				w.WriteHeader(http.StatusInternalServerError)
-			},
-			expectedError: true,
-		},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			// Setup mock HTTP server for this test case
-			server := httptest.NewServer(http.HandlerFunc(tt.mockResponse))
-			defer server.Close()
-
-			// Setup environment variable to mock the pushgateway URL
-			os.Setenv(envPromAggregationGatewayUrl, server.URL)
-			defer os.Unsetenv(envPromAggregationGatewayUrl)
-
-			// Increment a test counter to simulate metrics that would be pushed
-			incrementFailedTestsCounter("testApp")
-
-			// Call PushMetrics to attempt to push the test counter to the mock server
-			err := PushMetrics()
-
-			// Assert that an error occurred only if one was expected
-			if tt.expectedError {
-				if err == nil {
-					t.Errorf("TestPushMetrics %s: expected an error but got none", tt.name)
-				}
-			} else {
-				if err != nil {
-					t.Errorf("TestPushMetrics %s: did not expect an error but got: %v", tt.name, err)
-				}
-			}
-		})
-	}
-}
 func TestRunSyntheticTests(t *testing.T) {
 	// Convert MockApplication to a.Application
 	toApplication := func(ma *MockApplication) *a.Application {
@@ -323,8 +248,8 @@ func TestRunSyntheticTests(t *testing.T) {
 			defer mockPromAggregationGateway.Close()
 
 			// Set the PROM_AGGREGATION_GATEWAY_URL to the mock server's URL
-			os.Setenv(envPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
-			defer os.Unsetenv(envPromAggregationGatewayUrl)
+			os.Setenv(m.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
+			defer os.Unsetenv(m.EnvPromAggregationGatewayUrl)
 
 			// Convert MockApplications to real ones
 			var appData []*a.Application
@@ -379,7 +304,7 @@ func TestCheckDo(t *testing.T) {
 			os.Setenv(envYamlPath, tt.envYamlPath)
 			os.Setenv(envSlackWebhookUrl, tt.envSlackUrl)
 			os.Setenv(envClusterInfo, tt.envClusterInfo)
-			os.Setenv(envPromAggregationGatewayUrl, mockPushgateway.URL)
+			os.Setenv(m.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
@@ -402,7 +327,7 @@ func TestCheckDo(t *testing.T) {
 			os.Unsetenv(envYamlPath)
 			os.Unsetenv(envSlackWebhookUrl)
 			os.Unsetenv(envClusterInfo)
-			os.Unsetenv(envPromAggregationGatewayUrl)
+			os.Unsetenv(m.EnvPromAggregationGatewayUrl)
 			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
