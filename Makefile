@@ -3,7 +3,7 @@
 # Variables
 CLUSTER_INFO ?=
 DOCKER_COMPOSE_CMD ?= docker compose run --rm
-PUSHGATEWAY_URL ?=
+PROM_AGGREGATION_GATEWAY_URL ?=
 SLACK_CHANNEL_ID ?=
 SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
@@ -25,7 +25,7 @@ check_env:
 	UNSET_COUNT=0; \
 	if [ -z "$(SLACK_CHANNEL_ID)" ]; then MISSING_VARS="SLACK_CHANNEL_ID"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
 	if [ -z "$(CLUSTER_INFO)" ]; then MISSING_VARS="$$MISSING_VARS$${MISSING_VARS:+, }CLUSTER_INFO"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
-	if [ -z "$(PUSHGATEWAY_URL)" ]; then MISSING_VARS="$$MISSING_VARS$${MISSING_VARS:+, }PUSHGATEWAY_URL"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
+	if [ -z "$(PROM_AGGREGATION_GATEWAY_URL)" ]; then MISSING_VARS="$$MISSING_VARS$${MISSING_VARS:+, }PROM_AGGREGATION_GATEWAY_URL"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
 	if [ $$UNSET_COUNT -gt 0 ]; then \
 	    echo "$$MISSING_VARS $$([ $$UNSET_COUNT -gt 1 ] && echo 'are' || echo 'is') not set. Please set $$([ $$UNSET_COUNT -gt 1 ] && echo 'them' || echo 'it') and try again."; \
 	    exit 1; \
