@@ -130,12 +130,16 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		return err
 	}
 
-	// Push metrics after tests are run for all applications
-	if errorProm := PushMetrics(); errorProm != nil {
-		log.Printf("Error encountered during metrics push: %v", errorProm)
-		return errorProm // return the error to handle it accordingly
+	// Push metrics only if there are failed tests
+	if len(failingSyntheticTests) > 0 {
+		if errorProm := PushMetrics(); errorProm != nil {
+			log.Printf("Error encountered during metrics push: %v", errorProm)
+			return errorProm // return the error to handle it accordingly
+		}
+		log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
+	} else {
+		log.Println("No failed tests. No metrics pushed to Prom-Aggregation-Gateway")
 	}
-	log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
 
 	return nil
 }
