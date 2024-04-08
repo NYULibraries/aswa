@@ -1,26 +1,22 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
-	dto "github.com/prometheus/client_model/go"
-	"io"
-	"net/http"
-	"strings"
-
+	"github.com/prometheus/client_golang/prometheus/push"
+	"github.com/prometheus/common/expfmt"
 	"log"
 	"os"
 )
 
 // Constants for environment variables
 const (
-	envClusterInfo     = "CLUSTER_INFO"
-	envPushgatewayUrl  = "PUSHGATEWAY_URL"
-	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
-	envYamlPath        = "YAML_PATH"
+	envClusterInfo               = "CLUSTER_INFO"
+	envPromAggregationGatewayUrl = "PROM_AGGREGATION_GATEWAY_URL"
+	envSlackWebhookUrl           = "SLACK_WEBHOOK_URL"
+	envYamlPath                  = "YAML_PATH"
 )
 
 // ###############################################################
@@ -30,8 +26,8 @@ const (
 var (
 	failedTests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "aswa_failed_tests_total",
-			Help: "Total number of failed synthetic tests.",
+			Name: "aswa_checks",
+			Help: "Failed synthetic test.",
 		},
 		[]string{"app"},
 	)
@@ -42,52 +38,14 @@ func incrementFailedTestsCounter(appName string) {
 	failedTests.With(prometheus.Labels{"app": appName}).Inc()
 }
 
-// Create a struct that implements the interface using the push package
-type PrometheusPusher struct {
-	url       string
-	namespace string
-	collector prometheus.Collector
-	appName   string
-	counter   int
-}
-
-// Push sends a Prometheus counter metric for a specific application to a Pushgateway.
-// It formats the metric in Prometheus exposition format, constructs a POST request to the Pushgateway,
-// and handles the response. Errors during metric serialization, request creation, or server response
-// are returned to the caller.
-func (p *PrometheusPusher) Push(appName string, counter prometheus.Counter) error {
-	metricFamily := &dto.Metric{}
-	if err := counter.Write(metricFamily); err != nil {
-		log.Fatalf("Could not write Metric: %v", err)
-	}
-
-	// Convert the metric to the Prometheus exposition format
-	metricData := fmt.Sprintf("%s{%s=\"%s\"} %f\n", p.namespace+"FailedTests", "app", appName, *metricFamily.Counter.Value)
-
-	// Create a new HTTP request
-	req, err := http.NewRequest("POST", p.url+"/metrics/job/"+p.namespace, strings.NewReader(metricData))
-	if err != nil {
+// PushMetrics pushes all collected metrics to the PAG.
+func PushMetrics() error {
+	textFormat := expfmt.NewFormat(expfmt.TypeTextPlain)
+	pusher := push.New(getPromAggregationgatewayUrl(), "monitoring").
+		Collector(failedTests).
+		Format(textFormat)
+	if err := pusher.Push(); err != nil {
 		return err
-	}
-	req.Header.Set("Content-Type", "text/plain")
-
-	// Send the request using the http.DefaultClient
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return err
-	}
-	defer func(Body io.ReadCloser) {
-		err := Body.Close()
-		if err != nil {
-
-		}
-	}(resp.Body)
-
-	// Check the response
-	if resp.StatusCode != http.StatusOK {
-		buf := new(bytes.Buffer)
-		_, err = io.Copy(buf, resp.Body)
-		return fmt.Errorf("response Status: %s, Response Body: %s", resp.Status, buf.String())
 	}
 	return nil
 }
@@ -109,6 +67,7 @@ var check *Check
 func init() {
 	logger := log.New(os.Stdout, "", 0)
 	check = &Check{Logger: logger}
+	prometheus.MustRegister(failedTests)
 }
 
 // ########################
@@ -171,30 +130,18 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		return err
 	}
 
-	// Post failing test results after running tests on all applications
-	for _, failingTest := range failingSyntheticTests {
-		appCounter, err := failedTests.GetMetricWithLabelValues(failingTest.App.Name)
-		if err != nil {
-			log.Printf("Failed to get the counter for app: %s", failingTest.App.Name)
-			continue
-		}
-		pusher := &PrometheusPusher{
-			url:       getPushgatewayUrl(),
-			namespace: "aswa",
-			collector: failedTests,
-		}
-
-		if errorProm := pusher.Push(failingTest.App.Name, appCounter); errorProm != nil {
-			log.Printf("could not push to Prom Pushgateway: %v", errorProm)
-			continue
-		}
-		log.Printf("Success!Pushed failed test count for app: %s to Prom Pushgateway", failingTest.App.Name)
+	// Push metrics after tests are run for all applications
+	if errorProm := PushMetrics(); errorProm != nil {
+		log.Printf("Error encountered during metrics push: %v", errorProm)
+		return errorProm // return the error to handle it accordingly
 	}
+	log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
+
 	return nil
 }
 
 // ##################################################
-// Slack WebHook Url & Cluster Info & Pushgateway Url
+// Slack WebHook Url & Cluster Info & Prom-Aggregation-Gateway Url
 // ##################################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
@@ -217,14 +164,14 @@ func getClusterInfo() string {
 	return clusterInfo
 }
 
-// getPushgatewayUrl retrieves the pushgateway url from environment variables.
-func getPushgatewayUrl() string {
-	pushgatewayUrl := os.Getenv(envPushgatewayUrl)
-	if pushgatewayUrl == "" {
-		log.Println("PUSHGATEWAY_URL is not set")
+// getPromAggregationgatewayUrl retrieves the pag url from environment variables.
+func getPromAggregationgatewayUrl() string {
+	promAggregationGatewayUrl := os.Getenv(envPromAggregationGatewayUrl)
+	if promAggregationGatewayUrl == "" {
+		log.Println("PROM_AGGREGATION_GATEWAY_URL is not set")
 		return ""
 	}
-	return pushgatewayUrl
+	return promAggregationGatewayUrl
 }
 
 // ###############
