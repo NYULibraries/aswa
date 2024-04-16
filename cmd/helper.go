@@ -7,11 +7,13 @@ import (
 	m "github.com/NYULibraries/aswa/pkg/metrics"
 	"log"
 	"os"
+	"time"
 )
 
 // Constants for environment variables
 const (
 	envClusterInfo     = "CLUSTER_INFO"
+	envOutputSlack     = "OUTPUT_SLACK"
 	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
 	envYamlPath        = "YAML_PATH"
 )
@@ -66,11 +68,35 @@ type FailingSyntheticTest struct {
 	AppStatus a.ApplicationStatus
 }
 
+// postTestResult constructs a string containing the result of the given test.
+func postTestResult(appStatus a.ApplicationStatus) (string, error) {
+	result := appStatus.String()
+	timestamp := time.Now().Local().Format(time.RFC1123Z)
+	log.Printf("Test result generated on %s", timestamp)
+
+	return result, nil
+}
+
+func postToSlack(tests []FailingSyntheticTest) error {
+	getSlackWebhookUrl()
+	getClusterInfo()
+	for _, test := range tests {
+		result, err := postTestResult(test.AppStatus)
+		if err != nil {
+			return err
+		}
+		fmt.Println(result)
+	}
+	return nil
+}
+
 // RunSyntheticTests runs synthetic tests on the provided applications and posts results to Slack.
 func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 	found := false // Keep track of whether the app was found in the config file
 
 	var failingSyntheticTests []FailingSyntheticTest
+
+	IsOutputSlack := os.Getenv(envOutputSlack) == "true"
 
 	for _, app := range appData {
 		if targetAppName == "" || targetAppName == app.Name {
@@ -79,7 +105,9 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
-				m.IncrementFailedTestsCounter(app.Name)
+				if !IsOutputSlack {
+					m.IncrementFailedTestsCounter(app.Name)
+				}
 			}
 
 			if targetAppName != "" {
@@ -95,23 +123,25 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		return err
 	}
 
-	// Push metrics only if there are failed tests
 	if len(failingSyntheticTests) > 0 {
+		if IsOutputSlack {
+			return postToSlack(failingSyntheticTests)
+		}
+		// Push metrics to Prom-Aggregation-Gateway if OUTPUT_SLACK is not set
 		if errorProm := m.PushMetrics(); errorProm != nil {
 			log.Printf("Error encountered during metrics push: %v", errorProm)
 			return errorProm // return the error to handle it accordingly
 		}
 		log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
 	} else {
-		log.Println("No failed tests. No metrics pushed to Prom-Aggregation-Gateway")
+		log.Println("No failed tests. No actions taken.")
 	}
-
 	return nil
 }
 
-// ##################################################
-// Slack WebHook Url & Cluster Info & Prom-Aggregation-Gateway Url
-// ##################################################
+// #################################
+// Slack WebHook Url & Cluster Info
+// #################################
 
 // getSlackCredentials retrieves Slack credentials from environment variables.
 func getSlackWebhookUrl() string {
@@ -148,9 +178,6 @@ func (ch *Check) Do() error {
 	}
 
 	appData := inputData.Applications
-
-	getSlackWebhookUrl()
-	getClusterInfo()
 
 	cmdArg := getCmdArg()
 
