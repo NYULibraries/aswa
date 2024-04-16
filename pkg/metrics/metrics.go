@@ -9,15 +9,16 @@ import (
 )
 
 const EnvPromAggregationGatewayUrl = "PROM_AGGREGATION_GATEWAY_URL"
+const EnvName = "ENV"
 
 // Define a Prometheus counter to count the number of failed tests
 var (
 	failedTests = prometheus.NewCounterVec(
 		prometheus.CounterOpts{
-			Name: "aswa_checks",
+			Name: "aswa_checks_total",
 			Help: "Failed synthetic test.",
 		},
-		[]string{"app"},
+		[]string{"env", "app"},
 	)
 )
 
@@ -27,7 +28,8 @@ func init() {
 
 // IncrementFailedTestsCounter increments the counter for a given app
 func IncrementFailedTestsCounter(app string) {
-	failedTests.WithLabelValues(app).Inc()
+	env := getEnvironmentName()
+	failedTests.WithLabelValues(env, app).Inc()
 }
 
 // PushMetrics pushes all collected metrics to the PAG.
@@ -50,4 +52,13 @@ func getPromAggregationgatewayUrl() string {
 		return ""
 	}
 	return promAggregationGatewayUrl
+}
+
+// getEnvironmentName retrieves the environment name from environment variables, defaults to 'dev' if not set
+func getEnvironmentName() string {
+	env := os.Getenv(EnvName)
+	if env == "" {
+		return "dev"
+	}
+	return env
 }
