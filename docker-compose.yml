@@ -8,6 +8,7 @@ services:
     # volumes:
     #   - ./config:/config
     environment:
+      - ENV=${ENV:-dev}
       - DEBUG_MODE=${DEBUG_MODE:-false}
       - CLUSTER_INFO=${CLUSTER_INFO}
       - OUTPUT_SLACK=${OUTPUT_SLACK:-false}
