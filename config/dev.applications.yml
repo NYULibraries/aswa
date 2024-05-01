@@ -2,18 +2,10 @@ applications:
   - name: bess
     url: 'https://cdn-dev.library.nyu.edu/bess-vue/app.min.js'
     expected_status: 200
-  - name: bobcat-linker
-    url: 'https://dev.library.nyu.edu/persistent'
-    expected_status: 301
-    expected_location: 'https://app.library.nyu.edu/bobcat-linker'
   - name: bobcat-permalink
     url: 'https://bobcatdev.library.nyu.edu/permalink/f/ci13eu/nyu_aleph009700570'
     expected_status: 303
     expected_location: 'https://search.library.nyu.edu/discovery/fulldisplay?docid=alma990097005700107871&context=L&vid=01NYU_INST:NYU'
-  - name: campus-media-equipment
-    url: 'https://dev.library.nyu.edu/services/campus-media/classrooms/'
-    expected_status: 301
-    expected_location: 'https://www.appsheet.com/start/014cf30a-fbbc-454b-9fd8-b5bde95eb0d3'
   - name: getit
     url: 'https://getit-dev.library.nyu.edu'
     expected_status: 302
