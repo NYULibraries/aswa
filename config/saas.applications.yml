@@ -14,10 +14,10 @@ applications:
 #    url: 'https://guides.nyu.edu/arch'
 #    expected_status: 200
 #    expected_content: 'NYU Libraries Research Guides'
-  - name: libcal
-    url: 'https://nyu.libcal.com'
-    expected_status: 200
-    expected_content: 'Library Classes & Workshops'
+#  - name: libcal
+#    url: 'https://nyu.libcal.com'
+#    expected_status: 200
+#    expected_content: 'Library Classes & Workshops'
   - name: library-answers
     url: 'https://library.answers.nyu.edu'
     expected_status: 200
