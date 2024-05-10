@@ -130,7 +130,14 @@ func closeResponseBody(Body io.ReadCloser) {
 
 func performGetRequest(test Application, client *http.Client) (*http.Response, error, string, bool) {
 	clientUrl := getClientUrl(test)
-	resp, err := client.Get(clientUrl)
+	req, err := http.NewRequest("GET", clientUrl, nil)
+	if err != nil {
+		return nil, err, "", false
+	}
+
+	req.Header.Set("User-Agent", "ASWA MonitoringService/1.0 (Performs health checks every 15 minutes; contact lib-appdev@nyu.edu for more info)")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err, "", false
 	}
