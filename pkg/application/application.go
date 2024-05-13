@@ -147,6 +147,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, e
 	buf := new(bytes.Buffer)
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
+		log.Println("Error copying response body:", err)
 		return nil, err, "", false
 	}
 
