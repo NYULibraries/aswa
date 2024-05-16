@@ -277,7 +277,7 @@ func failureString(results ApplicationStatus) string {
 			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, and redirect location %s did not match %s", actualStatusCode, expectedStatusCode, actualLocation, expectedLocation)
 		} else if statusMatch && !locationMatch {
 			mismatchDetails = fmt.Sprintf("resolved with %d, but redirect location %s did not match %s", actualStatusCode, actualLocation, expectedLocation)
-		} else if !statusMatch && locationMatch {
+		} else if !statusMatch {
 			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, but redirect location matched", actualStatusCode, expectedStatusCode)
 		}
 	} else if !statusMatch {
