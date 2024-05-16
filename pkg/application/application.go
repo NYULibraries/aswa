@@ -135,7 +135,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, e
 		return nil, err, "", false
 	}
 
-	req.Header.Set("User-Agent", "ASWA-MonitoringService/1.0 (HealthCheck; contact: lib-appdev@nyu.edu)")
+	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
 
 	resp, err := client.Do(req)
 	if err != nil {
