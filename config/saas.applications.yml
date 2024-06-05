@@ -10,14 +10,14 @@ applications:
     url: 'https://status.circleci.com/api/v2/status.json'
     expected_status: 200
     expected_content: 'All Systems Operational'
-#  - name: lib-guides
-#    url: 'https://guides.nyu.edu/arch'
-#    expected_status: 200
-#    expected_content: 'NYU Libraries Research Guides'
-#  - name: libcal
-#    url: 'https://nyu.libcal.com'
-#    expected_status: 200
-#    expected_content: 'Library Classes & Workshops'
+  - name: lib-guides
+    url: 'https://guides.nyu.edu/arch'
+    expected_status: 200
+    expected_content: 'Research Guides'
+  - name: libcal
+    url: 'https://nyu.libcal.com'
+    expected_status: 200
+    expected_content: 'Library Classes & Workshops'
   - name: library-answers
     url: 'https://library.answers.nyu.edu'
     expected_status: 200

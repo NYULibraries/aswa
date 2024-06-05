@@ -130,7 +130,14 @@ func closeResponseBody(Body io.ReadCloser) {
 
 func performGetRequest(test Application, client *http.Client) (*http.Response, error, string, bool) {
 	clientUrl := getClientUrl(test)
-	resp, err := client.Get(clientUrl)
+	req, err := http.NewRequest("GET", clientUrl, nil)
+	if err != nil {
+		return nil, err, "", false
+	}
+
+	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
+
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err, "", false
 	}
@@ -141,6 +148,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, e
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
 		log.Println("Error copying response body:", err)
+		return nil, err, "", false
 	}
 
 	actualContent := buf.String()
@@ -269,7 +277,7 @@ func failureString(results ApplicationStatus) string {
 			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, and redirect location %s did not match %s", actualStatusCode, expectedStatusCode, actualLocation, expectedLocation)
 		} else if statusMatch && !locationMatch {
 			mismatchDetails = fmt.Sprintf("resolved with %d, but redirect location %s did not match %s", actualStatusCode, actualLocation, expectedLocation)
-		} else if !statusMatch && locationMatch {
+		} else if !statusMatch {
 			mismatchDetails = fmt.Sprintf("resolved with %d, expected %d, but redirect location matched", actualStatusCode, expectedStatusCode)
 		}
 	} else if !statusMatch {
