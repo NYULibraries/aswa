@@ -6,10 +6,14 @@ services:
     # volumes:
     #   - ./config:/config
     environment:
-      - YAML_PATH=${YAML_PATH:-config/dev.applications.yml}
-      - CLUSTER_INFO=${CLUSTER_INFO}
-      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - ENV=${ENV:-dev}
       - DEBUG_MODE=${DEBUG_MODE:-false}
+      - CLUSTER_INFO=${CLUSTER_INFO}
+      - OUTPUT_SLACK=${OUTPUT_SLACK:-false}
+      - PROM_AGGREGATION_GATEWAY_URL=${PROM_AGGREGATION_GATEWAY_URL}
+      - SLACK_WEBHOOK_URL=${SLACK_WEBHOOK_URL}
+      - YAML_PATH=${YAML_PATH:-config/dev.applications.yml}
+
   test:
     image: aswa_test
     build:
