@@ -5,18 +5,13 @@ import (
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
 	m "github.com/NYULibraries/aswa/pkg/metrics"
+	u "github.com/NYULibraries/aswa/pkg/utils"
 	"log"
 	"os"
 	"time"
 )
 
-// Constants for environment variables
-const (
-	envClusterInfo     = "CLUSTER_INFO"
-	envOutputSlack     = "OUTPUT_SLACK"
-	envSlackWebhookUrl = "SLACK_WEBHOOK_URL"
-	envYamlPath        = "YAML_PATH"
-)
+const envOutputSlack = "OUTPUT_SLACK"
 
 // #############################
 // Check Struct & Initialization
@@ -35,28 +30,6 @@ var check *Check
 func init() {
 	logger := log.New(os.Stdout, "", 0)
 	check = &Check{Logger: logger}
-}
-
-// ########################
-// Environment & Arguments
-// ########################
-
-// getYamlPath retrieves the YAML path from the environment variable.
-func getYamlPath(logger *log.Logger) string {
-	yamlPath := os.Getenv(envYamlPath)
-	if yamlPath == "" {
-		logger.Println("Environment variable for YAML path not found, using default")
-		yamlPath = "config/dev.applications.yml"
-	}
-	return yamlPath
-}
-
-// getCmdArg retrieves the command line argument without using the flag package.
-func getCmdArg() string {
-	if len(os.Args) == 1 {
-		return ""
-	}
-	return os.Args[1]
 }
 
 // ####################
@@ -78,8 +51,8 @@ func postTestResult(appStatus a.ApplicationStatus) (string, error) {
 }
 
 func postToSlack(tests []FailingSyntheticTest) error {
-	getSlackWebhookUrl()
-	getClusterInfo()
+	u.GetSlackWebhookUrl()
+	u.GetClusterInfo()
 	for _, test := range tests {
 		result, err := postTestResult(test.AppStatus)
 		if err != nil {
@@ -139,37 +112,13 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 	return nil
 }
 
-// #################################
-// Slack WebHook Url & Cluster Info
-// #################################
-
-// getSlackCredentials retrieves Slack credentials from environment variables.
-func getSlackWebhookUrl() string {
-	slackWebhookUrl := os.Getenv(envSlackWebhookUrl)
-	if slackWebhookUrl == "" {
-		log.Println("SLACK_WEBHOOK_URL is not set")
-		return ""
-	}
-	return slackWebhookUrl
-}
-
-// getClusterInfo retrieves the cluster info from environment variables.
-func getClusterInfo() string {
-	clusterInfo := os.Getenv(envClusterInfo)
-	if clusterInfo == "" {
-		log.Println("CLUSTER_INFO is not set")
-		return ""
-	}
-	return clusterInfo
-}
-
 // ###############
 // Check Execution
 // ###############
 
 // Do method on Check struct.
 func (ch *Check) Do() error {
-	yamlPath := getYamlPath(ch.Logger)
+	yamlPath := u.GetYamlPath(ch.Logger)
 	a.SetIsPrimoVE(yamlPath)
 
 	inputData, err := c.NewConfig(yamlPath)
@@ -179,7 +128,7 @@ func (ch *Check) Do() error {
 
 	appData := inputData.Applications
 
-	cmdArg := getCmdArg()
+	cmdArg := u.GetCmdArg()
 
 	return RunSyntheticTests(appData, cmdArg)
 }
