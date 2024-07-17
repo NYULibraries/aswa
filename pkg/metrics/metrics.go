@@ -16,19 +16,10 @@ var (
 		},
 		[]string{"env", "app"},
 	)
-
-	clusterInfoGauge = prometheus.NewGaugeVec(
-		prometheus.GaugeOpts{
-			Name: "aswa_cluster_info",
-			Help: "Cluster info.",
-		},
-		[]string{"cluster_info"},
-	)
 )
 
 func init() {
 	prometheus.MustRegister(failedTests)
-	prometheus.MustRegister(clusterInfoGauge)
 }
 
 // IncrementFailedTestsCounter increments the counter for a given app
@@ -39,12 +30,9 @@ func IncrementFailedTestsCounter(app string) {
 
 // PushMetrics pushes all collected metrics to the PAG.
 func PushMetrics() error {
-	clusterInfo := u.GetClusterInfo()
-	clusterInfoGauge.WithLabelValues(clusterInfo).Set(1)
 	textFormat := expfmt.NewFormat(expfmt.TypeTextPlain)
 	pusher := push.New(u.GetPromAggregationgatewayUrl(), "monitoring").
 		Collector(failedTests).
-		Collector(clusterInfoGauge).
 		Format(textFormat)
 	if err := pusher.Push(); err != nil {
 		return err
