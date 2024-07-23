@@ -1,11 +1,28 @@
 package utils
 
 import (
+	"bytes"
 	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
 )
+
+// CaptureOutput captures the log output of a function
+func CaptureOutput(f func()) string {
+	var buf bytes.Buffer
+	// Save the current flags and set log flags to exclude date and time
+	savedFlags := log.Flags()
+	log.SetFlags(0)
+	log.SetOutput(&buf)
+	defer func() {
+		// Restore the original log flags and output
+		log.SetFlags(savedFlags)
+		log.SetOutput(os.Stderr)
+	}()
+	f()
+	return buf.String()
+}
 
 func TestGetYamlPath(t *testing.T) {
 	tests := []struct {
@@ -22,7 +39,7 @@ func TestGetYamlPath(t *testing.T) {
 
 			os.Setenv(EnvYamlPath, tt.envYamlPath)
 
-			got := GetYamlPath(log.New(os.Stdout, "", 0))
+			got := GetYamlPath()
 
 			assert.Equal(t, tt.want, got, "getYamlPath() should return correct yaml path")
 
@@ -57,10 +74,10 @@ func TestGetSlackWebhookUrl(t *testing.T) {
 	tests := []struct {
 		name               string
 		envSlackWebhookUrl string
-		want               string
+		wantLogmessage     string
 	}{
-		{"EnvSlackWebhookUrl is set", "https://hooks.slack.com/test-url", "https://hooks.slack.com/test-url"},
-		{"EnvSlackWebhookUrl is not set", "", ""},
+		{"EnvSlackWebhookUrl is set", "https://hooks.slack.com/test-url", ""},
+		{"EnvSlackWebhookUrl is not set", "", "SLACK_WEBHOOK_URL is not set\n"},
 	}
 
 	for _, tt := range tests {
@@ -68,9 +85,9 @@ func TestGetSlackWebhookUrl(t *testing.T) {
 
 			os.Setenv(EnvSlackWebhookUrl, tt.envSlackWebhookUrl)
 
-			got := GetSlackWebhookUrl()
+			gotLogMessage := CaptureOutput(GetSlackWebhookUrl)
 
-			assert.Equal(t, tt.want, got, "getSlackWebhookUrl() should return correct Slack webhook URL")
+			assert.Equal(t, tt.wantLogmessage, gotLogMessage, "getSlackWebhookUrl() should return correct Slack webhook URL")
 
 			os.Unsetenv(EnvSlackWebhookUrl)
 		})
@@ -81,10 +98,10 @@ func TestGetClusterInfo(t *testing.T) {
 	tests := []struct {
 		name           string
 		envClusterInfo string
-		want           string
+		wantLogMessage string
 	}{
-		{"EnvClusterInfo is set", "test-cluster", "test-cluster"},
-		{"EnvClusterInfo is not set", "", ""},
+		{"EnvClusterInfo is set with lower case", "test-cluster", ""},
+		{"EnvClusterInfo is not set", "", "CLUSTER_INFO is not set\n"},
 	}
 
 	for _, tt := range tests {
@@ -94,10 +111,10 @@ func TestGetClusterInfo(t *testing.T) {
 			os.Setenv(EnvClusterInfo, tt.envClusterInfo)
 
 			// Call function under test
-			got := GetClusterInfo()
+			gotLogMessage := CaptureOutput(GetClusterInfo)
 
 			// Assert that the function returns the expected result
-			assert.Equal(t, tt.want, got, "getClusterInfo() should return correct cluster info")
+			assert.Equal(t, tt.wantLogMessage, gotLogMessage, "getClusterInfo() should return correct cluster info")
 
 			// Unset environment variable for next test
 			os.Unsetenv(EnvClusterInfo)
