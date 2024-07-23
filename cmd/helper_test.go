@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -178,7 +177,7 @@ func TestRunSyntheticTests(t *testing.T) {
 	}
 }
 
-func TestCheckDo(t *testing.T) {
+func TestDoCheck(t *testing.T) {
 	// Define a mock server to simulate the Pushgateway
 	mockPushgateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK) // simulate a successful push to the Pushgateway
@@ -211,12 +210,8 @@ func TestCheckDo(t *testing.T) {
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
 
-			// Initialize Check struct with a logger that outputs to stdout.
-			logger := log.New(os.Stdout, "", 0)
-			ch := &Check{Logger: logger}
-
 			// Call function under test
-			err := ch.Do()
+			err := DoCheck()
 
 			// Use assertions to check for expected error
 			if tt.wantErr {
