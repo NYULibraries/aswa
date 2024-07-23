@@ -1,7 +1,7 @@
 package metrics
 
 import (
-	u "github.com/NYULibraries/aswa/pkg/utils"
+	c "github.com/NYULibraries/aswa/pkg/config"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -37,8 +37,8 @@ func TestPushMetrics(t *testing.T) {
 			defer server.Close()
 
 			// Setup environment variable to mock the pushgateway URL
-			os.Setenv(u.EnvPromAggregationGatewayUrl, server.URL)
-			defer os.Unsetenv(u.EnvPromAggregationGatewayUrl)
+			os.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
+			defer os.Unsetenv(c.EnvPromAggregationGatewayUrl)
 
 			// Increment a test counter to simulate metrics that would be pushed
 			IncrementFailedTestsCounter("testApp")
