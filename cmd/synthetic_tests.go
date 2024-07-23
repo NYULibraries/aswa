@@ -5,7 +5,6 @@ import (
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
 	m "github.com/NYULibraries/aswa/pkg/metrics"
-	u "github.com/NYULibraries/aswa/pkg/utils"
 	"log"
 	"os"
 	"time"
@@ -32,8 +31,8 @@ func postTestResult(appStatus a.ApplicationStatus) (string, error) {
 }
 
 func postToSlack(tests []FailingSyntheticTest) error {
-	u.GetSlackWebhookUrl()
-	u.GetClusterInfo()
+	c.GetSlackWebhookUrl()
+	c.GetClusterInfo()
 	for _, test := range tests {
 		result, err := postTestResult(test.AppStatus)
 		if err != nil {
@@ -99,7 +98,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 
 // DoCheck loads configuration, initializes settings, and triggers synthetic tests.
 func DoCheck() error {
-	yamlPath := u.GetYamlPath()
+	yamlPath := c.GetYamlPath()
 	a.SetIsPrimoVE(yamlPath)
 
 	inputData, err := c.NewConfig(yamlPath)
@@ -109,7 +108,7 @@ func DoCheck() error {
 
 	appData := inputData.Applications
 
-	cmdArg := u.GetCmdArg()
+	cmdArg := c.GetCmdArg()
 
 	return RunSyntheticTests(appData, cmdArg)
 }

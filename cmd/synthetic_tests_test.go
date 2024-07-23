@@ -9,7 +9,6 @@ import (
 
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
-	u "github.com/NYULibraries/aswa/pkg/utils"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -149,8 +148,8 @@ func TestRunSyntheticTests(t *testing.T) {
 			defer mockPromAggregationGateway.Close()
 
 			// Set the PROM_AGGREGATION_GATEWAY_URL to the mock server's URL
-			os.Setenv(u.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
-			defer os.Unsetenv(u.EnvPromAggregationGatewayUrl)
+			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
+			defer os.Unsetenv(c.EnvPromAggregationGatewayUrl)
 
 			// Convert MockApplications to real ones
 			var appData []*a.Application
@@ -202,10 +201,10 @@ func TestDoCheck(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Set up environment variables and command line arguments
-			os.Setenv(u.EnvYamlPath, tt.envYamlPath)
-			os.Setenv(u.EnvSlackWebhookUrl, tt.envSlackUrl)
-			os.Setenv(u.EnvClusterInfo, tt.envClusterInfo)
-			os.Setenv(u.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
+			os.Setenv(c.EnvYamlPath, tt.envYamlPath)
+			os.Setenv(c.EnvSlackWebhookUrl, tt.envSlackUrl)
+			os.Setenv(c.EnvClusterInfo, tt.envClusterInfo)
+			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
@@ -221,10 +220,10 @@ func TestDoCheck(t *testing.T) {
 			}
 
 			// Unset environment variables
-			os.Unsetenv(u.EnvYamlPath)
-			os.Unsetenv(u.EnvSlackWebhookUrl)
-			os.Unsetenv(u.EnvClusterInfo)
-			os.Unsetenv(u.EnvPromAggregationGatewayUrl)
+			os.Unsetenv(c.EnvYamlPath)
+			os.Unsetenv(c.EnvSlackWebhookUrl)
+			os.Unsetenv(c.EnvClusterInfo)
+			os.Unsetenv(c.EnvPromAggregationGatewayUrl)
 			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
