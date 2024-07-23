@@ -13,25 +13,6 @@ import (
 
 const envOutputSlack = "OUTPUT_SLACK"
 
-// #############################
-// Check Struct & Initialization
-// #############################
-
-// Check struct encapsulates the main logic and associated state (e.g., the logger)
-// for running synthetic tests and posting results to Slack.
-type Check struct {
-	Logger *log.Logger
-}
-
-// Package-level variable 'check' holds the Check instance, initialized in the init function.
-var check *Check
-
-// init function initializes the Check instance with a logger that outputs to stdout.
-func init() {
-	logger := log.New(os.Stdout, "", 0)
-	check = &Check{Logger: logger}
-}
-
 // ####################
 // Synthetic Test Logic
 // ####################
@@ -116,9 +97,9 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 // Check Execution
 // ###############
 
-// Do method on Check struct.
-func (ch *Check) Do() error {
-	yamlPath := u.GetYamlPath(ch.Logger)
+// DoCheck loads configuration, initializes settings, and triggers synthetic tests.
+func DoCheck() error {
+	yamlPath := u.GetYamlPath()
 	a.SetIsPrimoVE(yamlPath)
 
 	inputData, err := c.NewConfig(yamlPath)
