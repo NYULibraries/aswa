@@ -18,9 +18,9 @@ If no config file is specified, it will default to `dev.applications.yml`
 Run a synthetic test in a docker container:
 
 ```
-docker-compose run aswa $APP_NAME
+docker compose run aswa $APP_NAME
 
-docker-compose run aswa
+docker compose run aswa
 
 ```
 
@@ -30,6 +30,13 @@ Run a synthetic test locally:
 ./aswa $APP_NAME
 
 ./aswa 
+```
+
+### Building ASWA binary
+To build the ASWA binary, execute the following command:
+
+```shell
+go build -o aswa ./cmd
 ```
 
 ### YAML config
@@ -55,6 +62,18 @@ applications:
     timeout: 600ms
 ~~~
 
+### Environment variables
+In the `docker-compose.yml` file, you can configure the environment variables for the ASWA service. 
+Here is an explanation of the key environment variables:
+
+* ENV: Specifies the environment in which ASWA is running (default is `dev`).
+* DEBUG_MODE: Enables or disables debug mode (default is false).
+* CLUSTER_INFO: Includes cluster information in the output.
+* OUTPUT_SLACK: If set to true, results are sent to Slack; otherwise, they are sent to PAG (default is `false`).
+* PROM_AGGREGATION_GATEWAY_URL: URL for the Prom Aggregation Gateway.
+* SLACK_WEBHOOK_URL: Slack webhook URL for notifications.
+* YAML_PATH: Path to the YAML configuration file (default is `config/dev.applications.yml`).
+
 ### Notifications
 ASWA can post the results of its checks to respective Slack channels (dev, prod, saas) based on the environment. To enable this feature, set the `SLACK_WEBHOOK_URL` environment variable with your Slack webhook URL.
 
@@ -63,3 +82,17 @@ By default, `OUTPUT_SLACK` is set to `false`. If `OUTPUT_SLACK` is set to `true`
 ### Deployment
 ASWA is designed to run as a cron job in a Kubernetes (K8s) cluster. 
 To include cluster information in the output, set the `CLUSTER_INFO` environment variable.
+
+### Tests
+To run the tests, execute the following command:
+
+Run tests locally:
+```shell
+go test -cover ./...
+```
+
+Run tests in a docker container:
+```shell
+docker compose run test
+
+
