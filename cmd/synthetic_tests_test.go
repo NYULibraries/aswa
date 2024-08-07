@@ -1,7 +1,6 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -10,7 +9,6 @@ import (
 
 	a "github.com/NYULibraries/aswa/pkg/application"
 	c "github.com/NYULibraries/aswa/pkg/config"
-	m "github.com/NYULibraries/aswa/pkg/metrics"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -30,104 +28,6 @@ type MockApplicationStatus struct {
 
 func (m *MockApplication) GetStatus() *MockApplicationStatus {
 	return m.Status
-}
-
-func TestGetYamlPath(t *testing.T) {
-	tests := []struct {
-		name        string
-		envYamlPath string
-		want        string
-	}{
-		{"envYamlPath is set", "test-path", "test-path"},
-		{"envYamlPath is not set", "", "config/dev.applications.yml"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			os.Setenv(envYamlPath, tt.envYamlPath)
-
-			got := getYamlPath(log.New(os.Stdout, "", 0))
-
-			assert.Equal(t, tt.want, got, "getYamlPath() should return correct yaml path")
-
-			os.Unsetenv(envYamlPath)
-		})
-	}
-}
-
-func TestGetCmdArg(t *testing.T) {
-	tests := []struct {
-		name   string
-		osArgs []string
-		want   string
-	}{
-		{"No argument", []string{"test"}, ""},
-		{"With argument", []string{"test", "arg1"}, "arg1"},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			os.Args = tt.osArgs
-
-			got := getCmdArg()
-
-			assert.Equal(t, tt.want, got, "getCmdArg() should return correct command argument")
-		})
-	}
-}
-
-func TestGetSlackWebhookUrl(t *testing.T) {
-	tests := []struct {
-		name               string
-		envSlackWebhookUrl string
-		want               string
-	}{
-		{"envSlackWebhookUrl is set", "https://hooks.slack.com/test-url", "https://hooks.slack.com/test-url"},
-		{"envSlackWebhookUrl is not set", "", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			os.Setenv(envSlackWebhookUrl, tt.envSlackWebhookUrl)
-
-			got := getSlackWebhookUrl()
-
-			assert.Equal(t, tt.want, got, "getSlackWebhookUrl() should return correct Slack webhook URL")
-
-			os.Unsetenv(envSlackWebhookUrl)
-		})
-	}
-}
-
-func TestGetClusterInfo(t *testing.T) {
-	tests := []struct {
-		name           string
-		envClusterInfo string
-		want           string
-	}{
-		{"envClusterInfo is set", "test-cluster", "test-cluster"},
-		{"envClusterInfo is not set", "", ""},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-
-			// Set up environment variable
-			os.Setenv(envClusterInfo, tt.envClusterInfo)
-
-			// Call function under test
-			got := getClusterInfo()
-
-			// Assert that the function returns the expected result
-			assert.Equal(t, tt.want, got, "getClusterInfo() should return correct cluster info")
-
-			// Unset environment variable for next test
-			os.Unsetenv(envClusterInfo)
-		})
-	}
 }
 
 func TestRunSyntheticTests(t *testing.T) {
@@ -248,8 +148,8 @@ func TestRunSyntheticTests(t *testing.T) {
 			defer mockPromAggregationGateway.Close()
 
 			// Set the PROM_AGGREGATION_GATEWAY_URL to the mock server's URL
-			os.Setenv(m.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
-			defer os.Unsetenv(m.EnvPromAggregationGatewayUrl)
+			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
+			defer os.Unsetenv(c.EnvPromAggregationGatewayUrl)
 
 			// Convert MockApplications to real ones
 			var appData []*a.Application
@@ -276,7 +176,7 @@ func TestRunSyntheticTests(t *testing.T) {
 	}
 }
 
-func TestCheckDo(t *testing.T) {
+func TestDoCheck(t *testing.T) {
 	// Define a mock server to simulate the Pushgateway
 	mockPushgateway := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK) // simulate a successful push to the Pushgateway
@@ -301,20 +201,16 @@ func TestCheckDo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Set up environment variables and command line arguments
-			os.Setenv(envYamlPath, tt.envYamlPath)
-			os.Setenv(envSlackWebhookUrl, tt.envSlackUrl)
-			os.Setenv(envClusterInfo, tt.envClusterInfo)
-			os.Setenv(m.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
+			os.Setenv(c.EnvYamlPath, tt.envYamlPath)
+			os.Setenv(c.EnvSlackWebhookUrl, tt.envSlackUrl)
+			os.Setenv(c.EnvClusterInfo, tt.envClusterInfo)
+			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			os.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
 
-			// Initialize Check struct with a logger that outputs to stdout.
-			logger := log.New(os.Stdout, "", 0)
-			ch := &Check{Logger: logger}
-
 			// Call function under test
-			err := ch.Do()
+			err := DoCheck()
 
 			// Use assertions to check for expected error
 			if tt.wantErr {
@@ -324,10 +220,10 @@ func TestCheckDo(t *testing.T) {
 			}
 
 			// Unset environment variables
-			os.Unsetenv(envYamlPath)
-			os.Unsetenv(envSlackWebhookUrl)
-			os.Unsetenv(envClusterInfo)
-			os.Unsetenv(m.EnvPromAggregationGatewayUrl)
+			os.Unsetenv(c.EnvYamlPath)
+			os.Unsetenv(c.EnvSlackWebhookUrl)
+			os.Unsetenv(c.EnvClusterInfo)
+			os.Unsetenv(c.EnvPromAggregationGatewayUrl)
 			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
