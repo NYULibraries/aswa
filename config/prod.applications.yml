@@ -52,10 +52,10 @@ applications:
   - name: statuspage-embed
     url: 'https://cdn.library.nyu.edu/statuspage-embed/index.min.js'
     expected_status: 200
-  - name: web-proxies
-    url: 'http://web-pr-proxy1.bobst.nyu.edu/'
-    expected_status: 301
-    expected_location: 'https://bobcat.library.nyu.edu/'
+#  - name: web-proxies
+#    url: 'http://web-pr-proxy1.bobst.nyu.edu/'
+#    expected_status: 301
+#    expected_location: 'https://bobcat.library.nyu.edu/'
 
 
 
