@@ -77,7 +77,8 @@ Here is an explanation of the key environment variables:
 ### Notifications
 ASWA can post the results of its checks to respective Slack channels (dev, prod, saas) based on the environment. To enable this feature, set the `SLACK_WEBHOOK_URL` environment variable with your Slack webhook URL.
 
-By default, `OUTPUT_SLACK` is set to `false`. If `OUTPUT_SLACK` is set to `true`, the results are sent to Slack. If `OUTPUT_SLACK` is set to `false`, the results are sent to PAG (Prom Aggregation Gateway of Prometheus).
+By default, `OUTPUT_SLACK` is set to `false`. If `OUTPUT_SLACK` is set to `true`, the results are sent to Slack. If `OUTPUT_SLACK` is set to `false`, the results are sent to PAG (Prom Aggregation Gateway). PAG aggregates metrics for Prometheus and is similar in function to Pushgateway but includes metric aggregation capabilities.
+
 
 ### Deployment
 ASWA is designed to run as a cron job in a Kubernetes (K8s) cluster. 
