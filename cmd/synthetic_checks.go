@@ -101,14 +101,12 @@ func DoCheck() error {
 	yamlPath := c.GetYamlPath()
 	a.SetIsPrimoVE(yamlPath)
 
-	inputData, err := c.NewConfig(yamlPath)
+	config, err := c.NewConfig(yamlPath)
 	if err != nil {
 		return err
 	}
 
-	appData := inputData.Applications
-
 	cmdArg := c.GetCmdArg()
 
-	return RunSyntheticTests(appData, cmdArg)
+	return RunSyntheticTests(config.Applications, cmdArg)
 }
