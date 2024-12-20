@@ -148,8 +148,7 @@ func TestRunSyntheticTests(t *testing.T) {
 			defer mockPromAggregationGateway.Close()
 
 			// Set the PROM_AGGREGATION_GATEWAY_URL to the mock server's URL
-			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
-			defer os.Unsetenv(c.EnvPromAggregationGatewayUrl)
+			t.Setenv(c.EnvPromAggregationGatewayUrl, mockPromAggregationGateway.URL)
 
 			// Convert MockApplications to real ones
 			var appData []*a.Application
@@ -201,12 +200,12 @@ func TestDoCheck(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Set up environment variables and command line arguments
-			os.Setenv(c.EnvYamlPath, tt.envYamlPath)
-			os.Setenv(c.EnvSlackWebhookUrl, tt.envSlackUrl)
-			os.Setenv(c.EnvClusterInfo, tt.envClusterInfo)
-			os.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
+			t.Setenv(c.EnvYamlPath, tt.envYamlPath)
+			t.Setenv(c.EnvSlackWebhookUrl, tt.envSlackUrl)
+			t.Setenv(c.EnvClusterInfo, tt.envClusterInfo)
+			t.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
-			os.Setenv(c.EnvSkipWhitelistCheck, "true")
+			t.Setenv(c.EnvSkipWhitelistCheck, "true")
 			os.Args = tt.cmdArgs
 
 			// Call function under test
@@ -218,13 +217,6 @@ func TestDoCheck(t *testing.T) {
 			} else {
 				assert.NoError(t, err, "Expected no error but got one")
 			}
-
-			// Unset environment variables
-			os.Unsetenv(c.EnvYamlPath)
-			os.Unsetenv(c.EnvSlackWebhookUrl)
-			os.Unsetenv(c.EnvClusterInfo)
-			os.Unsetenv(c.EnvPromAggregationGatewayUrl)
-			os.Unsetenv(c.EnvSkipWhitelistCheck)
 		})
 	}
 }
