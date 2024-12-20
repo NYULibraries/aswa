@@ -1,13 +1,11 @@
 module github.com/NYULibraries/aswa
 
-go 1.21
-
-toolchain go1.23.0
+go 1.23.4
 
 require (
 	github.com/prometheus/client_golang v1.20.5
-	github.com/prometheus/common v0.60.1
-	github.com/stretchr/testify v1.9.0
+	github.com/prometheus/common v0.61.0
+	github.com/stretchr/testify v1.10.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -20,6 +18,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
-	golang.org/x/sys v0.27.0 // indirect
-	google.golang.org/protobuf v1.35.2 // indirect
+	golang.org/x/sys v0.28.0 // indirect
+	google.golang.org/protobuf v1.36.0 // indirect
 )
