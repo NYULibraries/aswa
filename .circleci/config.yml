@@ -1,6 +1,6 @@
 docker-defaults: &docker-defaults
   docker:
-    - image: quay.io/nyulibraries/circleci_docker:20.10.6-dc-1.29.1-0
+    - image: cimg/base:2024.12
   working_directory: ~/app
 
 version: 2.1
@@ -13,21 +13,21 @@ jobs:
       - run:
           name: Build test
           command: |
-            docker-compose build test
+            docker compose build test
       - run:
           name: Check formatting
           command: |
-            docker-compose run test gofmt -l .
+            docker compose run test gofmt -l .
             test -z $(docker-compose run test gofmt -l .)
-            #docker-compose run test golint -set_exit_status
+            #docker compose run test golint -set_exit_status
       - run:
           name: Test
           command: |
-            docker-compose run test
+            docker compose run test
       - run:
           name: Build app
           command: |
-            docker-compose build
+            docker compose build
       - run:
           name: Push image
           command: |
