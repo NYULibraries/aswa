@@ -17,7 +17,7 @@ all: container test container-run
 # Build binary for aswa
 build:
 	@echo "Building aswa binary..."
-	go build -o aswa ./cmd
+	go build
 
 # Check if the required environment variables are set
 check_env:

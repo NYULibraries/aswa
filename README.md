@@ -36,7 +36,7 @@ Run a synthetic test locally:
 To build the ASWA binary, execute the following command:
 
 ```shell
-go build -o aswa ./cmd
+go build
 ```
 
 ### YAML config

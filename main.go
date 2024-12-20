@@ -1,9 +1,12 @@
 package main
 
-import "log"
+import (
+	"github.com/NYULibraries/aswa/cmd"
+	"log"
+)
 
 func main() {
-	err := DoCheck()
+	err := cmd.DoCheck()
 	if err != nil {
 		log.Fatal("Error:", err)
 	}
