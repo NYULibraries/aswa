@@ -60,6 +60,8 @@ func TestGetCmdArg(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			originalArgs := os.Args
+			defer func() { os.Args = originalArgs }()
 			os.Args = tt.osArgs
 
 			got := GetCmdArg()

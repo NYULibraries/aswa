@@ -206,6 +206,8 @@ func TestDoCheck(t *testing.T) {
 			t.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			t.Setenv(c.EnvSkipWhitelistCheck, "true")
+			originalArgs := os.Args
+			defer func() { os.Args = originalArgs }()
 			os.Args = tt.cmdArgs
 
 			// Call function under test
