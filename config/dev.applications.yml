@@ -29,6 +29,9 @@ applications:
   - name: illiad
     url: 'https://dev.ill.library.nyu.edu'
     expected_status: 200
+  - name: illiad-dev-new
+    url: 'https://ill-dev.library.nyu.edu'
+    expected_status: 200
   - name: libcal-assets
     url: 'https://cdn-dev.library.nyu.edu/libcal/index.min.js'
     expected_status: 200
