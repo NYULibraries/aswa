@@ -4,7 +4,6 @@ import (
 	c "github.com/NYULibraries/aswa/pkg/config"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"testing"
 )
 
@@ -37,8 +36,7 @@ func TestPushMetrics(t *testing.T) {
 			defer server.Close()
 
 			// Setup environment variable to mock the pushgateway URL
-			os.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
-			defer os.Unsetenv(c.EnvPromAggregationGatewayUrl)
+			t.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
 
 			// Increment a test counter to simulate metrics that would be pushed
 			IncrementFailedTestsCounter("testApp")
