@@ -1,6 +1,6 @@
 docker-defaults: &docker-defaults
   docker:
-    - image: cimg/base:2024.12
+    - image: cimg/base:2025.01
   working_directory: ~/app
 
 version: 2.1
