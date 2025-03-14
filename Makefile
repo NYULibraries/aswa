@@ -9,7 +9,7 @@ SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
 
 # Targets
-.PHONY: all build check_env clean conditional-build container container-run go-run init run run-app test
+.PHONY: all build check-env clean conditional-build container container-run go-run init run run-app test
 
 # Default target: build the images, run tests and run the app in a container
 all: container test container-run
@@ -17,10 +17,10 @@ all: container test container-run
 # Build binary for aswa
 build:
 	@echo "Building aswa binary..."
-	go build -o aswa ./cmd
+	go build
 
 # Check if the required environment variables are set
-check_env:
+check-env:
 	@MISSING_VARS=""; \
 	UNSET_COUNT=0; \
 	if [ -z "$(SLACK_CHANNEL_ID)" ]; then MISSING_VARS="SLACK_CHANNEL_ID"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
@@ -55,10 +55,10 @@ container-run: conditional-build
 # Run the aswa app with 'go run'
 go-run:
 	@echo "Running aswa with 'go run'..."
-	go run ./cmd
+	go run .
 
 # Initialize the project by checking if the environment variables are set
-init: check_env
+init: check-env
 
 # Run aswa using the built binary
 run: build

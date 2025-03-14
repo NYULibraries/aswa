@@ -7,7 +7,13 @@ IsOutputSlack=$(echo "${OUTPUT_SLACK:-false}")
 aswa_output=$(if ! command -v "$1" >/dev/null 2>&1; then /aswa "$1"; else "$@"; fi)
 
 if [ "$IsOutputSlack" = "true" ] && echo "$aswa_output" | grep -q "Failure"; then
-    cluster_name=${CLUSTER_INFO:-"Unknown cluster: CLUSTER_INFO is not set"}
+    # Check if CLUSTER_INFO is set and process accordingly
+    if [ -z "$CLUSTER_INFO" ]; then
+        cluster_name="Unknown cluster: CLUSTER_INFO is not set"
+    else
+        cluster_name=$(echo "$CLUSTER_INFO" | tr '[:lower:]' '[:upper:]')
+    fi
+
     slack_message="${cluster_name}: ${aswa_output}"
 
     # Construct JSON payload using jq
