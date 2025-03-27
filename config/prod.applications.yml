@@ -40,8 +40,8 @@ applications:
     expected_status: 302
     expected_location: 'https://library.nyu.edu/services/borrowing/from-non-nyu-libraries/marli/'
   - name: pushtocite
-    url: 'https://cite.library.nyu.edu/healthcheck'
-    expected_status: 200
+    url: 'https://cite.library.nyu.edu/'
+    expected_status: 404
   - name: salon
     url: 'https://persistent.library.nyu.edu/arch/does-not-ever-exist'
     expected_status: 400
