@@ -2,7 +2,7 @@ applications:
   - name: primo-ve
     url: 'https://nyu.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_csp: "object-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net s3.amazonaws.com www.youtube.com youtube.com artic.contentdm.oclc.org search.library.nyu.edu ;worker-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net s3.amazonaws.com www.youtube.com youtube.com artic.contentdm.oclc.org search.library.nyu.edu ;upgrade-insecure-requests; report-uri /infra/CSPReportEndpoint.jsp; report-to csp-report-endpoint;"
+    expected_csp: "object-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net s3.amazonaws.com www.youtube.com youtube.com artic.contentdm.oclc.org iiif.nlm.nih.gov search.library.nyu.edu ;worker-src blob: 'self' *.exlibrisgroup.com *.exlibrisgroup.com.cn www.google-analytics.com stats.g.doubleclick.net s3.amazonaws.com www.youtube.com youtube.com artic.contentdm.oclc.org search.library.nyu.edu ;upgrade-insecure-requests; report-uri /infra/CSPReportEndpoint.jsp; report-to csp-report-endpoint;"
   - name: primo-ve-search
     url: 'https://search.library.nyu.edu/'
     expected_status: 302
@@ -18,6 +18,6 @@ applications:
   - name: primo-ve-search-html
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=64654618d7"'
+    expected_content: 'src="lib/bundle.js?version=305861f95b"'
 
  

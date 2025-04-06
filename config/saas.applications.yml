@@ -11,7 +11,7 @@ applications:
     expected_status: 200
     expected_content: 'All Systems Operational'
   - name: lib-guides
-    url: 'https://guides.nyu.edu/arch'
+    url: 'https://guides.nyu.edu/az/databases'
     expected_status: 200
     expected_content: 'Research Guides'
   - name: libcal
