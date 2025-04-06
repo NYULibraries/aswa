@@ -37,13 +37,12 @@ func TestGetYamlPath(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			os.Setenv(EnvYamlPath, tt.envYamlPath)
+			t.Setenv(EnvYamlPath, tt.envYamlPath)
 
 			got := GetYamlPath()
 
 			assert.Equal(t, tt.want, got, "getYamlPath() should return correct yaml path")
 
-			os.Unsetenv(EnvYamlPath)
 		})
 	}
 }
@@ -61,6 +60,8 @@ func TestGetCmdArg(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
+			originalArgs := os.Args
+			defer func() { os.Args = originalArgs }()
 			os.Args = tt.osArgs
 
 			got := GetCmdArg()
@@ -83,13 +84,12 @@ func TestGetSlackWebhookUrl(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			os.Setenv(EnvSlackWebhookUrl, tt.envSlackWebhookUrl)
+			t.Setenv(EnvSlackWebhookUrl, tt.envSlackWebhookUrl)
 
 			gotLogMessage := CaptureOutput(GetSlackWebhookUrl)
 
 			assert.Equal(t, tt.wantLogmessage, gotLogMessage, "getSlackWebhookUrl() should return correct Slack webhook URL")
 
-			os.Unsetenv(EnvSlackWebhookUrl)
 		})
 	}
 }
@@ -108,7 +108,7 @@ func TestGetClusterInfo(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 
 			// Set up environment variable
-			os.Setenv(EnvClusterInfo, tt.envClusterInfo)
+			t.Setenv(EnvClusterInfo, tt.envClusterInfo)
 
 			// Call function under test
 			gotLogMessage := CaptureOutput(GetClusterInfo)
@@ -116,8 +116,6 @@ func TestGetClusterInfo(t *testing.T) {
 			// Assert that the function returns the expected result
 			assert.Equal(t, tt.wantLogMessage, gotLogMessage, "getClusterInfo() should return correct cluster info")
 
-			// Unset environment variable for next test
-			os.Unsetenv(EnvClusterInfo)
 		})
 	}
 }
@@ -135,13 +133,12 @@ func TestGetPromAggregationGatewayUrl(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			os.Setenv(EnvPromAggregationGatewayUrl, tt.envPromAggregationGatewayUrl)
+			t.Setenv(EnvPromAggregationGatewayUrl, tt.envPromAggregationGatewayUrl)
 
 			got := GetPromAggregationgatewayUrl()
 
 			assert.Equal(t, tt.want, got, "getPushgatewayUrl() should return correct pushgateway URL")
 
-			os.Unsetenv(EnvPromAggregationGatewayUrl)
 		})
 	}
 
@@ -160,13 +157,12 @@ func TestGetEnvironmentName(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 
-			os.Setenv(EnvName, tt.envName)
+			t.Setenv(EnvName, tt.envName)
 
 			got := GetEnvironmentName()
 
 			assert.Equal(t, tt.want, got, "GetEnvironmentName() should return correct environment name")
 
-			os.Unsetenv(EnvName)
 		})
 	}
 }
