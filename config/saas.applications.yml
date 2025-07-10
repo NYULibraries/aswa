@@ -23,9 +23,9 @@ applications:
     expected_status: 200
     expected_content: 'FAQs'
   - name: redHat
-    url: 'https://status.redhat.com'
+    url: 'https://status.redhat.com/api/v2/components.json'
     expected_status: 200
-    expected_content: 'All Systems Operational'
+    expected_content: '"name":"Quay.io","status":"operational"'
 
 
 
