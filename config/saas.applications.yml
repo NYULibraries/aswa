@@ -17,7 +17,7 @@ applications:
   - name: libcal
     url: 'https://nyu.libcal.com'
     expected_status: 200
-    expected_content: 'Library Classes and Workshops'
+    expected_content: 'NYU Libraries Classes, Workshops, and Events'
   - name: library-answers
     url: 'https://library.answers.nyu.edu'
     expected_status: 200
