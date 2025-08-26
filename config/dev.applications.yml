@@ -2,10 +2,6 @@ applications:
   - name: bess
     url: 'https://cdn-dev.library.nyu.edu/bess-vue/app.min.js'
     expected_status: 200
-  - name: bobcat-linker
-    url: 'https://dev.library.nyu.edu/persistent'
-    expected_status: 301
-    expected_location: 'https://app.library.nyu.edu/bobcat-linker'
   - name: bobcat-permalink
     url: 'https://bobcatdev.library.nyu.edu/permalink/f/ci13eu/nyu_aleph009700570'
     expected_status: 303
