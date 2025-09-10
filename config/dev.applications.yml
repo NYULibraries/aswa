@@ -12,12 +12,12 @@ applications:
     expected_location: 'https://www.appsheet.com/start/014cf30a-fbbc-454b-9fd8-b5bde95eb0d3'
   - name: getit
     url: 'https://getit-dev.library.nyu.edu'
-    expected_status: 302
-    expected_location: 'https://search.library.nyu.edu/discovery/citationlinker?vid=01NYU_INST:NYU'
+    expected_status: 301
+    expected_location: 'https://getit-dev.library.nyu.edu/'
   - name: getit-redirect
     url: 'https://getit-dev.library.nyu.edu/resolve?sid=google&auinit=C&aulast=Ottaviani&atitle=Pros+and+cons+of+a+wandering+mind:+a+prospective+study&id=doi:10.3389/fpsyg.2013.00524&title=Frontiers+in+Psychology&volume=4&date=2013&spage=524&issn=1664-1078'
-    expected_status: 302
-    expected_location: 'https://search.library.nyu.edu/openurl/01NYU_INST/01NYU_INST:NYU?sid=google&auinit=C&aulast=Ottaviani&atitle=Pros+and+cons+of+a+wandering+mind:+a+prospective+study&id=doi:10.3389/fpsyg.2013.00524&title=Frontiers+in+Psychology&volume=4&date=2013&spage=524&issn=1664-1078'
+    expected_status: 301
+    expected_location: 'https://getit-dev.library.nyu.edu/resolve?sid=google&auinit=C&aulast=Ottaviani&atitle=Pros+and+cons+of+a+wandering+mind:+a+prospective+study&id=doi:10.3389/fpsyg.2013.00524&title=Frontiers+in+Psychology&volume=4&date=2013&spage=524&issn=1664-1078'
 #  - name: getit-ebooks
 #    url: 'https://getit-dev.library.nyu.edu/v0/?genre=bookitem&isbn=9780190280390&issn=&title=Our%20Lady%20of%20everyday%20life:%20la%20Virgen%20de%20Guadalupe%20and%20the%20Catholic%20imagination%20of%20Mexican%20women%20in%20America&volume=&issue=&date=20180101&atitle=&aulast=&spage=&sid=EBSCO:Chicano%20Database&pid=XCHD8493320180101Chicano%20Database'
 #    expected_status: 200
