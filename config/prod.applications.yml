@@ -48,6 +48,9 @@ applications:
   - name: specialcollections
     url: 'https://specialcollections.library.nyu.edu/search/'
     expected_status: 200
+  - name: specialcollections-search
+    url: 'https://specialcollections.library.nyu.edu/search?utf8=✓&q="the+daily+worker"'
+    expected_status: 200
   - name: statuspage-embed
     url: 'https://cdn.library.nyu.edu/statuspage-embed/index.min.js'
     expected_status: 200
