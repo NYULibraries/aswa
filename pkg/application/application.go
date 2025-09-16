@@ -294,7 +294,7 @@ func contentSuccessString(results ApplicationStatus) string {
 	if results.ActualContent != "" {
 		return fmt.Sprintf("Success: ExpectedContent %s matched ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 	} else {
-		return fmt.Sprintf("No content to compare")
+		return "No content to compare"
 	}
 }
 
@@ -312,13 +312,13 @@ func contentFailureString(results ApplicationStatus) string {
 			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 		}
 	} else {
-		return fmt.Sprintf("Failure: No content to compare")
+		return "Failure: No content to compare"
 	}
 }
 
 func cspSuccessString(results ApplicationStatus) string {
 	if results.ActualCSP != "" {
-		return fmt.Sprintf("Success: Expected Primo VE CSP header matched Actual CSP header")
+		return "Success: Expected Primo VE CSP header matched Actual CSP header"
 	}
 	return ""
 }
@@ -327,6 +327,6 @@ func cspFailureString(results ApplicationStatus) string {
 	if results.ActualCSP != "" {
 		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
 	} else {
-		return fmt.Sprintf("Failure: No Primo VE CSP header to compare")
+		return "Failure: No Primo VE CSP header to compare"
 	}
 }
