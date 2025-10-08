@@ -48,6 +48,7 @@ func TestGetStatus(t *testing.T) {
 	}{
 		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusMovedPermanently, "", true, "", true, ""},
+		{"Success: 301 redirect with dynamic location (no expected_location)", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
 		{"Success: correct error expected", &Application{"", "https://library.nyu.edu/nopageexistshere", http.StatusNotFound, 600 * time.Millisecond, "", "", ""}, true, http.StatusNotFound, "", true, "", true, ""},
 		{"Success: success status code expected", &Application{"", "https://library.nyu.edu", http.StatusOK, 800 * time.Millisecond, "", "", ""}, true, http.StatusOK, "", true, "", true, ""},
 		{"Failure: wrong status code expected", &Application{"", mockServer.URL + "/wrongstatus", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", true, ""},

@@ -187,7 +187,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 
 		// Determine the statusOk
 		statusOk = compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) &&
-			compareLocations(actualLocation, test.ExpectedLocation)
+			(test.ExpectedLocation == "" || compareLocations(actualLocation, test.ExpectedLocation))
 
 		// Determine the statusContentOk
 		if test.IsGet() {
