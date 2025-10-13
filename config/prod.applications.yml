@@ -23,7 +23,7 @@ applications:
     expected_status: 200
   - name: illiad-zyu
     url: 'https://ill.library.nyu.edu/illiad/ZYU/illiad.dll'
-    expected_status: 403
+    expected_status: 302
   - name: libcal-assets
     url: 'https://cdn.library.nyu.edu/libcal/index.min.js'
     expected_status: 200
