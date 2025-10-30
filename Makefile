@@ -9,7 +9,7 @@ SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
 
 # Targets
-.PHONY: all build check-env clean conditional-build container container-run go-run init run run-app test
+.PHONY: all build check-env clean conditional-build container container-run go-run init lint lint-install run run-app test
 
 # Default target: build the images, run tests and run the app in a container
 all: container test container-run
@@ -59,6 +59,17 @@ go-run:
 
 # Initialize the project by checking if the environment variables are set
 init: check-env
+
+lint: ## golangci-lint (must be preinstalled)
+	@command -v golangci-lint >/dev/null || { \
+	echo "golangci-lint not found. Install with:" ; \
+	echo "  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest" ; \
+	exit 1 ; \
+	}
+	golangci-lint run ./...
+
+lint-install: ## Install golangci-lint (ensure GOBIN is in PATH)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Run aswa using the built binary
 run: build
