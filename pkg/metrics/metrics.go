@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"log"
+
 	c "github.com/NYULibraries/aswa/pkg/config"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/push"
