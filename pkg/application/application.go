@@ -86,7 +86,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 	var actualContent string
 
 	if test.IsGet() {
-		resp, err, actualContent, _ = performGetRequest(test, client)
+		resp, actualContent, _, err = performGetRequest(test, client)
 		if err != nil {
 			return createApplicationStatus(test, resp, err, "")
 		}
@@ -128,18 +128,18 @@ func closeResponseBody(Body io.ReadCloser) {
 	}
 }
 
-func performGetRequest(test Application, client *http.Client) (*http.Response, error, string, bool) {
+func performGetRequest(test Application, client *http.Client) (*http.Response, string, bool, error) {
 	clientUrl := getClientUrl(test)
 	req, err := http.NewRequest("GET", clientUrl, nil)
 	if err != nil {
-		return nil, err, "", false
+		return nil, "", false, err
 	}
 
 	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err, "", false
+		return nil, "", false, err
 	}
 
 	defer closeResponseBody(resp.Body)
@@ -148,7 +148,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, e
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
 		log.Println("Error copying response body:", err)
-		return nil, err, "", false
+		return nil, "", false, err
 	}
 
 	actualContent := buf.String()
@@ -157,7 +157,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, e
 		actualContent = matchedContent
 	}
 
-	return resp, nil, actualContent, statusContentOk
+	return resp, actualContent, statusContentOk, nil
 }
 
 func performHeadRequest(test Application, client *http.Client) (*http.Response, error) {

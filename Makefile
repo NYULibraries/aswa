@@ -1,4 +1,7 @@
 # Makefile for ASWA project
+SHELL := /bin/bash
+.SHELLFLAGS := -eu -o pipefail -c
+.DEFAULT_GOAL := all
 
 # Variables
 CLUSTER_INFO ?=
@@ -9,15 +12,17 @@ SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
 
 # Targets
-.PHONY: all build check-env clean conditional-build container container-run go-run init lint lint-install run run-app test
+.PHONY: all build check-env clean conditional-build container container-run go-run init run run-app test
+.PHONY: format lint lint-install staticcheck staticcheck-install
 
 # Default target: build the images, run tests and run the app in a container
-all: container test container-run
+all: format lint staticcheck container test container-run
 
 # Build binary for aswa
 build:
 	@echo "Building aswa binary..."
 	go build
+	@echo "✅ Success: build"
 
 # Check if the required environment variables are set
 check-env:
@@ -29,13 +34,14 @@ check-env:
 	if [ $$UNSET_COUNT -gt 0 ]; then \
 	    echo "$$MISSING_VARS $$([ $$UNSET_COUNT -gt 1 ] && echo 'are' || echo 'is') not set. Please set $$([ $$UNSET_COUNT -gt 1 ] && echo 'them' || echo 'it') and try again."; \
 	    exit 1; \
-	fi
+	fi; \
+	echo "✅ All required environment variables are set."
 
 # Clean up the project
 clean:
 	@echo "Cleaning up..."
 	rm -f aswa
-	docker compose down --rmi all --volumes --remove-orphans
+	docker compose down --rmi all --volumes --remove-orphans || true
 	@echo "Remember to manually unset YAML_PATH if it was exported in your shell."
 
 # Conditionally run the build target based on the value of SKIP_BUILD
@@ -46,35 +52,28 @@ conditional-build:
 container:
 	@echo "Building images..."
 	docker compose build
+	@echo "✅ Success: container build"
 
 # Run the aswa app in a Docker container
 container-run: conditional-build
 	@echo "Running aswa in a Docker container..."
 	$(DOCKER_COMPOSE_CMD) aswa
+	@echo "✅ Success: container-run"
 
 # Run the aswa app with 'go run'
 go-run:
 	@echo "Running aswa with 'go run'..."
 	go run .
+	@echo "✅ Success: go-run"
 
 # Initialize the project by checking if the environment variables are set
 init: check-env
-
-lint: ## golangci-lint (must be preinstalled)
-	@command -v golangci-lint >/dev/null || { \
-	echo "golangci-lint not found. Install with:" ; \
-	echo "  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest" ; \
-	exit 1 ; \
-	}
-	golangci-lint run ./...
-
-lint-install: ## Install golangci-lint (ensure GOBIN is in PATH)
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
 
 # Run aswa using the built binary
 run: build
 	@echo "Running aswa..."
 	./aswa
+	@echo "✅ Success: run"
 
 # Run the synthetic test on the app with the given name in a container
 run-app: conditional-build
@@ -89,6 +88,35 @@ run-app: conditional-build
 test: conditional-build
 	@echo "Running tests..."
 	$(DOCKER_COMPOSE_CMD) test
+	@echo "✅ Success: test"
 
+# Install and run staticcheck linter
+staticcheck-install:
+	@echo "Installing staticcheck..."
+	go install honnef.co/go/tools/cmd/staticcheck@latest
 
+staticcheck:
+	@command -v staticcheck >/dev/null || { \
+		echo "staticcheck not found. Install with:" ; \
+		echo "  go install honnef.co/go/tools/cmd/staticcheck@latest" ; \
+		exit 1 ; \
+	}
+	staticcheck ./...
+	@echo "✅ Success: staticcheck"
 
+format:
+	@echo "Running go fmt..."
+	go fmt ./...
+	@echo "✅ Success: format"
+
+lint: ## golangci-lint (must be preinstalled)
+	@command -v golangci-lint >/dev/null || { \
+		echo "golangci-lint not found. Install with:" ; \
+		echo "  go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest" ; \
+		exit 1 ; \
+	}
+	golangci-lint run ./...
+	@echo "✅ Success: lint"
+
+lint-install: ## Install golangci-lint (ensure GOBIN is in PATH)
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest

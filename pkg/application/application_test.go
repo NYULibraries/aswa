@@ -3,11 +3,12 @@ package application
 import (
 	"errors"
 	"fmt"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestGetStatus(t *testing.T) {
@@ -218,7 +219,7 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var actualContent string
 
 			if test.app.IsGet() {
-				resp, err, actualContent, _ = performGetRequest(test.app, client)
+				resp, actualContent, _, err = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 			}
