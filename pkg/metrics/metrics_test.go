@@ -1,10 +1,13 @@
 package metrics
 
 import (
-	c "github.com/NYULibraries/aswa/pkg/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	c "github.com/NYULibraries/aswa/pkg/config"
+
+	"github.com/prometheus/client_golang/prometheus/testutil"
 )
 
 func TestPushMetrics(t *testing.T) {
@@ -38,8 +41,11 @@ func TestPushMetrics(t *testing.T) {
 			// Setup environment variable to mock the pushgateway URL
 			t.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
 
+			// Use unique app label per subtest to avoid metric collisions
+			app := t.Name()
+
 			// Increment a test counter to simulate metrics that would be pushed
-			IncrementFailedTestsCounter("testApp")
+			IncrementFailedTestsCounter(app)
 
 			// Call PushMetrics to attempt to push the test counter to the mock server
 			err := PushMetrics()
@@ -55,5 +61,51 @@ func TestPushMetrics(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+func TestPushMetricsUnsupportedMediaType(t *testing.T) {
+	// Server returns 415 Unsupported Media Type to simulate "wrong format"
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusUnsupportedMediaType)
+	}))
+	defer server.Close()
+
+	t.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
+	app := t.Name()
+	IncrementFailedTestsCounter(app)
+
+	if err := PushMetrics(); err == nil {
+		t.Fatalf("expected error pushing to server that returns 415, got nil")
+	}
+}
+
+func TestPushMetricsServerClosed(t *testing.T) {
+	// Start and immediately close the server to cause connection errors
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	url := server.URL
+	server.Close()
+
+	t.Setenv(c.EnvPromAggregationGatewayUrl, url)
+	app := t.Name()
+	IncrementFailedTestsCounter(app)
+
+	if err := PushMetrics(); err == nil {
+		t.Fatalf("expected connection error pushing to closed server, got nil")
+	}
+}
+
+func TestIncrementFailedTestsCounterIncreases(t *testing.T) {
+	app := t.Name()
+
+	// Record current value, increment, and ensure it increased by 1.
+	before := testutil.ToFloat64(failedTests.WithLabelValues(c.GetEnvironmentName(), app))
+	IncrementFailedTestsCounter(app)
+	after := testutil.ToFloat64(failedTests.WithLabelValues(c.GetEnvironmentName(), app))
+
+	if after-before != 1 {
+		t.Fatalf("expected counter to increase by 1, before=%v after=%v", before, after)
 	}
 }
