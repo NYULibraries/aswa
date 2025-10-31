@@ -21,25 +21,29 @@ var (
 )
 
 func init() {
-	// Attempt to register the collector. If another collector with the same
-	// fully-qualified name is already registered, reuse it instead of
-	// panicking. This makes tests and multiple-import scenarios resilient to
-	// duplicate registration.
-	if err := prometheus.Register(failedTests); err != nil {
+	// Try to register against the default registerer. Any errors are logged
+	// (we intentionally don't panic during package init).
+	_ = RegisterMetrics(prometheus.DefaultRegisterer)
+}
+
+// RegisterMetrics attempts to register the package-level collectors with the
+// provided Registerer. If a collector with the same fully-qualified name is
+// already registered, it will reuse the existing collector (to avoid
+// duplicate registration errors). Returns any unexpected registration error.
+func RegisterMetrics(reg prometheus.Registerer) error {
+	if err := reg.Register(failedTests); err != nil {
 		if are, ok := err.(prometheus.AlreadyRegisteredError); ok {
 			if existing, ok := are.ExistingCollector.(*prometheus.CounterVec); ok {
 				// Reuse the already-registered collector
 				failedTests = existing
-				return
+				return nil
 			}
 		}
-		// Unexpected error: log it and continue. We avoid panicking in init so
-		// package import does not bring down the process; callers can still
-		// push metrics using the Collector directly even if registration
-		// failed. This follows the project's no-panic policy.
+		// Unexpected error: log it and return so callers/tests can observe it.
 		log.Printf("prometheus: failed to register collector: %v", err)
-		return
+		return err
 	}
+	return nil
 }
 
 // IncrementFailedTestsCounter increments the counter for a given app
