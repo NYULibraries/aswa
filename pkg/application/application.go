@@ -11,7 +11,10 @@ import (
 	"time"
 )
 
-const envDebugMode = "DEBUG_MODE"
+const (
+	envDebugMode = "DEBUG_MODE"
+	userAgent    = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+)
 
 var (
 	DebugMode = os.Getenv(envDebugMode) == "true"
@@ -48,18 +51,18 @@ func SetIsPrimoVE(yamlPath string) {
 
 // compareStatusCodes compares the actual and expected status codes.
 // It returns true if they are equal, and false otherwise.
-func compareStatusCodes(actual int, expected int) bool {
+func compareStatusCodes(actual, expected int) bool {
 	return actual == expected
 }
 
 // compareLocations compares the actual and expected locations.
 // It returns true if they are equal, and false otherwise.
-func compareLocations(actual string, expected string) bool {
+func compareLocations(actual, expected string) bool {
 	return actual == expected
 }
 
 // compareContent compares the actual and expected content.
-func compareContent(actual string, expected string) (bool, string) {
+func compareContent(actual, expected string) (bool, string) {
 	index := strings.Index(actual, expected)
 	if index == -1 {
 		return false, actual
@@ -135,7 +138,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, s
 		return nil, "", false, err
 	}
 
-	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -165,6 +168,7 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	if err != nil {
 		return nil, err
 	}
+	closeResponseBody(resp.Body)
 	return resp, nil
 }
 
