@@ -179,14 +179,6 @@ func createClient(timeout time.Duration) *http.Client {
 	}
 }
 
-func getClientUrl(test Application) string {
-	if test.ExpectedLocation != "" {
-		return test.ExpectedLocation
-	}
-
-	return test.URL
-}
-
 func (test Application) IsGet() bool {
 	return test.ExpectedContent != ""
 }
