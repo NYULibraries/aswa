@@ -191,8 +191,7 @@ func closeResponseBody(Body io.ReadCloser) {
 }
 
 func performGetRequest(test Application, client *http.Client) (*http.Response, string, bool, error) {
-	clientUrl := getClientUrl(test)
-	req, err := http.NewRequest("GET", clientUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, test.URL, nil)
 	if err != nil {
 		return nil, "", false, err
 	}
@@ -207,8 +206,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, s
 	defer closeResponseBody(resp.Body)
 
 	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, resp.Body)
-	if err != nil {
+	if _, err := io.Copy(buf, resp.Body); err != nil {
 		log.Println("Error copying response body:", err)
 		return nil, "", false, err
 	}
