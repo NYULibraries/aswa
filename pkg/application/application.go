@@ -326,8 +326,8 @@ func failureString(results ApplicationStatus) string {
 	expectedLocation := results.Application.ExpectedLocation
 	url := results.Application.URL
 
-	statusMatch := actualStatusCode == expectedStatusCode
-	locationMatch := actualLocation == expectedLocation
+	statusMatch := compareStatusCodes(actualStatusCode, expectedStatusCode)
+	locationMatch := compareLocations(actualLocation, expectedLocation)
 
 	var mismatchDetails string
 
