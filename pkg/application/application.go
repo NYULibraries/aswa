@@ -231,16 +231,15 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string, statusContentOk bool) *ApplicationStatus {
 	statusOk := false
-	statusContentOk := true
 	statusCSPOk := true
 	actualStatusCode := 0
 	actualLocation := ""
 	actualCSP := ""
 
 	if err != nil {
-		log.Println("Error performing request:", err)
+		log.Printf("[%s] Request error: %v", test.Name, err)
 		actualContent = ""
 		statusContentOk = false
 		statusCSPOk = false
@@ -253,17 +252,14 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 			(test.ExpectedLocation == "" || compareLocations(actualLocation, test.ExpectedLocation))
 
 		// Determine the statusContentOk
-		if test.IsGet() {
-			statusContentOk, actualContent = compareContent(actualContent, test.ExpectedContent)
-		} else {
+		// statusContentOk already computed upstream in performGetRequest
+		if !test.IsGet() {
 			actualContent = ""
 		}
 		// Determine the statusCSPOk
 		if test.ExpectedCSP != "" {
 			actualCSP = resp.Header.Get("Content-Security-Policy")
 			statusCSPOk = compareCSP(actualCSP, test.ExpectedCSP)
-		} else {
-			actualCSP = ""
 		}
 	}
 
