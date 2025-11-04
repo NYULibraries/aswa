@@ -100,28 +100,74 @@ func compareCSP(actual string, expected string) bool {
 	return actual == expected
 }
 
-// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
-// If the expected content is not empty, the function will also perform a GET request to retrieve and compare the content.
+// GetStatus performs an HTTP request for the given application's URL and evaluates
+// its response against expected criteria such as status code, redirect location,
+// and optional content or CSP header.
+//
+// Behavior summary:
+//   - Always validates the original URL’s HTTP status and redirect (no auto-follow).
+//   - If ExpectedContent is configured, also performs a GET request to fetch and
+//     validate page content (optionally following the expected redirect).
 func (test Application) GetStatus() *ApplicationStatus {
 	client := createClient(test.Timeout)
 
 	var resp *http.Response
 	var err error
 	var actualContent string
+	var statusContentOk bool
 
-	if test.IsGet() {
-		resp, actualContent, _, err = performGetRequest(test, client)
-		if err != nil {
-			return createApplicationStatus(test, resp, err, "")
-		}
-	} else {
-		resp, err = performHeadRequest(test, client)
-		if err != nil {
-			return createApplicationStatus(test, resp, err, "")
-		}
+	// Phase 1: probe ORIGINAL URL (status + Location)
+	resp, err = performHeadRequest(test, client)
+	if err != nil {
+		return createApplicationStatus(test, resp, err, "", false)
 	}
 
-	return createApplicationStatus(test, resp, nil, actualContent)
+	if DebugMode {
+		log.Printf("[HEAD probe] url=%s status=%d location=%q",
+			test.URL, resp.StatusCode, resp.Header.Get("Location"))
+	}
+
+	// Phase 2: content on the FINAL landing page (follow all redirects)
+	if test.IsGet() {
+		// Clone client and set redirect handler for visibility and cap
+		followClient := *client
+		followClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if DebugMode {
+				prev := via[len(via)-1].URL
+				log.Printf("[GET redirect] hop=%d %s -> %s", len(via), prev, req.URL)
+			}
+			if len(via) >= 10 {
+				return fmt.Errorf("stopped after %d redirects", len(via))
+			}
+			return nil
+		}
+
+		contentApp := test
+		contentApp.URL = test.URL
+
+		if DebugMode {
+			log.Printf("[GET start] url=%s", contentApp.URL)
+		}
+
+		var respContent *http.Response
+		respContent, actualContent, statusContentOk, err =
+			performGetRequest(contentApp, &followClient)
+		if err != nil {
+			if DebugMode {
+				log.Printf("[GET error] url=%s error=%v", contentApp.URL, err)
+			}
+			return createApplicationStatus(test, respContent, err, "", false)
+		}
+
+		if DebugMode {
+			log.Printf("[GET final] status=%d url=%s bodyLen=%d",
+				respContent.StatusCode, respContent.Request.URL, len(actualContent))
+		}
+	} else {
+		statusContentOk = true
+	}
+
+	return createApplicationStatus(test, resp, nil, actualContent, statusContentOk)
 }
 
 func createClient(timeout time.Duration) *http.Client {
