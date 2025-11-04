@@ -225,7 +225,9 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	if err != nil {
 		return nil, err
 	}
-	closeResponseBody(resp.Body)
+	if resp != nil && resp.Body != nil {
+		closeResponseBody(resp.Body)
+	}
 	return resp, nil
 }
 
