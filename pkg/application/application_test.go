@@ -217,14 +217,20 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var resp *http.Response
 			var err error
 			var actualContent string
+			var statusContentOk bool
 
 			if test.app.IsGet() {
-				resp, actualContent, _, err = performGetRequest(test.app, client)
+				resp, actualContent, statusContentOk, err = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
+				statusContentOk = err == nil
 			}
 
-			result := createApplicationStatus(test.app, resp, err, actualContent)
+			if err != nil {
+				statusContentOk = false
+			}
+
+			result := createApplicationStatus(test.app, resp, err, actualContent, statusContentOk)
 			assert.Equal(t, test.expectedApplication, result)
 		})
 	}
