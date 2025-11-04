@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -55,10 +56,30 @@ func compareStatusCodes(actual, expected int) bool {
 	return actual == expected
 }
 
-// compareLocations compares the actual and expected locations.
-// It returns true if they are equal, and false otherwise.
-func compareLocations(actual, expected string) bool {
-	return actual == expected
+// compareLocations compares an actual redirect location against an expected one.
+//
+// Logic summary:
+// 1. If either URL fails to parse, it falls back to a raw string comparison.
+// 2. If the expected location is relative (no scheme/host), only the path and query are compared.
+// 3. Otherwise (absolute expected URL), the full absolute URLs are compared.
+//
+// Returns true if the locations are considered equivalent according to the above rules.
+func compareLocations(actualLocation, expectedLocation string) bool {
+	parsedActualURL, actualParseErr := url.Parse(actualLocation)
+	parsedExpectedURL, expectedParseErr := url.Parse(expectedLocation)
+
+	// Fallback: if either parse fails, compare raw strings
+	if actualParseErr != nil || expectedParseErr != nil {
+		return actualLocation == expectedLocation
+	}
+
+	// If the expected location is relative (no scheme/host), compare only path + query
+	if parsedExpectedURL.Scheme == "" && parsedExpectedURL.Host == "" {
+		return parsedActualURL.RequestURI() == parsedExpectedURL.RequestURI()
+	}
+
+	// Otherwise, compare the full absolute URLs
+	return parsedActualURL.String() == parsedExpectedURL.String()
 }
 
 // compareContent compares the actual and expected content.
