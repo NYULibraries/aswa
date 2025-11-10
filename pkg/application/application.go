@@ -6,12 +6,16 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
 )
 
-const envDebugMode = "DEBUG_MODE"
+const (
+	envDebugMode = "DEBUG_MODE"
+	userAgent    = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+)
 
 var (
 	DebugMode = os.Getenv(envDebugMode) == "true"
@@ -48,18 +52,38 @@ func SetIsPrimoVE(yamlPath string) {
 
 // compareStatusCodes compares the actual and expected status codes.
 // It returns true if they are equal, and false otherwise.
-func compareStatusCodes(actual int, expected int) bool {
+func compareStatusCodes(actual, expected int) bool {
 	return actual == expected
 }
 
-// compareLocations compares the actual and expected locations.
-// It returns true if they are equal, and false otherwise.
-func compareLocations(actual string, expected string) bool {
-	return actual == expected
+// compareLocations compares an actual redirect location against an expected one.
+//
+// Logic summary:
+// 1. If either URL fails to parse, it falls back to a raw string comparison.
+// 2. If the expected location is relative (no scheme/host), only the path and query are compared.
+// 3. Otherwise (absolute expected URL), the full absolute URLs are compared.
+//
+// Returns true if the locations are considered equivalent according to the above rules.
+func compareLocations(actualLocation, expectedLocation string) bool {
+	parsedActualURL, actualParseErr := url.Parse(actualLocation)
+	parsedExpectedURL, expectedParseErr := url.Parse(expectedLocation)
+
+	// Fallback: if either parse fails, compare raw strings
+	if actualParseErr != nil || expectedParseErr != nil {
+		return actualLocation == expectedLocation
+	}
+
+	// If the expected location is relative (no scheme/host), compare only path + query
+	if parsedExpectedURL.Scheme == "" && parsedExpectedURL.Host == "" {
+		return parsedActualURL.RequestURI() == parsedExpectedURL.RequestURI()
+	}
+
+	// Otherwise, compare the full absolute URLs
+	return parsedActualURL.String() == parsedExpectedURL.String()
 }
 
 // compareContent compares the actual and expected content.
-func compareContent(actual string, expected string) (bool, string) {
+func compareContent(actual, expected string) (bool, string) {
 	index := strings.Index(actual, expected)
 	if index == -1 {
 		return false, actual
@@ -76,28 +100,74 @@ func compareCSP(actual string, expected string) bool {
 	return actual == expected
 }
 
-// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
-// If the expected content is not empty, the function will also perform a GET request to retrieve and compare the content.
+// GetStatus performs an HTTP request for the given application's URL and evaluates
+// its response against expected criteria such as status code, redirect location,
+// and optional content or CSP header.
+//
+// Behavior summary:
+//   - Always validates the original URL’s HTTP status and redirect (no auto-follow).
+//   - If ExpectedContent is configured, also performs a GET request to fetch and
+//     validate page content (optionally following the expected redirect).
 func (test Application) GetStatus() *ApplicationStatus {
 	client := createClient(test.Timeout)
 
 	var resp *http.Response
 	var err error
 	var actualContent string
+	var statusContentOk bool
 
-	if test.IsGet() {
-		resp, actualContent, _, err = performGetRequest(test, client)
-		if err != nil {
-			return createApplicationStatus(test, resp, err, "")
-		}
-	} else {
-		resp, err = performHeadRequest(test, client)
-		if err != nil {
-			return createApplicationStatus(test, resp, err, "")
-		}
+	// Phase 1: probe ORIGINAL URL (status + Location)
+	resp, err = performHeadRequest(test, client)
+	if err != nil {
+		return createApplicationStatus(test, resp, err, "", false)
 	}
 
-	return createApplicationStatus(test, resp, nil, actualContent)
+	if DebugMode {
+		log.Printf("[HEAD probe] url=%s status=%d location=%q",
+			test.URL, resp.StatusCode, resp.Header.Get("Location"))
+	}
+
+	// Phase 2: content on the FINAL landing page (follow all redirects)
+	if test.IsGet() {
+		// Clone client and set redirect handler for visibility and cap
+		followClient := *client
+		followClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
+			if DebugMode {
+				prev := via[len(via)-1].URL
+				log.Printf("[GET redirect] hop=%d %s -> %s", len(via), prev, req.URL)
+			}
+			if len(via) >= 10 {
+				return fmt.Errorf("stopped after %d redirects", len(via))
+			}
+			return nil
+		}
+
+		contentApp := test
+		contentApp.URL = test.URL
+
+		if DebugMode {
+			log.Printf("[GET start] url=%s", contentApp.URL)
+		}
+
+		var respContent *http.Response
+		respContent, actualContent, statusContentOk, err =
+			performGetRequest(contentApp, &followClient)
+		if err != nil {
+			if DebugMode {
+				log.Printf("[GET error] url=%s error=%v", contentApp.URL, err)
+			}
+			return createApplicationStatus(test, respContent, err, "", false)
+		}
+
+		if DebugMode {
+			log.Printf("[GET final] status=%d url=%s bodyLen=%d",
+				respContent.StatusCode, respContent.Request.URL, len(actualContent))
+		}
+	} else {
+		statusContentOk = true
+	}
+
+	return createApplicationStatus(test, resp, nil, actualContent, statusContentOk)
 }
 
 func createClient(timeout time.Duration) *http.Client {
@@ -107,14 +177,6 @@ func createClient(timeout time.Duration) *http.Client {
 		},
 		Timeout: timeout,
 	}
-}
-
-func getClientUrl(test Application) string {
-	if test.ExpectedLocation != "" {
-		return test.ExpectedLocation
-	}
-
-	return test.URL
 }
 
 func (test Application) IsGet() bool {
@@ -129,13 +191,12 @@ func closeResponseBody(Body io.ReadCloser) {
 }
 
 func performGetRequest(test Application, client *http.Client) (*http.Response, string, bool, error) {
-	clientUrl := getClientUrl(test)
-	req, err := http.NewRequest("GET", clientUrl, nil)
+	req, err := http.NewRequest(http.MethodGet, test.URL, nil)
 	if err != nil {
 		return nil, "", false, err
 	}
 
-	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
+	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
@@ -145,8 +206,7 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, s
 	defer closeResponseBody(resp.Body)
 
 	buf := new(bytes.Buffer)
-	_, err = io.Copy(buf, resp.Body)
-	if err != nil {
+	if _, err := io.Copy(buf, resp.Body); err != nil {
 		log.Println("Error copying response body:", err)
 		return nil, "", false, err
 	}
@@ -165,19 +225,21 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	if err != nil {
 		return nil, err
 	}
+	if resp != nil && resp.Body != nil {
+		closeResponseBody(resp.Body)
+	}
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string, statusContentOk bool) *ApplicationStatus {
 	statusOk := false
-	statusContentOk := true
 	statusCSPOk := true
 	actualStatusCode := 0
 	actualLocation := ""
 	actualCSP := ""
 
 	if err != nil {
-		log.Println("Error performing request:", err)
+		log.Printf("[%s] Request error: %v", test.Name, err)
 		actualContent = ""
 		statusContentOk = false
 		statusCSPOk = false
@@ -190,17 +252,14 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 			(test.ExpectedLocation == "" || compareLocations(actualLocation, test.ExpectedLocation))
 
 		// Determine the statusContentOk
-		if test.IsGet() {
-			statusContentOk, actualContent = compareContent(actualContent, test.ExpectedContent)
-		} else {
+		// statusContentOk already computed upstream in performGetRequest
+		if !test.IsGet() {
 			actualContent = ""
 		}
 		// Determine the statusCSPOk
 		if test.ExpectedCSP != "" {
 			actualCSP = resp.Header.Get("Content-Security-Policy")
 			statusCSPOk = compareCSP(actualCSP, test.ExpectedCSP)
-		} else {
-			actualCSP = ""
 		}
 	}
 
@@ -267,8 +326,8 @@ func failureString(results ApplicationStatus) string {
 	expectedLocation := results.Application.ExpectedLocation
 	url := results.Application.URL
 
-	statusMatch := actualStatusCode == expectedStatusCode
-	locationMatch := actualLocation == expectedLocation
+	statusMatch := compareStatusCodes(actualStatusCode, expectedStatusCode)
+	locationMatch := compareLocations(actualLocation, expectedLocation)
 
 	var mismatchDetails string
 
