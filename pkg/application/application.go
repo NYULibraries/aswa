@@ -247,17 +247,17 @@ func (results AppCheckStatus) String() string {
 
 	if contentString != "" || cspString != "" {
 		return statusString + "\n" + contentString + "\n" + cspString
-	} else {
-		return statusString
 	}
+	return statusString
+
 }
 
 func successString(results AppCheckStatus) string {
 	if results.ActualLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
-	} else {
-		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
 	}
+	return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
+
 }
 
 func failureString(results AppCheckStatus) string {
@@ -293,27 +293,27 @@ func failureString(results AppCheckStatus) string {
 func contentSuccessString(results AppCheckStatus) string {
 	if results.ActualContent != "" {
 		return fmt.Sprintf("Success: ExpectedContent %s matched ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
-	} else {
-		return "No content to compare"
 	}
+	return "No content to compare"
+
 }
 
 func contentFailureString(results AppCheckStatus) string {
 	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
-	if results.ActualContent != "" {
-		if results.Application.Name != "circleCI" {
-			if IsPrimoVE && DebugMode {
-				// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
-				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
-			} else {
-				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
-			}
-		} else {
-			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
-		}
-	} else {
+	if results.ActualContent == "" {
 		return "Failure: No content to compare"
 	}
+
+	if results.Application.Name == "circleCI" {
+		return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
+	}
+
+	if IsPrimoVE && DebugMode {
+		// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
+		return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
+	}
+
+	return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
 }
 
 func cspSuccessString(results AppCheckStatus) string {
@@ -326,7 +326,6 @@ func cspSuccessString(results AppCheckStatus) string {
 func cspFailureString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
-	} else {
-		return "Failure: No Primo VE CSP header to compare"
 	}
+	return "Failure: No Primo VE CSP header to compare"
 }
