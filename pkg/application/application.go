@@ -29,8 +29,8 @@ type Application struct {
 	ExpectedCSP        string        `yaml:"expected_csp"`
 }
 
-// ApplicationStatus represents the results of a synthetic test
-type ApplicationStatus struct {
+// AppCheckStatus represents the results of a synthetic test
+type AppCheckStatus struct {
 	Application      *Application
 	StatusOk         bool
 	StatusContentOk  bool
@@ -76,9 +76,9 @@ func compareCSP(actual string, expected string) bool {
 	return actual == expected
 }
 
-// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
+// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the AppCheckStatus corresponding to those results.
 // If the expected content is not empty, the function will also perform a GET request to retrieve and compare the content.
-func (test Application) GetStatus() *ApplicationStatus {
+func (test Application) GetStatus() *AppCheckStatus {
 	client := createClient(test.Timeout)
 
 	var resp *http.Response
@@ -168,7 +168,7 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *AppCheckStatus {
 	statusOk := false
 	statusContentOk := true
 	statusCSPOk := true
@@ -204,7 +204,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 		}
 	}
 
-	return &ApplicationStatus{
+	return &AppCheckStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
@@ -217,7 +217,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 }
 
 // String outputs the application status as a single string
-func (results ApplicationStatus) String() string {
+func (results AppCheckStatus) String() string {
 	statusString := ""
 	contentString := ""
 	cspString := ""
@@ -252,7 +252,7 @@ func (results ApplicationStatus) String() string {
 	}
 }
 
-func successString(results ApplicationStatus) string {
+func successString(results AppCheckStatus) string {
 	if results.ActualLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
 	} else {
@@ -260,7 +260,7 @@ func successString(results ApplicationStatus) string {
 	}
 }
 
-func failureString(results ApplicationStatus) string {
+func failureString(results AppCheckStatus) string {
 	actualStatusCode := results.ActualStatusCode
 	expectedStatusCode := results.Application.ExpectedStatusCode
 	actualLocation := results.ActualLocation
@@ -290,7 +290,7 @@ func failureString(results ApplicationStatus) string {
 	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
 }
 
-func contentSuccessString(results ApplicationStatus) string {
+func contentSuccessString(results AppCheckStatus) string {
 	if results.ActualContent != "" {
 		return fmt.Sprintf("Success: ExpectedContent %s matched ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 	} else {
@@ -298,7 +298,7 @@ func contentSuccessString(results ApplicationStatus) string {
 	}
 }
 
-func contentFailureString(results ApplicationStatus) string {
+func contentFailureString(results AppCheckStatus) string {
 	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
 	if results.ActualContent != "" {
 		if results.Application.Name != "circleCI" {
@@ -316,14 +316,14 @@ func contentFailureString(results ApplicationStatus) string {
 	}
 }
 
-func cspSuccessString(results ApplicationStatus) string {
+func cspSuccessString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return "Success: Expected Primo VE CSP header matched Actual CSP header"
 	}
 	return ""
 }
 
-func cspFailureString(results ApplicationStatus) string {
+func cspFailureString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
 	} else {
