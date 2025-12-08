@@ -34,7 +34,7 @@ func hasEmptyRequiredFields(app *a.Application) bool {
 // Loop through all categories and applications, check if any required field is empty
 func (list *Config) isConfigAnyRequiredFieldEmpty() bool {
 	for _, app := range list.Applications {
-		if hasEmptyRequiredFields((*a.Application)(app)) {
+		if hasEmptyRequiredFields(app) {
 			return true
 		}
 	}
