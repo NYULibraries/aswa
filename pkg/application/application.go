@@ -216,38 +216,32 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 
 // String outputs the application status as a single string
 func (results AppCheckStatus) String() string {
-	statusString := ""
-	contentString := ""
-	cspString := ""
+	var output []string
 
 	if results.StatusOk {
-		statusString = successString(results)
+		output = append(output, successString(results))
 	} else {
-		statusString = failureString(results)
+		output = append(output, failureString(results))
 	}
 
 	if results.Application.ExpectedContent != "" {
 		if results.StatusContentOk {
-			contentString = contentSuccessString(results)
+			output = append(output, contentSuccessString(results))
 		} else {
-			contentString = contentFailureString(results)
+			output = append(output, contentFailureString(results))
 		}
 	}
 
 	// Handling the CSP check status
 	if results.Application.ExpectedCSP != "" {
 		if results.StatusCSPOk {
-			cspString = cspSuccessString(results)
+			output = append(output, cspSuccessString(results))
 		} else {
-			cspString = cspFailureString(results)
+			output = append(output, cspFailureString(results))
 		}
 	}
 
-	if contentString != "" || cspString != "" {
-		return statusString + "\n" + contentString + "\n" + cspString
-	}
-	return statusString
-
+	return strings.Join(output, "\n")
 }
 
 func successString(results AppCheckStatus) string {
