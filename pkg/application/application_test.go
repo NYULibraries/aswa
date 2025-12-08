@@ -219,7 +219,7 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var actualContent string
 
 			if test.app.IsGet() {
-				resp, actualContent, _, err = performGetRequest(test.app, client)
+				resp, actualContent, err = performGetRequest(test.app, client)
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 			}
@@ -240,8 +240,8 @@ func TestString(t *testing.T) {
 		{description: "Failed status", appStatus: &AppCheckStatus{Application: &Application{URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 404}, expectedOutput: "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
 		{description: "Successful status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "https://library.nyu.edu/"}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
 		{description: "Failed status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "http://library.nyu.edu/"}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
-		{description: "Successful status with expected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Example Domain", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain\n"},
-		{description: "Failed status with unexpected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Wrong Content", ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content\n"},
+		{description: "Successful status with expected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Example Domain", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain"},
+		{description: "Failed status with unexpected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Wrong Content", ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content"},
 	}
 
 	for _, test := range tests {
@@ -343,7 +343,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
 				StatusOk:    true, StatusContentOk: true,
 				ActualStatusCode: 200, ActualContent: "Example Content"},
-			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content",
 		},
 		{
 			description: "Successful status, IsPrimoVE=true, DebugMode=true, with detailed content",
@@ -353,7 +353,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
 				StatusOk:    true, StatusContentOk: true,
 				ActualStatusCode: 200, ActualContent: "Example Content"},
-			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content\n",
+			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content",
 		},
 		{
 			description: "Failed status with unexpected content, DebugMode=false",
@@ -363,7 +363,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
-			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content",
 		},
 		{
 			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
@@ -374,7 +374,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
 
-			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content Some Actual Content\n",
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content Some Actual Content",
 		},
 		{
 			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
@@ -385,7 +385,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
 
-			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content\n",
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content",
 		},
 	}
 
