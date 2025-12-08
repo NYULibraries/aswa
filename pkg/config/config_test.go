@@ -1,11 +1,12 @@
 package config
 
 import (
-	a "github.com/NYULibraries/aswa/pkg/application"
-	"github.com/stretchr/testify/assert"
 	"net/http"
 	"testing"
 	"time"
+
+	a "github.com/NYULibraries/aswa/pkg/application"
+	"github.com/stretchr/testify/assert"
 )
 
 const configTestPath = "../../config/prod.applications.yml"

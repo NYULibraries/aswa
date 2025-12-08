@@ -2,11 +2,12 @@ package config
 
 import (
 	"errors"
-	a "github.com/NYULibraries/aswa/pkg/application"
-	"gopkg.in/yaml.v3"
 	"os"
 	"path/filepath"
 	"strconv"
+
+	a "github.com/NYULibraries/aswa/pkg/application"
+	"gopkg.in/yaml.v3"
 )
 
 // Define whitelist using a map with empty struct as values.
