@@ -121,9 +121,8 @@ func (test Application) IsGet() bool {
 	return test.ExpectedContent != ""
 }
 
-func closeResponseBody(Body io.ReadCloser) {
-	err := Body.Close()
-	if err != nil {
+func closeResponseBody(body io.ReadCloser) {
+	if err := body.Close(); err != nil {
 		log.Println("Error closing response body:", err)
 	}
 }
