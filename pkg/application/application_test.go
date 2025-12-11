@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestGetStatus(t *testing.T) {
@@ -32,6 +33,14 @@ func TestGetStatus(t *testing.T) {
 		case "/slowresponse":
 			time.Sleep(200 * time.Millisecond)
 			w.WriteHeader(http.StatusOK)
+		case "/redir":
+			w.Header().Set("Location", "/login")
+			w.WriteHeader(http.StatusFound)
+		case "/redir-wrong":
+			w.Header().Set("Location", "/somewhere-else")
+			w.WriteHeader(http.StatusFound)
+		case "/login":
+			_, _ = fmt.Fprint(w, "Log into your account")
 		}
 	}))
 	defer mockServer.Close()
@@ -47,6 +56,42 @@ func TestGetStatus(t *testing.T) {
 		expectedCSPSuccess       bool
 		expectedActualCSP        string
 	}{
+		{
+			description: "Success: relative redirect with content follow",
+			application: &Application{
+				Name:               "primo-ve-search",
+				URL:                mockServer.URL + "/redir",
+				ExpectedStatusCode: http.StatusFound,
+				Timeout:            2 * time.Second,
+				ExpectedLocation:   "/login",
+				ExpectedContent:    "Log into your account",
+			},
+			expectedSuccess:          true,
+			expectedActualStatusCode: http.StatusFound,
+			expectedActualLocation:   "/login",
+			expectedContentSuccess:   true,
+			expectedActualContent:    "Log into your account",
+			expectedCSPSuccess:       true,
+			expectedActualCSP:        "",
+		},
+		{
+			description: "Failure: relative redirect mismatches expected",
+			application: &Application{
+				Name:               "primo-ve-search",
+				URL:                mockServer.URL + "/redir-wrong",
+				ExpectedStatusCode: http.StatusFound,
+				Timeout:            2 * time.Second,
+				ExpectedLocation:   "/login",
+				ExpectedContent:    "Log into your account",
+			},
+			expectedSuccess:          false,
+			expectedActualStatusCode: http.StatusFound,
+			expectedActualLocation:   "/somewhere-else",
+			expectedContentSuccess:   false,
+			expectedActualContent:    "",
+			expectedCSPSuccess:       true,
+			expectedActualCSP:        "",
+		},
 		{"Success: correct redirect expected", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "https://library.nyu.edu/", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
 		{"Failure: wrong redirect expected", &Application{"", "http://library.nyu.edu", http.StatusFound, 800 * time.Millisecond, "", "", ""}, false, http.StatusMovedPermanently, "", true, "", true, ""},
 		{"Success: 301 redirect with dynamic location (no expected_location)", &Application{"", "http://library.nyu.edu", http.StatusMovedPermanently, 800 * time.Millisecond, "", "", ""}, true, http.StatusMovedPermanently, "https://library.nyu.edu/", true, "", true, ""},
@@ -217,14 +262,24 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var resp *http.Response
 			var err error
 			var actualContent string
+			var statusContentOk bool
+			var statusCode int
 
 			if test.app.IsGet() {
-				resp, actualContent, err = performGetRequest(test.app, client)
+				statusCode, _, actualContent, statusContentOk, err = performGetRequest(test.app, client)
+				if err == nil {
+					resp = &http.Response{StatusCode: statusCode, Header: http.Header{}}
+				}
 			} else {
 				resp, err = performHeadRequest(test.app, client)
+				statusContentOk = err == nil
 			}
 
-			result := createApplicationStatus(test.app, resp, err, actualContent)
+			if err != nil {
+				statusContentOk = false
+			}
+
+			result := createApplicationStatus(test.app, resp, err, actualContent, statusContentOk)
 			assert.Equal(t, test.expectedApplication, result)
 		})
 	}
@@ -289,6 +344,7 @@ func TestCompareLocations(t *testing.T) {
 		{description: "Empty expected location", actual: "New York", expected: "", wantBool: false},
 		{description: "Empty actual location", actual: "", expected: "San Francisco", wantBool: false},
 		{description: "Both locations empty", actual: "", expected: "", wantBool: true},
+		{description: "Relative path without leading slash matches", actual: "/mng/login", expected: "mng/login", wantBool: true},
 	}
 
 	for _, tt := range tests {
@@ -397,4 +453,108 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 			assert.Equal(t, test.expectedOutput, test.appStatus.String())
 		})
 	}
+}
+
+type hop struct {
+	path     string
+	status   int
+	location string
+	body     string
+}
+
+func newRedirectServer(hops ...hop) *httptest.Server {
+
+	table := make(map[string]hop, len(hops))
+	for _, h := range hops {
+		table[h.path] = h
+	}
+
+	return httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		h, ok := table[r.URL.Path]
+		if !ok {
+			http.NotFound(w, r)
+			return
+		}
+		if h.location != "" {
+			w.Header().Set("Location", h.location)
+		}
+		w.WriteHeader(h.status)
+		if h.body != "" {
+			_, _ = w.Write([]byte(h.body))
+		}
+	}))
+}
+
+func TestGetStatus_RelativeRedirect_AndContentSuccess(t *testing.T) {
+	// / → 302 Location:/mng/login
+	// /mng/login → 302 Location:/discovery/search
+	// /discovery/search → 200 body contains the expected substring
+	const expectedSnippet = "<primo-explore>"
+
+	srv := newRedirectServer(
+		hop{path: "/", status: http.StatusFound, location: "/mng/login"},
+		hop{path: "/mng/login", status: http.StatusFound, location: "/discovery/search"},
+		hop{path: "/discovery/search", status: http.StatusOK, body: expectedSnippet},
+	)
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "primo-ve-search",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusFound,
+		Timeout:            2 * time.Second,
+		ExpectedLocation:   "/mng/login",
+		ExpectedContent:    expectedSnippet,
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status, "GetStatus must return a non-nil status")
+	require.Equalf(t, http.StatusFound, status.ActualStatusCode,
+		"source status mismatch for %s", app.URL)
+	require.Equalf(t, "/mng/login", status.ActualLocation,
+		"first-hop Location mismatch for %s", app.URL)
+
+	assert.Truef(t, status.StatusOk, "redirect check should pass (status=%d location=%q)",
+		status.ActualStatusCode, status.ActualLocation)
+	assert.Truef(t, status.StatusContentOk, "content check should pass; got content=%q",
+		status.ActualContent)
+	assert.Equalf(t, expectedSnippet, status.ActualContent, "matched snippet should be returned")
+}
+
+func TestGetStatus_RelativeRedirect_AndContent_Failure_ContentMismatch(t *testing.T) {
+	// Same redirect chain, but FINAL page omits the expected substring.
+	const expectedSnippet = "Log into your account"
+	const deliveredBody = "<primo-explore>Welcome page without login text</primo-explore>"
+
+	srv := newRedirectServer(
+		hop{path: "/", status: http.StatusFound, location: "/mng/login"},
+		hop{path: "/mng/login", status: http.StatusFound, location: "/discovery/search"},
+		hop{path: "/discovery/search", status: http.StatusOK, body: deliveredBody},
+	)
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "primo-ve-search",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusFound,
+		Timeout:            2 * time.Second,
+		ExpectedLocation:   "/mng/login",
+		ExpectedContent:    expectedSnippet, // NOT present on final page
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status, "GetStatus must return a non-nil status")
+	require.Equalf(t, http.StatusFound, status.ActualStatusCode,
+		"source status mismatch for %s", app.URL)
+	require.Equalf(t, "/mng/login", status.ActualLocation,
+		"first-hop Location mismatch for %s", app.URL)
+
+	assert.Truef(t, status.StatusOk, "redirect check should pass (status=%d location=%q)",
+		status.ActualStatusCode, status.ActualLocation)
+	assert.Falsef(t, status.StatusContentOk, "content check should fail; expected substring %q", expectedSnippet)
+	assert.NotEmpty(t, status.ActualContent, "body should be preserved on mismatch")
+	assert.Equalf(t, deliveredBody, status.ActualContent,
+		"on mismatch we should capture the full final-page body")
 }
