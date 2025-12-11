@@ -33,8 +33,8 @@ type Application struct {
 	ExpectedCSP        string        `yaml:"expected_csp"`
 }
 
-// ApplicationStatus represents the results of a synthetic test
-type ApplicationStatus struct {
+// AppCheckStatus represents the results of a synthetic test
+type AppCheckStatus struct {
 	Application      *Application
 	StatusOk         bool
 	StatusContentOk  bool
@@ -108,7 +108,7 @@ func compareCSP(actual string, expected string) bool {
 //   - Always validates the original URL’s HTTP status and redirect (no auto-follow).
 //   - If ExpectedContent is configured, also performs a GET request to fetch and
 //     validate page content (optionally following the expected redirect).
-func (test Application) GetStatus() *ApplicationStatus {
+func (test Application) GetStatus() *AppCheckStatus {
 	client := createClient(test.Timeout)
 
 	var resp *http.Response
@@ -231,7 +231,7 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string, statusContentOk bool) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string, statusContentOk bool) *AppCheckStatus {
 	statusOk := false
 	statusCSPOk := true
 	actualStatusCode := 0
@@ -251,8 +251,6 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 		statusOk = compareStatusCodes(resp.StatusCode, test.ExpectedStatusCode) &&
 			(test.ExpectedLocation == "" || compareLocations(actualLocation, test.ExpectedLocation))
 
-		// Determine the statusContentOk
-		// statusContentOk already computed upstream in performGetRequest
 		if !test.IsGet() {
 			actualContent = ""
 		}
@@ -263,7 +261,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 		}
 	}
 
-	return &ApplicationStatus{
+	return &AppCheckStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
@@ -276,7 +274,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 }
 
 // String outputs the application status as a single string
-func (results ApplicationStatus) String() string {
+func (results AppCheckStatus) String() string {
 	statusString := ""
 	contentString := ""
 	cspString := ""
@@ -311,7 +309,7 @@ func (results ApplicationStatus) String() string {
 	}
 }
 
-func successString(results ApplicationStatus) string {
+func successString(results AppCheckStatus) string {
 	if results.ActualLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
 	} else {
@@ -319,7 +317,7 @@ func successString(results ApplicationStatus) string {
 	}
 }
 
-func failureString(results ApplicationStatus) string {
+func failureString(results AppCheckStatus) string {
 	actualStatusCode := results.ActualStatusCode
 	expectedStatusCode := results.Application.ExpectedStatusCode
 	actualLocation := results.ActualLocation
@@ -357,7 +355,7 @@ func contentSuccessString(results ApplicationStatus) string {
 	}
 }
 
-func contentFailureString(results ApplicationStatus) string {
+func contentFailureString(results AppCheckStatus) string {
 	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
 	if results.ActualContent != "" {
 		if results.Application.Name != "circleCI" {
@@ -375,14 +373,14 @@ func contentFailureString(results ApplicationStatus) string {
 	}
 }
 
-func cspSuccessString(results ApplicationStatus) string {
+func cspSuccessString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return "Success: Expected Primo VE CSP header matched Actual CSP header"
 	}
 	return ""
 }
 
-func cspFailureString(results ApplicationStatus) string {
+func cspFailureString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
 	} else {

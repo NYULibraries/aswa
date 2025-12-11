@@ -18,11 +18,11 @@ const envOutputSlack = "OUTPUT_SLACK"
 
 type FailingSyntheticTest struct {
 	App       *a.Application
-	AppStatus a.ApplicationStatus
+	AppStatus a.AppCheckStatus
 }
 
 // postTestResult constructs a string containing the result of the given test.
-func postTestResult(appStatus a.ApplicationStatus) (string, error) {
+func postTestResult(appStatus a.AppCheckStatus) (string, error) {
 	result := appStatus.String()
 	timestamp := time.Now().Local().Format(time.RFC1123Z)
 	log.Printf("Test result generated on %s", timestamp)
