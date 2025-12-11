@@ -263,9 +263,13 @@ func TestCreateApplicationStatus(t *testing.T) {
 			var err error
 			var actualContent string
 			var statusContentOk bool
+			var statusCode int
 
 			if test.app.IsGet() {
-				resp, actualContent, statusContentOk, err = performGetRequest(test.app, client)
+				statusCode, _, actualContent, statusContentOk, err = performGetRequest(test.app, client)
+				if err == nil {
+					resp = &http.Response{StatusCode: statusCode, Header: http.Header{}}
+				}
 			} else {
 				resp, err = performHeadRequest(test.app, client)
 				statusContentOk = err == nil
@@ -340,6 +344,7 @@ func TestCompareLocations(t *testing.T) {
 		{description: "Empty expected location", actual: "New York", expected: "", wantBool: false},
 		{description: "Empty actual location", actual: "", expected: "San Francisco", wantBool: false},
 		{description: "Both locations empty", actual: "", expected: "", wantBool: true},
+		{description: "Relative path without leading slash matches", actual: "/mng/login", expected: "mng/login", wantBool: true},
 	}
 
 	for _, tt := range tests {
