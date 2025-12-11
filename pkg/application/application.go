@@ -75,7 +75,21 @@ func compareLocations(actualLocation, expectedLocation string) bool {
 
 	// If the expected location is relative (no scheme/host), compare only path + query
 	if parsedExpectedURL.Scheme == "" && parsedExpectedURL.Host == "" {
-		return parsedActualURL.RequestURI() == parsedExpectedURL.RequestURI()
+		actualURI := parsedActualURL.RequestURI()
+		expectedURI := parsedExpectedURL.RequestURI()
+
+		// Accept relative paths with or without a leading slash
+		if actualURI == expectedURI {
+			return true
+		}
+		if "/"+expectedURI == actualURI {
+			return true
+		}
+		if strings.TrimPrefix(actualURI, "/") == expectedURI {
+			return true
+		}
+
+		return false
 	}
 
 	// Otherwise, compare the full absolute URLs
@@ -121,6 +135,10 @@ func (test Application) GetStatus() *AppCheckStatus {
 	if err != nil {
 		return createApplicationStatus(test, resp, err, "", false)
 	}
+	if resp == nil {
+		return createApplicationStatus(test, resp, fmt.Errorf("nil HEAD response"), "", false)
+	}
+	defer closeResponseBody(resp.Body)
 
 	if DebugMode {
 		log.Printf("[HEAD probe] url=%s status=%d location=%q",
@@ -149,19 +167,20 @@ func (test Application) GetStatus() *AppCheckStatus {
 			log.Printf("[GET start] url=%s", contentApp.URL)
 		}
 
-		var respContent *http.Response
-		respContent, actualContent, statusContentOk, err =
+		var respStatusCode int
+		var finalURL string
+		respStatusCode, finalURL, actualContent, statusContentOk, err =
 			performGetRequest(contentApp, &followClient)
 		if err != nil {
 			if DebugMode {
 				log.Printf("[GET error] url=%s error=%v", contentApp.URL, err)
 			}
-			return createApplicationStatus(test, respContent, err, "", false)
+			return createApplicationStatus(test, nil, err, "", false)
 		}
 
 		if DebugMode {
 			log.Printf("[GET final] status=%d url=%s bodyLen=%d",
-				respContent.StatusCode, respContent.Request.URL, len(actualContent))
+				respStatusCode, finalURL, len(actualContent))
 		}
 	} else {
 		statusContentOk = true
@@ -189,25 +208,24 @@ func closeResponseBody(body io.ReadCloser) {
 	}
 }
 
-func performGetRequest(test Application, client *http.Client) (*http.Response, string, bool, error) {
+func performGetRequest(test Application, client *http.Client) (int, string, string, bool, error) {
 	req, err := http.NewRequest(http.MethodGet, test.URL, nil)
 	if err != nil {
-		return nil, "", false, err
+		return 0, "", "", false, err
 	}
 
 	req.Header.Set("User-Agent", userAgent)
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, "", false, err
+		return 0, "", "", false, err
 	}
-
 	defer closeResponseBody(resp.Body)
 
 	buf := new(bytes.Buffer)
 	if _, err := io.Copy(buf, resp.Body); err != nil {
 		log.Println("Error copying response body:", err)
-		return nil, "", false, err
+		return resp.StatusCode, resp.Request.URL.String(), "", false, err
 	}
 
 	actualContent := buf.String()
@@ -216,16 +234,18 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, s
 		actualContent = matchedContent
 	}
 
-	return resp, actualContent, statusContentOk, nil
+	finalURL := ""
+	if resp.Request != nil && resp.Request.URL != nil {
+		finalURL = resp.Request.URL.String()
+	}
+
+	return resp.StatusCode, finalURL, actualContent, statusContentOk, nil
 }
 
 func performHeadRequest(test Application, client *http.Client) (*http.Response, error) {
 	resp, err := client.Head(test.URL)
 	if err != nil {
 		return nil, err
-	}
-	if resp != nil && resp.Body != nil {
-		closeResponseBody(resp.Body)
 	}
 	return resp, nil
 }
@@ -315,7 +335,7 @@ func failureString(results AppCheckStatus) string {
 	expectedStatusCode := results.Application.ExpectedStatusCode
 	actualLocation := results.ActualLocation
 	expectedLocation := results.Application.ExpectedLocation
-	url := results.Application.URL
+	appURL := results.Application.URL
 
 	statusMatch := compareStatusCodes(actualStatusCode, expectedStatusCode)
 	locationMatch := compareLocations(actualLocation, expectedLocation)
@@ -334,10 +354,10 @@ func failureString(results AppCheckStatus) string {
 		mismatchDetails = fmt.Sprintf("resolved with %d, expected %d", actualStatusCode, expectedStatusCode)
 	} else {
 		// Should not be reached under normal circumstances
-		return fmt.Sprintf("Unknown failure for URL %s", url)
+		return fmt.Sprintf("Unknown failure for URL %s", appURL)
 	}
 
-	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
+	return fmt.Sprintf("Failure: URL %s %s", appURL, mismatchDetails)
 }
 
 func contentSuccessString(results AppCheckStatus) string {
