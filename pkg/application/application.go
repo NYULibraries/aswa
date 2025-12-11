@@ -347,7 +347,7 @@ func failureString(results AppCheckStatus) string {
 	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
 }
 
-func contentSuccessString(results ApplicationStatus) string {
+func contentSuccessString(results AppCheckStatus) string {
 	if results.ActualContent != "" {
 		return fmt.Sprintf("Success: ExpectedContent %s matched ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
 	} else {
