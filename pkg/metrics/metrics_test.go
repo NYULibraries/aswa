@@ -1,10 +1,11 @@
 package metrics
 
 import (
-	c "github.com/NYULibraries/aswa/pkg/config"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	c "github.com/NYULibraries/aswa/pkg/config"
 )
 
 func TestPushMetrics(t *testing.T) {

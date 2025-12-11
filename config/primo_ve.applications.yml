@@ -18,6 +18,6 @@ applications:
   - name: primo-ve-search-html
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=1414d5e329"'
+    expected_content: 'src="lib/bundle.js?version=55a42e4db2"'
 
  

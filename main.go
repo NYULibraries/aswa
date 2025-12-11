@@ -1,8 +1,9 @@
 package main
 
 import (
-	"github.com/NYULibraries/aswa/cmd"
 	"log"
+
+	"github.com/NYULibraries/aswa/cmd"
 )
 
 func main() {

@@ -2,12 +2,13 @@ package cmd
 
 import (
 	"fmt"
-	a "github.com/NYULibraries/aswa/pkg/application"
-	c "github.com/NYULibraries/aswa/pkg/config"
-	m "github.com/NYULibraries/aswa/pkg/metrics"
 	"log"
 	"os"
 	"time"
+
+	a "github.com/NYULibraries/aswa/pkg/application"
+	c "github.com/NYULibraries/aswa/pkg/config"
+	m "github.com/NYULibraries/aswa/pkg/metrics"
 )
 
 const envOutputSlack = "OUTPUT_SLACK"
