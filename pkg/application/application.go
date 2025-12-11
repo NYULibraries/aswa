@@ -29,8 +29,8 @@ type Application struct {
 	ExpectedCSP        string        `yaml:"expected_csp"`
 }
 
-// ApplicationStatus represents the results of a synthetic test
-type ApplicationStatus struct {
+// AppCheckStatus represents the results of a synthetic test
+type AppCheckStatus struct {
 	Application      *Application
 	StatusOk         bool
 	StatusContentOk  bool
@@ -76,9 +76,9 @@ func compareCSP(actual string, expected string) bool {
 	return actual == expected
 }
 
-// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the ApplicationStatus corresponding to those results.
+// GetStatus performs an HTTP call for the given Application's url, checks the expected status code, location, and content, and returns the AppCheckStatus corresponding to those results.
 // If the expected content is not empty, the function will also perform a GET request to retrieve and compare the content.
-func (test Application) GetStatus() *ApplicationStatus {
+func (test Application) GetStatus() *AppCheckStatus {
 	client := createClient(test.Timeout)
 
 	var resp *http.Response
@@ -86,7 +86,7 @@ func (test Application) GetStatus() *ApplicationStatus {
 	var actualContent string
 
 	if test.IsGet() {
-		resp, actualContent, _, err = performGetRequest(test, client)
+		resp, actualContent, err = performGetRequest(test, client)
 		if err != nil {
 			return createApplicationStatus(test, resp, err, "")
 		}
@@ -121,25 +121,24 @@ func (test Application) IsGet() bool {
 	return test.ExpectedContent != ""
 }
 
-func closeResponseBody(Body io.ReadCloser) {
-	err := Body.Close()
-	if err != nil {
+func closeResponseBody(body io.ReadCloser) {
+	if err := body.Close(); err != nil {
 		log.Println("Error closing response body:", err)
 	}
 }
 
-func performGetRequest(test Application, client *http.Client) (*http.Response, string, bool, error) {
+func performGetRequest(test Application, client *http.Client) (*http.Response, string, error) {
 	clientUrl := getClientUrl(test)
 	req, err := http.NewRequest("GET", clientUrl, nil)
 	if err != nil {
-		return nil, "", false, err
+		return nil, "", err
 	}
 
 	req.Header.Set("User-Agent", "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)")
 
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, "", false, err
+		return nil, "", err
 	}
 
 	defer closeResponseBody(resp.Body)
@@ -148,16 +147,15 @@ func performGetRequest(test Application, client *http.Client) (*http.Response, s
 	_, err = io.Copy(buf, resp.Body)
 	if err != nil {
 		log.Println("Error copying response body:", err)
-		return nil, "", false, err
+		return nil, "", err
 	}
 
 	actualContent := buf.String()
-	statusContentOk, matchedContent := compareContent(actualContent, test.ExpectedContent)
-	if statusContentOk {
+	if statusContentOk, matchedContent := compareContent(actualContent, test.ExpectedContent); statusContentOk {
 		actualContent = matchedContent
 	}
 
-	return resp, actualContent, statusContentOk, nil
+	return resp, actualContent, nil
 }
 
 func performHeadRequest(test Application, client *http.Client) (*http.Response, error) {
@@ -168,7 +166,7 @@ func performHeadRequest(test Application, client *http.Client) (*http.Response, 
 	return resp, nil
 }
 
-func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *ApplicationStatus {
+func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string) *AppCheckStatus {
 	statusOk := false
 	statusContentOk := true
 	statusCSPOk := true
@@ -204,7 +202,7 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 		}
 	}
 
-	return &ApplicationStatus{
+	return &AppCheckStatus{
 		Application:      &test,
 		StatusOk:         statusOk,
 		StatusContentOk:  statusContentOk,
@@ -217,50 +215,44 @@ func createApplicationStatus(test Application, resp *http.Response, err error, a
 }
 
 // String outputs the application status as a single string
-func (results ApplicationStatus) String() string {
-	statusString := ""
-	contentString := ""
-	cspString := ""
+func (results AppCheckStatus) String() string {
+	var output []string
 
 	if results.StatusOk {
-		statusString = successString(results)
+		output = append(output, successString(results))
 	} else {
-		statusString = failureString(results)
+		output = append(output, failureString(results))
 	}
 
 	if results.Application.ExpectedContent != "" {
 		if results.StatusContentOk {
-			contentString = contentSuccessString(results)
+			output = append(output, contentSuccessString(results))
 		} else {
-			contentString = contentFailureString(results)
+			output = append(output, contentFailureString(results))
 		}
 	}
 
 	// Handling the CSP check status
 	if results.Application.ExpectedCSP != "" {
 		if results.StatusCSPOk {
-			cspString = cspSuccessString(results)
+			output = append(output, cspSuccessString(results))
 		} else {
-			cspString = cspFailureString(results)
+			output = append(output, cspFailureString(results))
 		}
 	}
 
-	if contentString != "" || cspString != "" {
-		return statusString + "\n" + contentString + "\n" + cspString
-	} else {
-		return statusString
-	}
+	return strings.Join(output, "\n")
 }
 
-func successString(results ApplicationStatus) string {
+func successString(results AppCheckStatus) string {
 	if results.ActualLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
-	} else {
-		return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
 	}
+	return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
+
 }
 
-func failureString(results ApplicationStatus) string {
+func failureString(results AppCheckStatus) string {
 	actualStatusCode := results.ActualStatusCode
 	expectedStatusCode := results.Application.ExpectedStatusCode
 	actualLocation := results.ActualLocation
@@ -290,43 +282,42 @@ func failureString(results ApplicationStatus) string {
 	return fmt.Sprintf("Failure: URL %s %s", url, mismatchDetails)
 }
 
-func contentSuccessString(results ApplicationStatus) string {
+func contentSuccessString(results AppCheckStatus) string {
 	if results.ActualContent != "" {
 		return fmt.Sprintf("Success: ExpectedContent %s matched ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
-	} else {
-		return "No content to compare"
 	}
+	return "No content to compare"
+
 }
 
-func contentFailureString(results ApplicationStatus) string {
+func contentFailureString(results AppCheckStatus) string {
 	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
-	if results.ActualContent != "" {
-		if results.Application.Name != "circleCI" {
-			if IsPrimoVE && DebugMode {
-				// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
-				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
-			} else {
-				return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
-			}
-		} else {
-			return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
-		}
-	} else {
+	if results.ActualContent == "" {
 		return "Failure: No content to compare"
 	}
+
+	if results.Application.Name == "circleCI" {
+		return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
+	}
+
+	if IsPrimoVE && DebugMode {
+		// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
+		return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
+	}
+
+	return fmt.Sprintf("Failure: Expected content %s did not match Actual Content", results.Application.ExpectedContent)
 }
 
-func cspSuccessString(results ApplicationStatus) string {
+func cspSuccessString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return "Success: Expected Primo VE CSP header matched Actual CSP header"
 	}
 	return ""
 }
 
-func cspFailureString(results ApplicationStatus) string {
+func cspFailureString(results AppCheckStatus) string {
 	if results.ActualCSP != "" {
 		return fmt.Sprintf("Failure: Expected Primo VE CSP header did not match Actual CSP header: %s", results.ActualCSP)
-	} else {
-		return "Failure: No Primo VE CSP header to compare"
 	}
+	return "Failure: No Primo VE CSP header to compare"
 }

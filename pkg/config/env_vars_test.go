@@ -2,10 +2,11 @@ package config
 
 import (
 	"bytes"
-	"github.com/stretchr/testify/assert"
 	"log"
 	"os"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // CaptureOutput captures the log output of a function
