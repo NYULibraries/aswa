@@ -14,6 +14,7 @@ import (
 )
 
 const (
+	// 10 is a reasonable default to prevent infinite redirect loops :https://pkg.go.dev/net/http#Get
 	defaultMaxRedirects = 10
 	envDebugMode        = "DEBUG_MODE"
 	userAgent           = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
