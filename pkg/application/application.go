@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -21,9 +22,14 @@ const (
 )
 
 var (
-	DebugMode = os.Getenv(envDebugMode) == "true"
+	DebugMode = parseEnvBool(envDebugMode)
 	IsPrimoVE bool
 )
+
+func parseEnvBool(envVar string) bool {
+	val, err := strconv.ParseBool(os.Getenv(envVar))
+	return err == nil && val
+}
 
 // Application represents a synthetic test on an external url to perform
 type Application struct {
