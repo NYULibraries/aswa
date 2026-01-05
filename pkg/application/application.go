@@ -13,8 +13,9 @@ import (
 )
 
 const (
-	envDebugMode = "DEBUG_MODE"
-	userAgent    = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+	defaultMaxRedirects = 10
+	envDebugMode        = "DEBUG_MODE"
+	userAgent           = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
 )
 
 var (
@@ -24,13 +25,15 @@ var (
 
 // Application represents a synthetic test on an external url to perform
 type Application struct {
-	Name               string        `yaml:"name"`
-	URL                string        `yaml:"url"`
-	ExpectedStatusCode int           `yaml:"expected_status"`
-	Timeout            time.Duration `yaml:"timeout"`
-	ExpectedLocation   string        `yaml:"expected_location"`
-	ExpectedContent    string        `yaml:"expected_content"`
-	ExpectedCSP        string        `yaml:"expected_csp"`
+	Name                          string        `yaml:"name"`
+	URL                           string        `yaml:"url"`
+	ExpectedStatusCode            int           `yaml:"expected_status"`
+	Timeout                       time.Duration `yaml:"timeout"`
+	IncludeActualContentOnFailure bool          `yaml:"include_actual_content_on_failure"`
+	MaxRedirects                  int           `yaml:"max_redirects"`
+	ExpectedLocation              string        `yaml:"expected_location"`
+	ExpectedContent               string        `yaml:"expected_content"`
+	ExpectedCSP                   string        `yaml:"expected_csp"`
 }
 
 // AppCheckStatus represents the results of a synthetic test
