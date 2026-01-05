@@ -15,11 +15,12 @@ const (
 )
 
 // GetClusterInfo retrieves the cluster info from environment variables.
-func GetClusterInfo() {
+func GetClusterInfo() string {
 	clusterInfo := os.Getenv(EnvClusterInfo)
 	if clusterInfo == "" {
 		log.Println("CLUSTER_INFO is not set")
 	}
+	return clusterInfo
 }
 
 // GetCmdArg retrieves the command line argument without using the flag package.
@@ -50,11 +51,12 @@ func GetPromAggregationgatewayUrl() string {
 }
 
 // GetSlackWebhookUrl retrieves Slack credentials from environment variables.
-func GetSlackWebhookUrl() {
+func GetSlackWebhookUrl() string {
 	slackWebhookUrl := os.Getenv(EnvSlackWebhookUrl)
 	if slackWebhookUrl == "" {
 		log.Println("SLACK_WEBHOOK_URL is not set")
 	}
+	return slackWebhookUrl
 }
 
 // GetYamlPath retrieves the YAML path from the environment variable.
