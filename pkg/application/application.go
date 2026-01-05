@@ -169,20 +169,17 @@ func (test Application) GetStatus() *AppCheckStatus {
 			return nil
 		}
 
-		contentApp := test
-		contentApp.URL = test.URL
-
 		if DebugMode {
-			log.Printf("[GET start] url=%s", contentApp.URL)
+			log.Printf("[GET start] url=%s", test.URL)
 		}
 
 		var respStatusCode int
 		var finalURL string
 		respStatusCode, finalURL, actualContent, statusContentOk, err =
-			performGetRequest(contentApp, &followClient)
+			performGetRequest(test, &followClient)
 		if err != nil {
 			if DebugMode {
-				log.Printf("[GET error] url=%s error=%v", contentApp.URL, err)
+				log.Printf("[GET error] url=%s error=%v", test.URL, err)
 			}
 			return createApplicationStatus(test, nil, err, "", false)
 		}
