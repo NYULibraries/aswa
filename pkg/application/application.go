@@ -8,29 +8,40 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
 const (
-	envDebugMode = "DEBUG_MODE"
-	userAgent    = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+	// 10 is a reasonable default to prevent infinite redirect loops :https://pkg.go.dev/net/http#Get
+	defaultMaxRedirects = 10
+	envDebugMode        = "DEBUG_MODE"
+	userAgent           = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
 )
 
 var (
-	DebugMode = os.Getenv(envDebugMode) == "true"
+	DebugMode = parseEnvBool(envDebugMode)
 	IsPrimoVE bool
 )
 
+func parseEnvBool(envVar string) bool {
+	val, err := strconv.ParseBool(os.Getenv(envVar))
+	return err == nil && val
+}
+
 // Application represents a synthetic test on an external url to perform
 type Application struct {
-	Name               string        `yaml:"name"`
-	URL                string        `yaml:"url"`
-	ExpectedStatusCode int           `yaml:"expected_status"`
-	Timeout            time.Duration `yaml:"timeout"`
-	ExpectedLocation   string        `yaml:"expected_location"`
-	ExpectedContent    string        `yaml:"expected_content"`
-	ExpectedCSP        string        `yaml:"expected_csp"`
+	Name                          string        `yaml:"name"`
+	URL                           string        `yaml:"url"`
+	ExpectedStatusCode            int           `yaml:"expected_status"`
+	Timeout                       time.Duration `yaml:"timeout"`
+	IncludeActualContentOnFailure bool          `yaml:"include_actual_content_on_failure"`
+	MaxRedirects                  int           `yaml:"max_redirects"`
+	ExpectedLocation              string        `yaml:"expected_location"`
+	ExpectedContent               string        `yaml:"expected_content"`
+	ExpectedCSP                   string        `yaml:"expected_csp"`
 }
 
 // AppCheckStatus represents the results of a synthetic test
@@ -47,7 +58,7 @@ type AppCheckStatus struct {
 
 // SetIsPrimoVE sets the IsPrimoVE flag based on the yamlPath.
 func SetIsPrimoVE(yamlPath string) {
-	IsPrimoVE = yamlPath == "./config/primo_ve.applications.yml"
+	IsPrimoVE = filepath.Base(filepath.Clean(yamlPath)) == "primo_ve.applications.yml"
 }
 
 // compareStatusCodes compares the actual and expected status codes.
@@ -147,6 +158,11 @@ func (test Application) GetStatus() *AppCheckStatus {
 
 	// Phase 2: content on the FINAL landing page (follow all redirects)
 	if test.IsGet() {
+		maxRedirects := test.MaxRedirects
+		if maxRedirects <= 0 {
+			maxRedirects = defaultMaxRedirects
+		}
+
 		// Clone client and set redirect handler for visibility and cap
 		followClient := *client
 		followClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
@@ -154,26 +170,23 @@ func (test Application) GetStatus() *AppCheckStatus {
 				prev := via[len(via)-1].URL
 				log.Printf("[GET redirect] hop=%d %s -> %s", len(via), prev, req.URL)
 			}
-			if len(via) >= 10 {
-				return fmt.Errorf("stopped after %d redirects", len(via))
+			if len(via) >= maxRedirects {
+				return fmt.Errorf("stopped after %d redirects", maxRedirects)
 			}
 			return nil
 		}
 
-		contentApp := test
-		contentApp.URL = test.URL
-
 		if DebugMode {
-			log.Printf("[GET start] url=%s", contentApp.URL)
+			log.Printf("[GET start] url=%s", test.URL)
 		}
 
 		var respStatusCode int
 		var finalURL string
 		respStatusCode, finalURL, actualContent, statusContentOk, err =
-			performGetRequest(contentApp, &followClient)
+			performGetRequest(test, &followClient)
 		if err != nil {
 			if DebugMode {
-				log.Printf("[GET error] url=%s error=%v", contentApp.URL, err)
+				log.Printf("[GET error] url=%s error=%v", test.URL, err)
 			}
 			return createApplicationStatus(test, nil, err, "", false)
 		}
@@ -369,17 +382,11 @@ func contentSuccessString(results AppCheckStatus) string {
 }
 
 func contentFailureString(results AppCheckStatus) string {
-	log.Printf("DebugMode: %t, IsPrimoVE: %t", DebugMode, IsPrimoVE)
 	if results.ActualContent == "" {
 		return "Failure: No content to compare"
 	}
 
-	if results.Application.Name == "circleCI" {
-		return fmt.Sprintf("Failure: Expected content %s did not match ActualContent %s", results.Application.ExpectedContent, results.ActualContent)
-	}
-
-	if IsPrimoVE && DebugMode {
-		// For Primo VE checks with debug mode enabled, the actual content is included in the failure message
+	if results.Application.IncludeActualContentOnFailure || (IsPrimoVE && DebugMode) {
 		return fmt.Sprintf("Failure: Expected content %s did not match Actual Content %s", results.Application.ExpectedContent, results.ActualContent)
 	}
 

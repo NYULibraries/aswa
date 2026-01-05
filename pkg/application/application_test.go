@@ -170,8 +170,8 @@ func TestGetStatus(t *testing.T) {
 			expectedCSPSuccess:       true,
 			expectedActualCSP:        "",
 		},
-		{"Failure: wrong status code expected", &Application{"", mockServer.URL + "/wrongstatus", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusNotFound, "", true, "", true, ""},
-		{"Failure: application is down", &Application{"", mockServer.URL + "/500", http.StatusOK, 800 * time.Millisecond, "", "", ""}, false, http.StatusInternalServerError, "", true, "", true, ""},
+		{"Failure: wrong status code expected", &Application{Name: "", URL: mockServer.URL + "/wrongstatus", ExpectedStatusCode: http.StatusOK, Timeout: 800 * time.Millisecond, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}, false, http.StatusNotFound, "", true, "", true, ""},
+		{"Failure: application is down", &Application{Name: "", URL: mockServer.URL + "/500", ExpectedStatusCode: http.StatusOK, Timeout: 800 * time.Millisecond, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}, false, http.StatusInternalServerError, "", true, "", true, ""},
 		{
 			description: "Success: slow response within timeout",
 			application: &Application{
@@ -187,7 +187,7 @@ func TestGetStatus(t *testing.T) {
 			expectedCSPSuccess:       true,
 			expectedActualCSP:        "",
 		},
-		{"Failure: timeout", &Application{"", mockServer.URL + "/slowresponse", http.StatusOK, 1 * time.Millisecond, "", "", ""}, false, 0, "", false, "", false, ""},
+		{"Failure: timeout", &Application{Name: "", URL: mockServer.URL + "/slowresponse", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Millisecond, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}, false, 0, "", false, "", false, ""},
 		{
 			description: "Failure: wrong error expected",
 			application: &Application{
@@ -203,10 +203,10 @@ func TestGetStatus(t *testing.T) {
 			expectedCSPSuccess:       true,
 			expectedActualCSP:        "",
 		},
-		{"Success: expected content found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Herman Melville", ""}, true, http.StatusOK, "", true, "Herman Melville", true, ""},
-		{"Failure: expected content not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "Jules Verne - 20,000 Leagues Under the Sea", ""}, true, http.StatusOK, "", false, "", true, ""},
-		{"Success: expected CSP header found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'self'"}, true, http.StatusOK, "", true, "", true, "default-src 'self'"},
-		{"Failure: expected CSP header not found", &Application{"", mockServer.URL + "/html", http.StatusOK, 5 * time.Second, "", "", "default-src 'none'"}, true, http.StatusOK, "", true, "", false, ""},
+		{"Success: expected content found", &Application{Name: "", URL: mockServer.URL + "/html", ExpectedStatusCode: http.StatusOK, Timeout: 5 * time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Herman Melville", ExpectedCSP: ""}, true, http.StatusOK, "", true, "Herman Melville", true, ""},
+		{"Failure: expected content not found", &Application{Name: "", URL: mockServer.URL + "/html", ExpectedStatusCode: http.StatusOK, Timeout: 5 * time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Jules Verne - 20,000 Leagues Under the Sea", ExpectedCSP: ""}, true, http.StatusOK, "", false, "", true, ""},
+		{"Success: expected CSP header found", &Application{Name: "", URL: mockServer.URL + "/html", ExpectedStatusCode: http.StatusOK, Timeout: 5 * time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: "default-src 'self'"}, true, http.StatusOK, "", true, "", true, "default-src 'self'"},
+		{"Failure: expected CSP header not found", &Application{Name: "", URL: mockServer.URL + "/html", ExpectedStatusCode: http.StatusOK, Timeout: 5 * time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: "default-src 'none'"}, true, http.StatusOK, "", true, "", false, ""},
 	}
 
 	for _, test := range tests {
@@ -389,12 +389,12 @@ func TestString(t *testing.T) {
 		appStatus      *AppCheckStatus
 		expectedOutput string
 	}{
-		{description: "Successful status", appStatus: &AppCheckStatus{Application: &Application{"", "https://library.nyu.edu", http.StatusOK, time.Second, "", "", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200}, expectedOutput: "Success: URL https://library.nyu.edu resolved with 200"},
+		{description: "Successful status", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200}, expectedOutput: "Success: URL https://library.nyu.edu resolved with 200"},
 		{description: "Failed status", appStatus: &AppCheckStatus{Application: &Application{URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 404}, expectedOutput: "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
 		{description: "Successful status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "https://library.nyu.edu/"}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
 		{description: "Failed status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "http://library.nyu.edu/"}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
-		{description: "Successful status with expected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Example Domain", ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain"},
-		{description: "Failed status with unexpected content", appStatus: &AppCheckStatus{Application: &Application{"", "https://example.com", http.StatusOK, time.Second, "", "Wrong Content", ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content"},
+		{description: "Successful status with expected content", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Example Domain", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain"},
+		{description: "Failed status with unexpected content", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Wrong Content", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content"},
 	}
 
 	for _, test := range tests {
@@ -494,7 +494,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 			isPrimoVE:   false,
 			debugMode:   false,
 			appStatus: &AppCheckStatus{
-				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: false, ExpectedContent: "Example Content"},
 				StatusOk:    true, StatusContentOk: true,
 				ActualStatusCode: 200, ActualContent: "Example Content"},
 			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content",
@@ -504,7 +504,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 			isPrimoVE:   true,
 			debugMode:   true,
 			appStatus: &AppCheckStatus{
-				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Example Content"},
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: false, ExpectedContent: "Example Content"},
 				StatusOk:    true, StatusContentOk: true,
 				ActualStatusCode: 200, ActualContent: "Example Content"},
 			expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Content matched ActualContent Example Content",
@@ -514,17 +514,27 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 			isPrimoVE:   false,
 			debugMode:   false,
 			appStatus: &AppCheckStatus{
-				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: false, ExpectedContent: "Expected Content"},
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
 			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content",
+		},
+		{
+			description: "Failed status with unexpected content, DebugMode=false, include flag=true",
+			isPrimoVE:   false,
+			debugMode:   false,
+			appStatus: &AppCheckStatus{
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: true, ExpectedContent: "Expected Content"},
+				StatusOk:    true, StatusContentOk: false,
+				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
+			expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Expected Content did not match Actual Content Some Actual Content",
 		},
 		{
 			description: "Failed status with unexpected content, DebugMode=true, with detailed content",
 			isPrimoVE:   true,
 			debugMode:   true,
 			appStatus: &AppCheckStatus{
-				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: false, ExpectedContent: "Expected Content"},
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
 
@@ -535,7 +545,7 @@ func TestStringWithEnvVarsSuccessAndContent(t *testing.T) {
 			isPrimoVE:   false,
 			debugMode:   true,
 			appStatus: &AppCheckStatus{
-				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, ExpectedContent: "Expected Content"},
+				Application: &Application{Name: "TestApp", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second * 5, IncludeActualContentOnFailure: false, ExpectedContent: "Expected Content"},
 				StatusOk:    true, StatusContentOk: false,
 				ActualStatusCode: 200, ActualContent: "Some Actual Content"},
 

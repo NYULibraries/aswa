@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	a "github.com/NYULibraries/aswa/pkg/application"
@@ -50,7 +51,8 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 
 	var failingSyntheticTests []FailingSyntheticTest
 
-	IsOutputSlack := os.Getenv(envOutputSlack) == "true"
+	v, _ := strconv.ParseBool(os.Getenv(envOutputSlack))
+	IsOutputSlack := v
 
 	for _, app := range appData {
 		if targetAppName == "" || targetAppName == app.Name {

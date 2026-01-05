@@ -4,3 +4,6 @@ c.out
 
 
 .vscode
+
+.idea
+.DS_Store

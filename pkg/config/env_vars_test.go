@@ -87,7 +87,7 @@ func TestGetSlackWebhookUrl(t *testing.T) {
 
 			t.Setenv(EnvSlackWebhookUrl, tt.envSlackWebhookUrl)
 
-			gotLogMessage := CaptureOutput(GetSlackWebhookUrl)
+			gotLogMessage := CaptureOutput(func() { _ = GetSlackWebhookUrl() })
 
 			assert.Equal(t, tt.wantLogmessage, gotLogMessage, "getSlackWebhookUrl() should return correct Slack webhook URL")
 
@@ -112,7 +112,7 @@ func TestGetClusterInfo(t *testing.T) {
 			t.Setenv(EnvClusterInfo, tt.envClusterInfo)
 
 			// Call function under test
-			gotLogMessage := CaptureOutput(GetClusterInfo)
+			gotLogMessage := CaptureOutput(func() { _ = GetClusterInfo() })
 
 			// Assert that the function returns the expected result
 			assert.Equal(t, tt.wantLogMessage, gotLogMessage, "getClusterInfo() should return correct cluster info")

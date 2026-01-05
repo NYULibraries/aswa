@@ -10,6 +10,7 @@ applications:
     url: 'https://status.circleci.com/api/v2/status.json'
     expected_status: 200
     expected_content: 'All Systems Operational'
+    include_actual_content_on_failure: true 
   - name: lib-guides
     url: 'https://guides.nyu.edu/'
     expected_status: 200
