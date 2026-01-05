@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 )
@@ -50,7 +51,7 @@ type AppCheckStatus struct {
 
 // SetIsPrimoVE sets the IsPrimoVE flag based on the yamlPath.
 func SetIsPrimoVE(yamlPath string) {
-	IsPrimoVE = yamlPath == "./config/primo_ve.applications.yml"
+	IsPrimoVE = filepath.Base(filepath.Clean(yamlPath)) == "primo_ve.applications.yml"
 }
 
 // compareStatusCodes compares the actual and expected status codes.
