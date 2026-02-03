@@ -19,5 +19,10 @@ applications:
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
     expected_content: 'src="lib/bundle.js?version=67ee48b131'
+  - name: primo-nui-sandbox
+    url: 'https://nyu-psb.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
+    expected_status: 200
+    expected_content: 'src="lib/bundle.js?version=67ee48b131"'
+
 
  
