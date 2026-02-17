@@ -22,11 +22,11 @@ applications:
   - name: primo-nui-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=f1b77a438d"'
+    expected_content: 'src="lib/bundle.js?version=f5a760143d"'
   - name: primo-nde-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/nde/home?vid=01NYU_INST:NYU_NDE'
     expected_status: 200
-    expected_content: 'src="main.80587d9f9e71f248.js"'
+    expected_content: 'src="main.660b085e0f91ff72.js"'
 
 
  
