@@ -4,6 +4,7 @@ import (
 	"errors"
 	"os"
 	"path/filepath"
+	"slices"
 	"strconv"
 
 	a "github.com/NYULibraries/aswa/pkg/application"
@@ -32,13 +33,8 @@ func hasEmptyRequiredFields(app *a.Application) bool {
 }
 
 // Loop through all categories and applications, check if any required field is empty
-func (list *Config) isConfigAnyRequiredFieldEmpty() bool {
-	for _, app := range list.Applications {
-		if hasEmptyRequiredFields(app) {
-			return true
-		}
-	}
-	return false
+func (cfg *Config) isConfigAnyRequiredFieldEmpty() bool {
+	return slices.ContainsFunc(cfg.Applications, hasEmptyRequiredFields)
 }
 
 func loadConfig(yamlPath string) (*Config, error) {
