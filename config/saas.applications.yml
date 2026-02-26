@@ -1,5 +1,5 @@
 applications:
-  - name: alerts
+  - name: statuspage-alerts
     url: 'https://alerts.library.nyu.edu'
     expected_status: 200
     expected_content: 'About This Site'
