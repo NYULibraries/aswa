@@ -62,6 +62,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
 				if !IsOutputSlack {
+					m.SetAppInfo(app.Name, app.URL)
 					m.IncrementFailedTestsCounter(app.Name)
 				}
 			}

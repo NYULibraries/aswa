@@ -1,12 +1,40 @@
 package metrics
 
 import (
+	dto "github.com/prometheus/client_model/go"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	c "github.com/NYULibraries/aswa/pkg/config"
 )
+
+func TestIncrementFailedTestsCounter(t *testing.T) {
+	failedTests.Reset()
+	appInfo.Reset()
+	t.Setenv(c.EnvName, "saas")
+
+	SetAppInfo("testApp", "https://example.com/app")
+	IncrementFailedTestsCounter("testApp")
+
+	counterMetric := &dto.Metric{}
+	if err := failedTests.WithLabelValues("saas", "testApp").Write(counterMetric); err != nil {
+		t.Fatalf("failed to read counter metric: %v", err)
+	}
+
+	if counterMetric.GetCounter().GetValue() != 1 {
+		t.Fatalf("expected counter value 1, got %v", counterMetric.GetCounter().GetValue())
+	}
+
+	infoMetric := &dto.Metric{}
+	if err := appInfo.WithLabelValues("saas", "testApp", "https://example.com/app").Write(infoMetric); err != nil {
+		t.Fatalf("failed to read app info metric: %v", err)
+	}
+
+	if infoMetric.GetGauge().GetValue() != 1 {
+		t.Fatalf("expected app info gauge value 1, got %v", infoMetric.GetGauge().GetValue())
+	}
+}
 
 func TestPushMetrics(t *testing.T) {
 	tests := []struct {
@@ -32,14 +60,19 @@ func TestPushMetrics(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			failedTests.Reset()
+			appInfo.Reset()
+
 			// Setup mock HTTP server for this test case
 			server := httptest.NewServer(http.HandlerFunc(tt.mockResponse))
 			defer server.Close()
 
 			// Setup environment variable to mock the pushgateway URL
 			t.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
+			t.Setenv(c.EnvName, "saas")
 
-			// Increment a test counter to simulate metrics that would be pushed
+			// Record app metadata and increment a test counter to simulate metrics that would be pushed.
+			SetAppInfo("testApp", "https://example.com/app")
 			IncrementFailedTestsCounter("testApp")
 
 			// Call PushMetrics to attempt to push the test counter to the mock server

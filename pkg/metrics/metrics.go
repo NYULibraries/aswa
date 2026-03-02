@@ -16,16 +16,30 @@ var (
 		},
 		[]string{"env", "app"},
 	)
+	appInfo = prometheus.NewGaugeVec(
+		prometheus.GaugeOpts{
+			Name: "aswa_app_info",
+			Help: "Static application metadata for ASWA checks.",
+		},
+		[]string{"env", "app", "url"},
+	)
 )
 
 func init() {
 	prometheus.MustRegister(failedTests)
+	prometheus.MustRegister(appInfo)
 }
 
-// IncrementFailedTestsCounter increments the counter for a given app
+// IncrementFailedTestsCounter increments the counter for a given app.
 func IncrementFailedTestsCounter(app string) {
 	env := c.GetEnvironmentName()
 	failedTests.WithLabelValues(env, app).Inc()
+}
+
+// SetAppInfo records static app metadata that can be joined into alerts.
+func SetAppInfo(app string, url string) {
+	env := c.GetEnvironmentName()
+	appInfo.WithLabelValues(env, app, url).Set(1)
 }
 
 // PushMetrics pushes all collected metrics to the PAG.
@@ -33,6 +47,7 @@ func PushMetrics() error {
 	textFormat := expfmt.NewFormat(expfmt.TypeTextPlain)
 	pusher := push.New(c.GetPromAggregationgatewayUrl(), "monitoring").
 		Collector(failedTests).
+		Collector(appInfo).
 		Format(textFormat)
 	if err := pusher.Push(); err != nil {
 		return err
