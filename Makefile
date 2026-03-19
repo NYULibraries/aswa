@@ -3,6 +3,9 @@ SHELL := /bin/bash
 .SHELLFLAGS := -eu -o pipefail -c
 .DEFAULT_GOAL := all
 
+BINARY := aswa
+SOURCES := $(shell find . -type f -name '*.go')
+
 # Variables
 CLUSTER_INFO ?=
 DOCKER_COMPOSE_CMD ?= docker compose run --rm
@@ -19,10 +22,12 @@ SKIP_BUILD ?= 0
 all: format lint staticcheck container test container-run
 
 # Build binary for aswa
-build:
-	@echo "Building aswa binary..."
-	go build
-	@echo "✅ Success: build"
+$(BINARY): $(SOURCES) go.mod go.sum
+	@echo "Building $(BINARY)..."
+	go build -o $(BINARY) .
+	@echo "✅ Built $(BINARY)"
+
+build: $(BINARY)
 
 # Check if the required environment variables are set
 check-env:
@@ -40,7 +45,7 @@ check-env:
 # Clean up the project
 clean:
 	@echo "Cleaning up..."
-	rm -f aswa
+	rm -f $(BINARY)
 	docker compose down --rmi all --volumes --remove-orphans || true
 	@echo "Remember to manually unset YAML_PATH if it was exported in your shell."
 
@@ -72,7 +77,7 @@ init: check-env
 # Run aswa using the built binary
 run: build
 	@echo "Running aswa..."
-	./aswa
+	./$(BINARY)
 	@echo "✅ Success: run"
 
 # Run the synthetic test on the app with the given name in a container
