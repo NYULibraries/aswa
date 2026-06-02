@@ -44,7 +44,7 @@ jobs:
             export BRANCH_NO_SLASH=${CIRCLE_BRANCH//\//_}
             docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
             docker tag aswa quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
-            docker login -u "$QUAY_USERNAME" --password "$QUAY_PASSWORD" quay.io
+            printf '%s' "$QUAY_PASSWORD" | docker login -u "$QUAY_USERNAME" --password-stdin quay.io
             docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
             docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
 
