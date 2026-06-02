@@ -24,10 +24,6 @@ jobs:
           name: Test
           command: |
             docker compose run test
-      - run:
-          name: Build app
-          command: |
-            docker compose build
 
   publish-image:
     <<: *docker-defaults
@@ -37,7 +33,7 @@ jobs:
       - run:
           name: Build app
           command: |
-            docker compose build
+            docker compose build aswa
       - run:
           name: Push image
           command: |
@@ -54,7 +50,6 @@ workflows:
     jobs:
       - build-test
       - publish-image:
-          context: quay-publish
           requires:
             - build-test
           filters:
