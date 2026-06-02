@@ -28,6 +28,16 @@ jobs:
           name: Build app
           command: |
             docker compose build
+
+  publish-image:
+    <<: *docker-defaults
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build app
+          command: |
+            docker compose build
       - run:
           name: Push image
           command: |
@@ -43,4 +53,10 @@ workflows:
   build-test:
     jobs:
       - build-test
-
+      - publish-image:
+          context: quay-publish
+          requires:
+            - build-test
+          filters:
+            tags:
+              ignore: /.*/
