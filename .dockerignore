@@ -12,7 +12,6 @@ coverage.out
 .devcontainer
 .idea
 .vscode
-.yarn
 
 # Local environment and logs
 .env
@@ -20,12 +19,3 @@ coverage.out
 *.log
 .DS_Store
 
-# Sensitive material that should not enter Docker build context
-*.cert
-*.crt
-*.key
-*.pem
-*.p12
-*.pfx
-*secret*
-*token*
