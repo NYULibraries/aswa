@@ -1,6 +1,21 @@
+# Local build and test outputs
 aswa
-
 c.out
+*.out
+coverage.out
+*.coverprofile
 
-
+# VCS, CI, and editor metadata
+.git
+.github
+.circleci
+.devcontainer
+.idea
 .vscode
+
+# Local environment and logs
+.env
+.env.*
+*.log
+.DS_Store
+
