@@ -698,8 +698,14 @@ func TestGetStatus_HeadUnsupported_FallsBackToGet(t *testing.T) {
 }
 
 func TestGetStatus_Expects405_DoesNotFallBack(t *testing.T) {
-	// A check that genuinely expects 405 must not be rerouted to GET.
+	// A check that genuinely expects 405 must not be rerouted to GET. GET returns a
+	// distinct 200, so an erroneous fallback would surface as a 200 ActualStatusCode
+	// rather than the expected 405.
 	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodGet {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}))
 	t.Cleanup(srv.Close)
@@ -714,6 +720,7 @@ func TestGetStatus_Expects405_DoesNotFallBack(t *testing.T) {
 	status := app.GetStatus()
 
 	require.NotNil(t, status)
+	// 405 (not 200) confirms the probe used HEAD and did not fall back to GET.
 	assert.Equal(t, http.StatusMethodNotAllowed, status.ActualStatusCode)
 	assert.True(t, status.StatusOk, "a check that expects 405 should pass on the HEAD response")
 }
