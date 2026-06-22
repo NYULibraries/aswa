@@ -87,7 +87,7 @@ func TestIsConfigAnyRequiredFieldEmpty(t *testing.T) {
 	var tests = []struct {
 		description string
 		application *a.Application
-		expected    bool
+		valid       bool
 	}{
 		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: 1 * time.Second, ExpectedLocation: "test"}, true},
 		{"Valid application", &a.Application{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}, true},
@@ -106,12 +106,11 @@ func TestIsConfigAnyRequiredFieldEmpty(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		t.Run(test.description, testIsAnyRequiredFieldFunc(test.application, test.expected))
-	}
-}
-
-func testIsAnyRequiredFieldFunc(app *a.Application, expected bool) func(*testing.T) {
-	return func(t *testing.T) {
-		assert.Equal(t, expected, app.Name != "" && app.URL != "" && app.ExpectedStatusCode != 0)
+		t.Run(test.description, func(t *testing.T) {
+			cfg := &Config{Applications: []*a.Application{test.application}}
+			// isConfigAnyRequiredFieldEmpty reports true exactly when an application is
+			// missing a required field, i.e. the inverse of a valid application.
+			assert.Equal(t, !test.valid, cfg.isConfigAnyRequiredFieldEmpty())
+		})
 	}
 }
