@@ -17,18 +17,18 @@ func TestNewConfig(t *testing.T) {
 		path        string
 		expectedErr string
 	}{
-		{"Valid path", configTestPath, ""},
-		{"Valid path with valid yaml", configTestPath, ""},
-		{"Valid path with invalid yaml", "../../config/config.yml", "yaml: unmarshal errors:"},
-		{"Valid path with valid yaml but missing required fields", "../../testdata/test.yml", "config file is missing required fields"},
-		{"Invalid path", "../../config/config_test.yml", "open ../../config/config_test.yml: no such file or directory"},
-		{"Invalid path with valid yaml", "./prod.applications.yml", "yaml: unmarshal errors:"},
-		{"Empty path", "", "open : no such file or directory"},
-		{"Invalid yaml", "./invalid.yml", "yaml: unmarshal errors"},
-		{"Valid yaml", configTestPath, ""},
-		{"Another valid yaml", "../../testdata/expect_valid.yml", ""},
-		{"Invalid yaml", "../../testdata/expect_invalid.yml", "config file is missing required fields"},
-		{"Wrong type timeout yaml", "../../testdata/expect_timeout_wrong_type.yml", "yaml: unmarshal errors:\n  line 5: cannot unmarshal !!int `600` into time.Duration"},
+		{"Valid prod config", configTestPath, ""},
+		{"Valid dev config", "../../config/dev.applications.yml", ""},
+		{"Valid saas config", "../../config/saas.applications.yml", ""},
+		{"Valid primo_ve config", "../../config/primo_ve.applications.yml", ""},
+		{"Valid testdata config", "../../testdata/expect_valid.yml", ""},
+		{"Missing required fields", "../../testdata/expect_invalid.yml", "config file is missing one or more required fields"},
+		{"Wrong type for timeout", "../../testdata/expect_timeout_wrong_type.yml", "cannot unmarshal !!int `600` into time.Duration"},
+		{"Nonexistent file in config dir", "../../config/does_not_exist.yml", "no such file or directory"},
+		{"Nonexistent config.yml", "../../config/config.yml", "no such file or directory"},
+		{"Nonexistent testdata file", "../../testdata/test.yml", "no such file or directory"},
+		{"Nonexistent relative file", "./prod.applications.yml", "no such file or directory"},
+		{"Empty path", "", "no such file or directory"},
 	}
 
 	for _, test := range tests {
@@ -43,9 +43,9 @@ func testNewConfigFunc(path string, expectedErr string) func(*testing.T) {
 		_, err := NewConfig(path)
 
 		if expectedErr == "" {
-			assert.Nil(t, err)
+			assert.NoError(t, err)
 		} else {
-			assert.Error(t, err, expectedErr)
+			assert.ErrorContains(t, err, expectedErr)
 		}
 	}
 }
