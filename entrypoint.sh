@@ -24,5 +24,6 @@ if [ "$IsOutputSlack" = "true" ] && echo "$aswa_output" | grep -q "Failure"; the
         -H 'Content-type: application/json' \
         --data "$payload" "${SLACK_WEBHOOK_URL}"; then
         echo "Failed to post message to Slack webhook" >&2
+        exit 1
     fi
 fi
