@@ -141,18 +141,19 @@ func (test Application) GetStatus() *AppCheckStatus {
 	var actualContent string
 	var statusContentOk bool
 
-	// Phase 1: probe ORIGINAL URL (status + Location)
-	resp, err = performHeadRequest(test, client)
+	// Phase 1: probe ORIGINAL URL (status + Location), preferring HEAD but
+	// falling back to a no-redirect GET when the server does not support HEAD.
+	resp, err = performProbeRequest(test, client)
 	if err != nil {
 		return createApplicationStatus(test, resp, err, "", false)
 	}
 	if resp == nil {
-		return createApplicationStatus(test, resp, fmt.Errorf("nil HEAD response"), "", false)
+		return createApplicationStatus(test, resp, fmt.Errorf("nil probe response"), "", false)
 	}
 	defer closeResponseBody(resp.Body)
 
 	if DebugMode {
-		log.Printf("[HEAD probe] url=%s status=%d location=%q",
+		log.Printf("[probe] url=%s status=%d location=%q",
 			test.URL, resp.StatusCode, resp.Header.Get("Location"))
 	}
 
@@ -255,12 +256,54 @@ func performGetRequest(test Application, client *http.Client) (int, string, stri
 	return resp.StatusCode, finalURL, actualContent, statusContentOk, nil
 }
 
+// performProbeRequest inspects the original URL's status, Location, and headers
+// without following redirects. It prefers HEAD, but falls back to a no-redirect GET
+// when the server does not support HEAD (transport error or 405 Method Not Allowed)
+// so that status/CSP checks are not failed spuriously by HEAD-hostile endpoints.
+func performProbeRequest(test Application, client *http.Client) (*http.Response, error) {
+	resp, err := performHeadRequest(test, client)
+	if !headUnsupported(test, resp, err) {
+		return resp, err
+	}
+	if DebugMode {
+		log.Printf("[probe] HEAD unsupported for url=%s, retrying with GET (err=%v)", test.URL, err)
+	}
+	if resp != nil {
+		closeResponseBody(resp.Body)
+	}
+	return performProbeGetRequest(test, client)
+}
+
+// headUnsupported reports whether a HEAD probe indicates the server does not
+// support HEAD and the check should retry with GET. A 405 is only treated as
+// unsupported when the check does not actually expect a 405.
+func headUnsupported(test Application, resp *http.Response, err error) bool {
+	if err != nil {
+		return true
+	}
+	return resp != nil &&
+		resp.StatusCode == http.StatusMethodNotAllowed &&
+		test.ExpectedStatusCode != http.StatusMethodNotAllowed
+}
+
 func performHeadRequest(test Application, client *http.Client) (*http.Response, error) {
-	resp, err := client.Head(test.URL)
+	req, err := http.NewRequest(http.MethodHead, test.URL, nil)
 	if err != nil {
 		return nil, err
 	}
-	return resp, nil
+	req.Header.Set("User-Agent", userAgent)
+	return client.Do(req)
+}
+
+// performProbeGetRequest issues a GET without following redirects (the client's
+// CheckRedirect prevents following), used as a fallback when HEAD is unsupported.
+func performProbeGetRequest(test Application, client *http.Client) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodGet, test.URL, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("User-Agent", userAgent)
+	return client.Do(req)
 }
 
 func createApplicationStatus(test Application, resp *http.Response, err error, actualContent string, statusContentOk bool) *AppCheckStatus {
