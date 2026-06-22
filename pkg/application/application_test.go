@@ -666,3 +666,33 @@ func TestGetStatus_RelativeRedirect_AndContent_Failure_ContentMismatch(t *testin
 	assert.Equalf(t, deliveredBody, status.ActualContent,
 		"on mismatch we should capture the full final-page body")
 }
+
+func TestGetStatus_OversizedBody_IsCappedAtLimit(t *testing.T) {
+	// The marker sits past maxResponseBodyBytes, so a correctly capped read truncates
+	// before reaching it. Without the cap the marker would be found and content would match.
+	const marker = "MARKER_PAST_THE_CAP"
+	body := make([]byte, maxResponseBodyBytes+len(marker)+1024)
+	for i := range body {
+		body[i] = 'a'
+	}
+	copy(body[len(body)-len(marker):], marker)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "oversized",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            5 * time.Second,
+		ExpectedContent:    marker,
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status)
+	assert.False(t, status.StatusContentOk, "marker beyond the cap must not match a truncated body")
+	assert.Len(t, status.ActualContent, maxResponseBodyBytes, "captured body should be truncated to the cap")
+}
