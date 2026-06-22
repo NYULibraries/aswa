@@ -17,9 +17,7 @@ jobs:
       - run:
           name: Check formatting
           command: |
-            docker compose run test gofmt -l .
-            test -z $(docker-compose run test gofmt -l .)
-            #docker compose run test golint -set_exit_status
+            test -z "$(docker compose run test gofmt -l .)"
       - run:
           name: Test
           command: |
