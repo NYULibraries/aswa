@@ -24,23 +24,19 @@ type FailingSyntheticTest struct {
 }
 
 // postTestResult constructs a string containing the result of the given test.
-func postTestResult(appStatus a.AppCheckStatus) (string, error) {
+func postTestResult(appStatus a.AppCheckStatus) string {
 	result := appStatus.String()
 	timestamp := time.Now().Local().Format(time.RFC1123Z)
 	log.Printf("Test result generated on %s", timestamp)
 
-	return result, nil
+	return result
 }
 
 func postToSlack(tests []FailingSyntheticTest) error {
 	c.GetSlackWebhookUrl()
 	c.GetClusterInfo()
 	for _, test := range tests {
-		result, err := postTestResult(test.AppStatus)
-		if err != nil {
-			return err
-		}
-		fmt.Println(result)
+		fmt.Println(postTestResult(test.AppStatus))
 	}
 	return nil
 }
