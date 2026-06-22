@@ -33,8 +33,6 @@ func postTestResult(appStatus a.AppCheckStatus) string {
 }
 
 func postToSlack(tests []FailingSyntheticTest) error {
-	c.GetSlackWebhookUrl()
-	c.GetClusterInfo()
 	for _, test := range tests {
 		fmt.Println(postTestResult(test.AppStatus))
 	}
