@@ -666,3 +666,54 @@ func TestGetStatus_RelativeRedirect_AndContent_Failure_ContentMismatch(t *testin
 	assert.Equalf(t, deliveredBody, status.ActualContent,
 		"on mismatch we should capture the full final-page body")
 }
+
+func TestGetStatus_HeadUnsupported_FallsBackToGet(t *testing.T) {
+	// Server rejects HEAD with 405 but answers GET with 200 + a CSP header,
+	// mirroring HEAD-hostile endpoints. The probe should fall back to GET.
+	const csp = "default-src 'self'"
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.Method == http.MethodHead {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		w.Header().Set("Content-Security-Policy", csp)
+		_, _ = fmt.Fprint(w, "<html><body>OK</body></html>")
+	}))
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "head-unsupported",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            2 * time.Second,
+		ExpectedCSP:        csp,
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status)
+	assert.Equal(t, http.StatusOK, status.ActualStatusCode, "status should come from the GET fallback, not the HEAD 405")
+	assert.True(t, status.StatusOk, "status check should pass after falling back to GET")
+	assert.True(t, status.StatusCSPOk, "CSP read from the GET fallback response should match")
+}
+
+func TestGetStatus_Expects405_DoesNotFallBack(t *testing.T) {
+	// A check that genuinely expects 405 must not be rerouted to GET.
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}))
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "expects-405",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusMethodNotAllowed,
+		Timeout:            2 * time.Second,
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status)
+	assert.Equal(t, http.StatusMethodNotAllowed, status.ActualStatusCode)
+	assert.True(t, status.StatusOk, "a check that expects 405 should pass on the HEAD response")
+}
