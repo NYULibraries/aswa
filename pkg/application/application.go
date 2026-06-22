@@ -96,9 +96,6 @@ func compareLocations(actualLocation, expectedLocation string) bool {
 		if "/"+expectedURI == actualURI {
 			return true
 		}
-		if strings.TrimPrefix(actualURI, "/") == expectedURI {
-			return true
-		}
 
 		return false
 	}
