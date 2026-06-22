@@ -19,6 +19,9 @@ const (
 	defaultMaxRedirects = 10
 	envDebugMode        = "DEBUG_MODE"
 	userAgent           = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+	// maxResponseBodyBytes caps how much of a response body is read into memory
+	// when matching expected content, bounding memory use on large or hostile responses.
+	maxResponseBodyBytes = 10 << 20 // 10 MiB
 )
 
 var (
@@ -236,7 +239,7 @@ func performGetRequest(test Application, client *http.Client) (int, string, stri
 	defer closeResponseBody(resp.Body)
 
 	buf := new(bytes.Buffer)
-	if _, err := io.Copy(buf, resp.Body); err != nil {
+	if _, err := io.Copy(buf, io.LimitReader(resp.Body, maxResponseBodyBytes)); err != nil {
 		log.Println("Error copying response body:", err)
 		return resp.StatusCode, resp.Request.URL.String(), "", false, err
 	}
