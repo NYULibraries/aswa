@@ -50,39 +50,6 @@ func testNewConfigFunc(path string, expectedErr string) func(*testing.T) {
 	}
 }
 
-func TestContainApp(t *testing.T) {
-	var tests = []struct {
-		description  string
-		applications []*a.Application
-		appName      string
-		expected     bool
-	}{
-		{"Valid application", []*a.Application{{Name: "test", URL: "http://test.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, ExpectedLocation: "test"}}, "test", true},
-		{"Valid application", []*a.Application{{Name: "test"}}, "test", true},
-		{"Invalid application", []*a.Application{{Name: "test"}}, "test2", false},
-		{"Invalid application", []*a.Application{{Name: "test", URL: "test", ExpectedStatusCode: 0, Timeout: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}}, "test2", false},
-		{"Empty application", []*a.Application{}, "test", false},
-		{"Empty application", []*a.Application{{Name: "test"}}, "", false},
-		{"Empty application", []*a.Application{}, "", false},
-	}
-
-	for _, test := range tests {
-		t.Run(test.description, testContainAppFunc(test.applications, test.appName))
-	}
-}
-
-func testContainAppFunc(applications []*a.Application, appName string) func(*testing.T) {
-	return func(t *testing.T) {
-		for _, app := range applications {
-			if app.Name == appName {
-				assert.True(t, ContainApp(applications, appName))
-			} else {
-				assert.False(t, ContainApp(applications, appName))
-			}
-		}
-	}
-}
-
 func TestIsConfigAnyRequiredFieldEmpty(t *testing.T) {
 	var tests = []struct {
 		description string

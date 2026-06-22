@@ -19,7 +19,6 @@ const envOutputSlack = "OUTPUT_SLACK"
 // ####################
 
 type FailingSyntheticTest struct {
-	App       *a.Application
 	AppStatus a.AppCheckStatus
 }
 
@@ -54,7 +53,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			appStatus := app.GetStatus()
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
-				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{AppStatus: *appStatus})
 				if !IsOutputSlack {
 					m.IncrementFailedTestsCounter(app.Name)
 				}

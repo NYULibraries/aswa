@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags '-extldflags "-static"' -o app .
 
-FROM alpine:latest
+FROM alpine:3.24
 
 RUN addgroup -g 1000 docker && \
     adduser -D -u 1000 -G docker docker

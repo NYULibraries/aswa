@@ -99,9 +99,6 @@ func compareLocations(actualLocation, expectedLocation string) bool {
 		if "/"+expectedURI == actualURI {
 			return true
 		}
-		if strings.TrimPrefix(actualURI, "/") == expectedURI {
-			return true
-		}
 
 		return false
 	}
@@ -339,7 +336,9 @@ func (results AppCheckStatus) String() string {
 }
 
 func successString(results AppCheckStatus) string {
-	if results.ActualLocation != "" {
+	// Only claim a location "match" when an expected_location was actually configured;
+	// otherwise the redirect target was never checked.
+	if results.Application.ExpectedLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
 	}
 	return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)
