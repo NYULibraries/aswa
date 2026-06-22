@@ -19,6 +19,9 @@ const (
 	defaultMaxRedirects = 10
 	envDebugMode        = "DEBUG_MODE"
 	userAgent           = "ASWA-MonitoringService (HealthCheck; contact: lib-appdev@nyu.edu)"
+	// maxResponseBodyBytes caps how much of a response body is read into memory
+	// when matching expected content, bounding memory use on large or hostile responses.
+	maxResponseBodyBytes = 10 << 20 // 10 MiB
 )
 
 var (
@@ -94,9 +97,6 @@ func compareLocations(actualLocation, expectedLocation string) bool {
 			return true
 		}
 		if "/"+expectedURI == actualURI {
-			return true
-		}
-		if strings.TrimPrefix(actualURI, "/") == expectedURI {
 			return true
 		}
 
@@ -237,7 +237,7 @@ func performGetRequest(test Application, client *http.Client) (int, string, stri
 	defer closeResponseBody(resp.Body)
 
 	buf := new(bytes.Buffer)
-	if _, err := io.Copy(buf, resp.Body); err != nil {
+	if _, err := io.Copy(buf, io.LimitReader(resp.Body, maxResponseBodyBytes)); err != nil {
 		log.Println("Error copying response body:", err)
 		return resp.StatusCode, resp.Request.URL.String(), "", false, err
 	}
@@ -379,7 +379,9 @@ func (results AppCheckStatus) String() string {
 }
 
 func successString(results AppCheckStatus) string {
-	if results.ActualLocation != "" {
+	// Only claim a location "match" when an expected_location was actually configured;
+	// otherwise the redirect target was never checked.
+	if results.Application.ExpectedLocation != "" {
 		return fmt.Sprintf("Success: URL %s resolved with %d, redirect location matched %s", results.Application.URL, results.ActualStatusCode, results.ActualLocation)
 	}
 	return fmt.Sprintf("Success: URL %s resolved with %d", results.Application.URL, results.ActualStatusCode)

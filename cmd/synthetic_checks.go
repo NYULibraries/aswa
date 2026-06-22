@@ -19,28 +19,21 @@ const envOutputSlack = "OUTPUT_SLACK"
 // ####################
 
 type FailingSyntheticTest struct {
-	App       *a.Application
 	AppStatus a.AppCheckStatus
 }
 
 // postTestResult constructs a string containing the result of the given test.
-func postTestResult(appStatus a.AppCheckStatus) (string, error) {
+func postTestResult(appStatus a.AppCheckStatus) string {
 	result := appStatus.String()
 	timestamp := time.Now().Local().Format(time.RFC1123Z)
 	log.Printf("Test result generated on %s", timestamp)
 
-	return result, nil
+	return result
 }
 
 func postToSlack(tests []FailingSyntheticTest) error {
-	c.GetSlackWebhookUrl()
-	c.GetClusterInfo()
 	for _, test := range tests {
-		result, err := postTestResult(test.AppStatus)
-		if err != nil {
-			return err
-		}
-		fmt.Println(result)
+		fmt.Println(postTestResult(test.AppStatus))
 	}
 	return nil
 }
@@ -60,7 +53,7 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			appStatus := app.GetStatus()
 			log.Println(appStatus)
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
-				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{App: app, AppStatus: *appStatus})
+				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{AppStatus: *appStatus})
 				if !IsOutputSlack {
 					m.IncrementFailedTestsCounter(app.Name)
 				}

@@ -392,6 +392,7 @@ func TestString(t *testing.T) {
 		{description: "Successful status", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200}, expectedOutput: "Success: URL https://library.nyu.edu resolved with 200"},
 		{description: "Failed status", appStatus: &AppCheckStatus{Application: &Application{URL: "https://library.nyu.edu", ExpectedStatusCode: http.StatusOK, Timeout: time.Second}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 404}, expectedOutput: "Failure: URL https://library.nyu.edu resolved with 404, expected 200"},
 		{description: "Successful status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "https://library.nyu.edu/"}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 301, redirect location matched https://library.nyu.edu/"},
+		{description: "Successful status, redirect present but no expected_location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusFound, Timeout: time.Second, ExpectedLocation: ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 302, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Success: URL http://library.nyu.edu resolved with 302"},
 		{description: "Failed status with location", appStatus: &AppCheckStatus{Application: &Application{URL: "http://library.nyu.edu", ExpectedStatusCode: http.StatusMovedPermanently, Timeout: time.Second, ExpectedLocation: "http://library.nyu.edu/"}, StatusOk: false, StatusContentOk: true, ActualStatusCode: 301, ActualLocation: "https://library.nyu.edu/"}, expectedOutput: "Failure: URL http://library.nyu.edu resolved with 301, but redirect location https://library.nyu.edu/ did not match http://library.nyu.edu/"},
 		{description: "Successful status with expected content", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Example Domain", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: true, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nSuccess: ExpectedContent Example Domain matched ActualContent Example Domain"},
 		{description: "Failed status with unexpected content", appStatus: &AppCheckStatus{Application: &Application{Name: "", URL: "https://example.com", ExpectedStatusCode: http.StatusOK, Timeout: time.Second, MaxRedirects: 0, ExpectedLocation: "", ExpectedContent: "Wrong Content", ExpectedCSP: ""}, StatusOk: true, StatusContentOk: false, ActualStatusCode: 200, ActualContent: "Example Domain"}, expectedOutput: "Success: URL https://example.com resolved with 200\nFailure: Expected content Wrong Content did not match Actual Content"},
@@ -723,4 +724,34 @@ func TestGetStatus_Expects405_DoesNotFallBack(t *testing.T) {
 	// 405 (not 200) confirms the probe used HEAD and did not fall back to GET.
 	assert.Equal(t, http.StatusMethodNotAllowed, status.ActualStatusCode)
 	assert.True(t, status.StatusOk, "a check that expects 405 should pass on the HEAD response")
+}
+
+func TestGetStatus_OversizedBody_IsCappedAtLimit(t *testing.T) {
+	// The marker sits past maxResponseBodyBytes, so a correctly capped read truncates
+	// before reaching it. Without the cap the marker would be found and content would match.
+	const marker = "MARKER_PAST_THE_CAP"
+	body := make([]byte, maxResponseBodyBytes+len(marker)+1024)
+	for i := range body {
+		body[i] = 'a'
+	}
+	copy(body[len(body)-len(marker):], marker)
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write(body)
+	}))
+	t.Cleanup(srv.Close)
+
+	app := &Application{
+		Name:               "oversized",
+		URL:                srv.URL + "/",
+		ExpectedStatusCode: http.StatusOK,
+		Timeout:            5 * time.Second,
+		ExpectedContent:    marker,
+	}
+
+	status := app.GetStatus()
+
+	require.NotNil(t, status)
+	assert.False(t, status.StatusContentOk, "marker beyond the cap must not match a truncated body")
+	assert.Len(t, status.ActualContent, maxResponseBodyBytes, "captured body should be truncated to the cap")
 }

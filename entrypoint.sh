@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # Check if the output should be posted to Slack
-IsOutputSlack=$(echo "${OUTPUT_SLACK:-false}")
+IsOutputSlack="${OUTPUT_SLACK:-false}"
 
 # Capture the output of /aswa
 aswa_output=$(if ! command -v "$1" >/dev/null 2>&1; then /aswa "$1"; else "$@"; fi)
@@ -20,5 +20,10 @@ if [ "$IsOutputSlack" = "true" ] && echo "$aswa_output" | grep -q "Failure"; the
     payload=$(echo '{}' | jq --arg text "$slack_message" '.text = $text')
 
     # Send the constructed message to Slack webhook URL
-    curl -X POST -H 'Content-type: application/json' --data "$payload" "${SLACK_WEBHOOK_URL}"
+    if ! curl --fail --silent --show-error -X POST \
+        -H 'Content-type: application/json' \
+        --data "$payload" "${SLACK_WEBHOOK_URL}"; then
+        echo "Failed to post message to Slack webhook" >&2
+        exit 1
+    fi
 fi

@@ -61,15 +61,6 @@ func loadConfig(yamlPath string) (*Config, error) {
 	return &config, nil
 }
 
-func ContainApp(applications []*a.Application, e string) bool {
-	for _, application := range applications {
-		if application.Name == e {
-			return true
-		}
-	}
-	return false
-}
-
 func NewConfig(yamlPath string) (*Config, error) {
 	return loadConfig(yamlPath)
 }
