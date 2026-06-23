@@ -81,6 +81,19 @@ ASWA can post the results of its checks to respective Slack channels (dev, prod,
 
 By default, `OUTPUT_SLACK` is set to `false`. If `OUTPUT_SLACK` is set to `true`, the results are sent to Slack. If `OUTPUT_SLACK` is set to `false`, the results are sent to PAG (Prom Aggregation Gateway). PAG aggregates metrics for Prometheus and is similar in function to Pushgateway but includes metric aggregation capabilities.
 
+### Metrics
+When `OUTPUT_SLACK` is `false`, ASWA pushes two counters to PAG on **every** run:
+
+* `aswa_checks_failed_total{env, app}` — incremented when a synthetic check **fails**.
+* `aswa_checks_run_total{env, app}` — incremented on **every** check (pass or fail).
+
+Because the run counter is recorded even when everything passes, real per-application uptime can be computed in Prometheus/Grafana:
+
+```promql
+uptime % = 1 - increase(aswa_checks_failed_total[$range]) / increase(aswa_checks_run_total[$range])
+```
+
+PAG sums counters across pushes, so both metrics accumulate correctly over time.
 
 ### Deployment
 ASWA is designed to run as a cron job in a Kubernetes (K8s) cluster. 
