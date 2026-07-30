@@ -52,6 +52,10 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 			found = true // The app was found in the config file
 			appStatus := app.GetStatus()
 			log.Println(appStatus)
+			// Count every check that ran (pass or fail) so uptime has a denominator.
+			if !IsOutputSlack {
+				m.IncrementRunCounter(app.Name)
+			}
 			if !appStatus.StatusOk || !appStatus.StatusContentOk || !appStatus.StatusCSPOk {
 				failingSyntheticTests = append(failingSyntheticTests, FailingSyntheticTest{AppStatus: *appStatus})
 				if !IsOutputSlack {
@@ -72,19 +76,21 @@ func RunSyntheticTests(appData []*a.Application, targetAppName string) error {
 		return err
 	}
 
-	if len(failingSyntheticTests) > 0 {
-		if IsOutputSlack {
+	if IsOutputSlack {
+		if len(failingSyntheticTests) > 0 {
 			return postToSlack(failingSyntheticTests)
 		}
-		// Push metrics to Prom-Aggregation-Gateway if OUTPUT_SLACK is not set
-		if errorProm := m.PushMetrics(); errorProm != nil {
-			log.Printf("Error encountered during metrics push: %v", errorProm)
-			return errorProm // return the error to handle it accordingly
-		}
-		log.Println("Success! Pushed failed test count for all apps to Prom-Aggregation-Gateway")
-	} else {
 		log.Println("No failed tests. No actions taken.")
+		return nil
 	}
+
+	// Metrics mode: always push so the run-count denominator is recorded on every run,
+	// even when all checks pass (PAG sums counters across pushes).
+	if errorProm := m.PushMetrics(); errorProm != nil {
+		log.Printf("Error encountered during metrics push: %v", errorProm)
+		return errorProm // return the error to handle it accordingly
+	}
+	log.Printf("Success! Pushed run and failure counts for all apps to Prom-Aggregation-Gateway (%d failing)", len(failingSyntheticTests))
 	return nil
 }
 

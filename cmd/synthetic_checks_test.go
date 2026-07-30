@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -221,4 +222,38 @@ func TestDoCheck(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestRunSyntheticTestsPushesWhenAllPass covers the metrics-mode behavior change: metrics are
+// pushed on every run, including when nothing fails, so the run-count denominator
+// (aswa_checks_run_total) is always recorded — not only when there is a failure.
+func TestRunSyntheticTestsPushesWhenAllPass(t *testing.T) {
+	t.Setenv(envOutputSlack, "false") // force metrics mode regardless of the ambient environment
+	// Healthy upstream: returns 200, and with no content/location/CSP expectations every check passes.
+	appServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer appServer.Close()
+
+	var pushes int32
+	pag := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		atomic.AddInt32(&pushes, 1)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer pag.Close()
+	t.Setenv(c.EnvPromAggregationGatewayUrl, pag.URL)
+
+	apps := []*a.Application{
+		{
+			Name:               "healthy",
+			URL:                appServer.URL,
+			ExpectedStatusCode: http.StatusOK,
+			Timeout:            5 * time.Second,
+		},
+	}
+
+	err := RunSyntheticTests(apps, "")
+	assert.NoError(t, err)
+	assert.Equal(t, int32(1), atomic.LoadInt32(&pushes),
+		"metrics should be pushed even when all checks pass")
 }
