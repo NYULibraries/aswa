@@ -18,7 +18,7 @@ applications:
   - name: primo-ve-search-html
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=58bfe6c3d1"'
+    expected_content: 'src="lib/bundle.js?version=ab184815ad"'
   - name: primo-nui-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
