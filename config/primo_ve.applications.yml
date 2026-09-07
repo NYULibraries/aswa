@@ -18,12 +18,12 @@ applications:
   - name: primo-ve-search-html
     url: 'https://search.library.nyu.edu/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=ab184815ad"'
+    expected_content: 'src="lib/bundle.js?version=5337243ac7"'
   - name: primo-nui-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/discovery/search?vid=01NYU_INST:NYU'
     expected_status: 200
-    expected_content: 'src="lib/bundle.js?version=f909bdf597"'
+    expected_content: 'src="lib/bundle.js?version=5337243ac7"'
   - name: primo-nde-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/nde/home?vid=01NYU_INST:NYU_NDE'
     expected_status: 200
-    expected_content: 'src="main.e78c3f4fa3a10fd4.js"'
+    expected_content: 'src="main.e7d6f8b380da5f3f.js"'
