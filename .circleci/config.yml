@@ -48,6 +48,7 @@ workflows:
     jobs:
       - build-test
       - publish-image:
+          context: web-quay-publish
           requires:
             - build-test
           filters:
