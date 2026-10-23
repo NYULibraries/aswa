@@ -10,10 +10,6 @@ parameters:
   weekly-security-scan:
     type: boolean
     default: false
-  # Set by hand to send a test alert to #security-scan-alerts
-  security-scan-test-alert:
-    type: boolean
-    default: false
 
 jobs:
   build-test:
@@ -62,14 +58,6 @@ jobs:
   security-scan:
     <<: *docker-defaults
     steps:
-      - when:
-          condition: << pipeline.parameters.security-scan-test-alert >>
-          steps:
-            - run:
-                name: Fail on purpose for a test alert
-                command: |
-                  echo "Test alert requested"
-                  exit 1
       - checkout
       - setup_remote_docker
       - run:
@@ -91,11 +79,7 @@ jobs:
           name: Post failure to Slack
           when: on_fail
           command: |
-            if [ "<< pipeline.parameters.security-scan-test-alert >>" = "true" ]; then
-              text="TEST ALERT, please ignore: aswa security scan alert check from ${CIRCLE_BRANCH}. ${CIRCLE_BUILD_URL}"
-            else
-              text="aswa weekly security scan failed on ${CIRCLE_BRANCH}: ${CIRCLE_BUILD_URL}"
-            fi
+            text="aswa weekly security scan failed on ${CIRCLE_BRANCH}: ${CIRCLE_BUILD_URL}"
             jq -n --arg text "$text" '{text: $text}' |
               curl --fail-with-body --silent --show-error -H 'Content-Type: application/json' -d @- "$SECURITY_SCAN_SLACK_WEBHOOK"
 
@@ -103,10 +87,7 @@ workflows:
   version: 2
   build-test:
     when:
-      not:
-        or:
-          - << pipeline.parameters.weekly-security-scan >>
-          - << pipeline.parameters.security-scan-test-alert >>
+      not: << pipeline.parameters.weekly-security-scan >>
     jobs:
       - build-test
       - publish-image:
@@ -119,10 +100,7 @@ workflows:
             tags:
               ignore: /.*/
   weekly-security-scan:
-    when:
-      or:
-        - << pipeline.parameters.weekly-security-scan >>
-        - << pipeline.parameters.security-scan-test-alert >>
+    when: << pipeline.parameters.weekly-security-scan >>
     jobs:
       - security-scan:
           context: web-slack-security-scan
