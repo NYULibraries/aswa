@@ -22,6 +22,10 @@ jobs:
           name: Test
           command: |
             docker compose run test
+      - run:
+          name: Check vulnerabilities
+          command: |
+            docker compose run test govulncheck ./...
 
   publish-image:
     <<: *docker-defaults
