@@ -17,7 +17,9 @@ jobs:
       - run:
           name: Check formatting
           command: |
-            test -z "$(docker compose run test gofmt -l .)"
+            format_output=$(docker compose run test gofmt -l .)
+            echo "$format_output"
+            test -z "$format_output"
       - run:
           name: Test
           command: |
