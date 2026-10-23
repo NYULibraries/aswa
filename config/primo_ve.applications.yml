@@ -26,4 +26,4 @@ applications:
   - name: primo-nde-sandbox
     url: 'https://nyu-psb.primo.exlibrisgroup.com/nde/home?vid=01NYU_INST:NYU_NDE'
     expected_status: 200
-    expected_content: 'src="main.86fdc700121a45a5.js"'
+    expected_content: 'src="main.04f7c02653ca62fc.js"'
