@@ -7,21 +7,10 @@ import (
 
 // Constants for environment variables
 const (
-	EnvClusterInfo               = "CLUSTER_INFO"
 	EnvName                      = "ENV"
 	EnvPromAggregationGatewayUrl = "PROM_AGGREGATION_GATEWAY_URL"
-	EnvSlackWebhookUrl           = "SLACK_WEBHOOK_URL"
 	EnvYamlPath                  = "YAML_PATH"
 )
-
-// GetClusterInfo retrieves the cluster info from environment variables.
-func GetClusterInfo() string {
-	clusterInfo := os.Getenv(EnvClusterInfo)
-	if clusterInfo == "" {
-		log.Println("CLUSTER_INFO is not set")
-	}
-	return clusterInfo
-}
 
 // GetCmdArg retrieves the command line argument without using the flag package.
 func GetCmdArg() string {
@@ -48,15 +37,6 @@ func GetPromAggregationgatewayUrl() string {
 		return ""
 	}
 	return promAggregationGatewayUrl
-}
-
-// GetSlackWebhookUrl retrieves Slack credentials from environment variables.
-func GetSlackWebhookUrl() string {
-	slackWebhookUrl := os.Getenv(EnvSlackWebhookUrl)
-	if slackWebhookUrl == "" {
-		log.Println("SLACK_WEBHOOK_URL is not set")
-	}
-	return slackWebhookUrl
 }
 
 // GetYamlPath retrieves the YAML path from the environment variable.

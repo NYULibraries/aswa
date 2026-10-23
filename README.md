@@ -99,32 +99,14 @@ Here is an explanation of the key environment variables:
 
 * ENV: Specifies the environment in which ASWA is running (default is `dev`). It becomes the `env` label on the metrics below.
 * DEBUG_MODE: Enables or disables debug mode (default is false).
-* CLUSTER_INFO: Cluster name. Used only to prefix Slack messages — see Notifications.
-* OUTPUT_SLACK: If set to true, results are sent to Slack; otherwise, they are sent to PAG (default is `false`).
 * PROM_AGGREGATION_GATEWAY_URL: URL for the Prom Aggregation Gateway.
-* SLACK_WEBHOOK_URL: Slack webhook URL. Read by `entrypoint.sh`, not by the binary — see Notifications.
 * YAML_PATH: Path to the YAML configuration file (default is `config/dev.applications.yml`).
 * SKIP_WHITELIST_CHECK: If true, skips the `YAML_PATH` whitelist check.
 
-### Notifications
-
-Slack posting is done by `entrypoint.sh`, not by the Go binary, so it only happens when ASWA runs in its container.
-The binary writes results to stdout; the entrypoint captures that output and POSTs it to `SLACK_WEBHOOK_URL` only when
-**both** of these hold:
-
-* `OUTPUT_SLACK` is `true`, and
-* the output contains the word `Failure` — passing runs are never posted.
-
-If `CLUSTER_INFO` is set, the message is prefixed with its uppercased value; otherwise the prefix reads
-`Unknown cluster: CLUSTER_INFO is not set`. Running the binary directly (`./aswa`) never posts to Slack, whatever
-`SLACK_WEBHOOK_URL` is set to.
-
-By default, `OUTPUT_SLACK` is `false` and results go to PAG (Prom Aggregation Gateway) instead. PAG aggregates metrics
-for Prometheus and is similar in function to Pushgateway but includes metric aggregation capabilities. The two modes are
-mutually exclusive: with `OUTPUT_SLACK=true` no metrics are recorded or pushed at all.
-
 ### Metrics
-When `OUTPUT_SLACK` is `false`, ASWA pushes two counters to PAG on **every** run:
+ASWA pushes two counters to PAG (Prom Aggregation Gateway) on **every** run. PAG aggregates metrics for Prometheus and
+is similar in function to Pushgateway but includes metric aggregation capabilities. Alerts on these metrics are
+defined in Prometheus, not in ASWA.
 
 * `aswa_checks_failed_total{env, app}` — incremented when a synthetic check **fails**.
 * `aswa_checks_run_total{env, app}` — incremented on **every** check (pass or fail).
@@ -140,10 +122,15 @@ PAG sums counters across pushes, so both metrics accumulate correctly over time.
 ### Deployment
 
 ASWA is designed to run as a cron job in a Kubernetes (K8s) cluster.
-Set `CLUSTER_INFO` to identify the cluster in Slack notifications.
 
 The config files are baked into the image at build time (the `Dockerfile` copies `/app/config` to `/config`) — there is
 no ConfigMap mount. A config change therefore only reaches a cluster once the image has been rebuilt and re-pulled.
+
+The image is built `FROM scratch`: it holds only the binary, the config files and the CA certificates, with no shell.
+Its entrypoint is `/aswa`, so any argument is the app name to check.
+
+When ASWA itself fails, for example on a failed metrics push or an unknown app name, it exits with status 1, so the
+CronJob marks the run failed. Failing checks are not errors: they are counted in the metrics, and the run exits 0.
 
 ### Tests
 
