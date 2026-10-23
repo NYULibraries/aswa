@@ -1,8 +1,12 @@
 package metrics
 
 import (
+	"fmt"
+	"io"
+	"mime"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	c "github.com/NYULibraries/aswa/pkg/config"
@@ -59,6 +63,58 @@ func TestPushMetrics(t *testing.T) {
 				}
 			}
 		})
+	}
+}
+
+// TestPushMetricsRequest pins down what reaches the Prom Aggregation Gateway: the method, path,
+// text format, and both metric families with their env and app labels. Dashboards and alerts
+// depend on these, and a Prometheus client library upgrade could change them.
+func TestPushMetricsRequest(t *testing.T) {
+	var method, path, contentType, body string
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		method, path, contentType = r.Method, r.URL.Path, r.Header.Get("Content-Type")
+		b, _ := io.ReadAll(r.Body)
+		body = string(b)
+		w.WriteHeader(http.StatusOK)
+	}))
+	defer server.Close()
+	t.Setenv(c.EnvPromAggregationGatewayUrl, server.URL)
+	t.Setenv(c.EnvName, "format-test")
+
+	IncrementRunCounter("push-format-app")
+	IncrementFailedTestsCounter("push-format-app")
+	// The counters are package globals, so read their values instead of assuming 1 (go test -count=2).
+	runs := counterValue(t, checksRun.WithLabelValues("format-test", "push-format-app"))
+	failures := counterValue(t, failedTests.WithLabelValues("format-test", "push-format-app"))
+
+	if err := PushMetrics(); err != nil {
+		t.Fatalf("PushMetrics: %v", err)
+	}
+
+	if method != http.MethodPut {
+		t.Errorf("method = %q, want PUT", method)
+	}
+	if path != "/metrics/job/monitoring" {
+		t.Errorf("path = %q, want /metrics/job/monitoring", path)
+	}
+	mediaType, params, err := mime.ParseMediaType(contentType)
+	if err != nil || mediaType != "text/plain" || params["version"] != "0.0.4" {
+		t.Errorf("Content-Type = %q, want text/plain; version=0.0.4", contentType)
+	}
+	// Match whole lines, so a wrong value such as 10 can't pass for 1.
+	lines := make(map[string]bool)
+	for line := range strings.SplitSeq(body, "\n") {
+		lines[line] = true
+	}
+	for _, want := range []string{
+		"# TYPE aswa_checks_run_total counter",
+		"# TYPE aswa_checks_failed_total counter",
+		fmt.Sprintf(`aswa_checks_run_total{app="push-format-app",env="format-test"} %g`, runs),
+		fmt.Sprintf(`aswa_checks_failed_total{app="push-format-app",env="format-test"} %g`, failures),
+	} {
+		if !lines[want] {
+			t.Errorf("pushed body is missing the line %q", want)
+		}
 	}
 }
 

@@ -132,6 +132,18 @@ Its entrypoint is `/aswa`, so any argument is the app name to check.
 When ASWA itself fails, for example on a failed metrics push or an unknown app name, it exits with status 1, so the
 CronJob marks the run failed. Failing checks are not errors: they are counted in the metrics, and the run exits 0.
 
+### CI and dependency updates
+
+CircleCI runs `build-test` on every branch push (not on tags): gofmt, the tests, and `govulncheck`, which fails the
+build when aswa's code reaches a known vulnerability. `publish-image` then pushes `quay.io/nyulibraries/aswa:<branch>`
+and `:<branch>-<sha>`, with any `/` in the branch name replaced by `_` (`chore/foo` becomes `:chore_foo`). A merge to
+`main` publishes `:main`, which the clusters run.
+
+Dependabot opens weekly pull requests when the Go modules or the `golang` base image have newer versions. They run
+`build-test` but not `publish-image`, and nothing merges automatically: check that CI passed, read the release notes,
+and merge. The `FROM` lines are pinned by digest, and Dependabot updates the tag and digest together. govulncheck
+itself is pinned in `Dockerfile.test` and is updated by hand.
+
 ### Tests
 
 To run the tests, execute the following command:
@@ -146,6 +158,12 @@ Run tests in a docker container:
 
 ```shell
 docker compose run test
+```
+
+Check for known vulnerabilities, as CI does:
+
+```shell
+docker compose run test govulncheck ./...
 ```
 
 ### Make targets
