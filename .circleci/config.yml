@@ -4,6 +4,17 @@ docker-defaults: &docker-defaults
   working_directory: ~/app
 
 version: 2.1
+
+parameters:
+  # Set by the weekly schedule trigger
+  weekly-security-scan:
+    type: boolean
+    default: false
+  # Set by hand to send a test alert to #security-scan-alerts
+  security-scan-test-alert:
+    type: boolean
+    default: false
+
 jobs:
   build-test:
     <<: *docker-defaults
@@ -48,9 +59,54 @@ jobs:
             docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}
             docker push quay.io/nyulibraries/aswa:${BRANCH_NO_SLASH}-${CIRCLE_SHA1}
 
+  security-scan:
+    <<: *docker-defaults
+    steps:
+      - when:
+          condition: << pipeline.parameters.security-scan-test-alert >>
+          steps:
+            - run:
+                name: Fail on purpose for a test alert
+                command: |
+                  echo "Test alert requested"
+                  exit 1
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build test
+          command: |
+            docker compose build test
+      - run:
+          name: Check source vulnerabilities
+          command: |
+            docker compose run test govulncheck ./...
+      - run:
+          name: Check published image vulnerabilities
+          command: |
+            # Scan the binary inside the image the clusters run
+            docker pull quay.io/nyulibraries/aswa:main
+            docker create --name published quay.io/nyulibraries/aswa:main
+            docker cp published:/aswa - | docker compose run -T test sh -c 'tar -xf - -C /tmp && govulncheck -mode binary /tmp/aswa'
+      - run:
+          name: Post failure to Slack
+          when: on_fail
+          command: |
+            if [ "<< pipeline.parameters.security-scan-test-alert >>" = "true" ]; then
+              text="TEST ALERT, please ignore: aswa security scan alert check from ${CIRCLE_BRANCH}. ${CIRCLE_BUILD_URL}"
+            else
+              text="aswa weekly security scan failed on ${CIRCLE_BRANCH}: ${CIRCLE_BUILD_URL}"
+            fi
+            jq -n --arg text "$text" '{text: $text}' |
+              curl --fail-with-body --silent --show-error -H 'Content-Type: application/json' -d @- "$SECURITY_SCAN_SLACK_WEBHOOK"
+
 workflows:
   version: 2
   build-test:
+    when:
+      not:
+        or:
+          - << pipeline.parameters.weekly-security-scan >>
+          - << pipeline.parameters.security-scan-test-alert >>
     jobs:
       - build-test
       - publish-image:
@@ -62,3 +118,11 @@ workflows:
               ignore: /^dependabot\/.*/
             tags:
               ignore: /.*/
+  weekly-security-scan:
+    when:
+      or:
+        - << pipeline.parameters.weekly-security-scan >>
+        - << pipeline.parameters.security-scan-test-alert >>
+    jobs:
+      - security-scan:
+          context: web-slack-security-scan
