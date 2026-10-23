@@ -58,5 +58,7 @@ workflows:
           requires:
             - build-test
           filters:
+            branches:
+              ignore: /^dependabot\/.*/
             tags:
               ignore: /.*/
