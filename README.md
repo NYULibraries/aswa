@@ -144,6 +144,18 @@ Dependabot opens weekly pull requests when the Go modules or the `golang` base i
 and merge. The `FROM` lines are pinned by digest, and Dependabot updates the tag and digest together. govulncheck
 itself is pinned in `Dockerfile.test` and is updated by hand.
 
+A weekly scheduled pipeline runs `security-scan` on `main`, so vulnerabilities disclosed after the last push are still
+found. It runs govulncheck on the source and on the binary in `quay.io/nyulibraries/aswa:main`, the image the clusters
+run, and posts to #security-scan-alerts when the job fails. It builds the test image but does not build or publish the
+application image. To check that alerts reach Slack, trigger a pipeline with `security-scan-test-alert` set; the job
+fails on purpose and posts a message marked TEST ALERT:
+
+```shell
+curl -X POST https://circleci.com/api/v2/project/gh/NYULibraries/aswa/pipeline \
+  -H "Circle-Token: $CIRCLE_TOKEN" -H 'Content-Type: application/json' \
+  -d '{"branch": "main", "parameters": {"security-scan-test-alert": true}}'
+```
+
 ### Tests
 
 To run the tests, execute the following command:
