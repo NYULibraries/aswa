@@ -7,10 +7,8 @@ BINARY := aswa
 SOURCES := $(shell find . -type f -name '*.go')
 
 # Variables
-CLUSTER_INFO ?=
 DOCKER_COMPOSE_CMD ?= docker compose run --rm
 PROM_AGGREGATION_GATEWAY_URL ?=
-SLACK_CHANNEL_ID ?=
 SKIP_BUILD ?= 0
 # Set to 1 to skip building the images
 
@@ -31,13 +29,8 @@ build: $(BINARY)
 
 # Check if the required environment variables are set
 check-env:
-	@MISSING_VARS=""; \
-	UNSET_COUNT=0; \
-	if [ -z "$(SLACK_CHANNEL_ID)" ]; then MISSING_VARS="SLACK_CHANNEL_ID"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
-	if [ -z "$(CLUSTER_INFO)" ]; then MISSING_VARS="$$MISSING_VARS$${MISSING_VARS:+, }CLUSTER_INFO"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
-	if [ -z "$(PROM_AGGREGATION_GATEWAY_URL)" ]; then MISSING_VARS="$$MISSING_VARS$${MISSING_VARS:+, }PROM_AGGREGATION_GATEWAY_URL"; UNSET_COUNT=$$((UNSET_COUNT + 1)); fi; \
-	if [ $$UNSET_COUNT -gt 0 ]; then \
-	    echo "$$MISSING_VARS $$([ $$UNSET_COUNT -gt 1 ] && echo 'are' || echo 'is') not set. Please set $$([ $$UNSET_COUNT -gt 1 ] && echo 'them' || echo 'it') and try again."; \
+	@if [ -z "$(PROM_AGGREGATION_GATEWAY_URL)" ]; then \
+	    echo "PROM_AGGREGATION_GATEWAY_URL is not set. Please set it and try again."; \
 	    exit 1; \
 	fi; \
 	echo "✅ All required environment variables are set."
@@ -83,7 +76,7 @@ run: build
 # Run the synthetic test on the app with the given name in a container
 run-app: conditional-build
 	@if [ -z "$(filter-out $@,$(MAKECMDGOALS))" ]; then echo "Error: Please provide an app name. Usage: make run-app your_app_name_here"; exit 1; fi
-	$(DOCKER_COMPOSE_CMD) aswa /aswa $(filter-out $@,$(MAKECMDGOALS))
+	$(DOCKER_COMPOSE_CMD) aswa $(filter-out $@,$(MAKECMDGOALS))
 
 # Ignore any targets that are not files
 %:

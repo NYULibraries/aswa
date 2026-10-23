@@ -184,17 +184,15 @@ func TestDoCheck(t *testing.T) {
 	defer mockPushgateway.Close()
 
 	tests := []struct {
-		name           string
-		envYamlPath    string
-		envSlackUrl    string
-		envClusterInfo string
-		cmdArgs        []string
-		wantErr        bool
+		name        string
+		envYamlPath string
+		cmdArgs     []string
+		wantErr     bool
 	}{
 		// Add test cases here
-		{"valid case, but missing app", "test-path", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "arg"}, true},
-		{"valid case with existing app", "../testdata/expect_valid.yml", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "specialcollections"}, false},
-		{"missing yaml path", "", "https://hooks.slack.com/test-url", "test-cluster", []string{"cmd", "arg"}, true},
+		{"valid case, but missing app", "test-path", []string{"cmd", "arg"}, true},
+		{"valid case with existing app", "../testdata/expect_valid.yml", []string{"cmd", "specialcollections"}, false},
+		{"missing yaml path", "", []string{"cmd", "arg"}, true},
 	}
 
 	for _, tt := range tests {
@@ -202,8 +200,6 @@ func TestDoCheck(t *testing.T) {
 
 			// Set up environment variables and command line arguments
 			t.Setenv(c.EnvYamlPath, tt.envYamlPath)
-			t.Setenv(c.EnvSlackWebhookUrl, tt.envSlackUrl)
-			t.Setenv(c.EnvClusterInfo, tt.envClusterInfo)
 			t.Setenv(c.EnvPromAggregationGatewayUrl, mockPushgateway.URL)
 			// Set environment variable to true for this test
 			t.Setenv(c.EnvSkipWhitelistCheck, "true")
@@ -224,11 +220,10 @@ func TestDoCheck(t *testing.T) {
 	}
 }
 
-// TestRunSyntheticTestsPushesWhenAllPass covers the metrics-mode behavior change: metrics are
-// pushed on every run, including when nothing fails, so the run-count denominator
-// (aswa_checks_run_total) is always recorded — not only when there is a failure.
+// TestRunSyntheticTestsPushesWhenAllPass checks that metrics are pushed on every run,
+// including when nothing fails, so the run-count denominator (aswa_checks_run_total)
+// is always recorded — not only when there is a failure.
 func TestRunSyntheticTestsPushesWhenAllPass(t *testing.T) {
-	t.Setenv(envOutputSlack, "false") // force metrics mode regardless of the ambient environment
 	// Healthy upstream: returns 200, and with no content/location/CSP expectations every check passes.
 	appServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
