@@ -5,6 +5,11 @@ updates:
     directory: /
     schedule:
       interval: weekly
+    allow:
+      - dependency-type: direct
+      # govulncheck is a go.mod tool, which Dependabot sees as an indirect dependency
+      - dependency-name: golang.org/x/vuln
+        dependency-type: all
     groups:
       go-modules:
         patterns:
