@@ -1,6 +1,6 @@
 docker-defaults: &docker-defaults
   docker:
-    - image: cimg/base:2025.01
+    - image: cimg/base:2026.11
   working_directory: ~/app
 
 version: 2.1
@@ -77,6 +77,25 @@ jobs:
             docker pull quay.io/nyulibraries/aswa:main
             docker create --name published quay.io/nyulibraries/aswa:main
             docker cp published:/aswa - | docker compose run -T test sh -c 'tar -xf - -C /tmp && govulncheck -mode binary /tmp/aswa'
+      - run:
+          name: Check the CI base image age
+          # Dependabot does not read this file, so the cimg/base pin is bumped by hand.
+          # Fail once it is more than 3 months old, to post a reminder.
+          when: always
+          command: |
+            tags=$(grep -oE 'image: cimg/base:[0-9]{4}\.[0-9]{2}$' .circleci/config.yml | cut -d: -f3) || true
+            if [ -z "$tags" ]; then
+              echo "No cimg/base:YYYY.MM image found in .circleci/config.yml"
+              exit 1
+            fi
+            for tag in $tags; do
+              age=$(( ($(date -u +%Y) - ${tag%.*}) * 12 + 10#$(date -u +%m) - 10#${tag#*.} ))
+              echo "cimg/base:$tag is $age months old"
+              if [ "$age" -gt 3 ]; then
+                echo "Update it to the latest monthly tag: https://hub.docker.com/r/cimg/base/tags"
+                exit 1
+              fi
+            done
       - run:
           name: Post failure to Slack
           when: on_fail

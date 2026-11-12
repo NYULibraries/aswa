@@ -154,6 +154,9 @@ run, and posts to #security-scan-alerts when the job fails. It builds the test i
 application image. To run it by hand, trigger a pipeline on `main` with the `weekly-security-scan` parameter set to
 `true`.
 
+The same job also fails when the `cimg/base` image that the CircleCI jobs run in is more than 3 months old. Dependabot
+does not read `.circleci/config.yml`, so bump that tag by hand to the latest monthly release.
+
 ### Tests
 
 To run the tests, execute the following command:
