@@ -70,6 +70,8 @@ jobs:
             docker compose run test govulncheck ./...
       - run:
           name: Check published image vulnerabilities
+          # Run even when the source check fails, so one alert covers both
+          when: always
           command: |
             # Scan the binary inside the image the clusters run
             docker pull quay.io/nyulibraries/aswa:main
