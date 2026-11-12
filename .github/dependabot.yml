@@ -1,4 +1,4 @@
-# Weekly pull requests that keep the Go modules and the golang base image current.
+# Pull requests that keep the Go modules (weekly) and the golang base image (daily) current.
 version: 2
 updates:
   - package-ecosystem: gomod
@@ -9,10 +9,16 @@ updates:
       go-modules:
         patterns:
           - "*"
+  # Daily, weekends included ("daily" skips them), so a Go patch release is proposed soon after its
+  # 2-day cooldown ends. The cooldown counts from the tag's last push on Docker Hub.
   - package-ecosystem: docker
     directory: /
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 9 * * *"
+      timezone: Etc/UTC
+    cooldown:
+      default-days: 2
     groups:
       docker-images:
         patterns:

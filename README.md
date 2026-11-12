@@ -139,10 +139,14 @@ build when aswa's code reaches a known vulnerability. `publish-image` then pushe
 and `:<branch>-<sha>`, with any `/` in the branch name replaced by `_` (`chore/foo` becomes `:chore_foo`). A merge to
 `main` publishes `:main`, which the clusters run.
 
-Dependabot opens weekly pull requests when the Go modules or the `golang` base image have newer versions. They run
-`build-test` but not `publish-image`, and nothing merges automatically: check that CI passed, read the release notes,
-and merge. The `FROM` lines are pinned by digest, and Dependabot updates the tag and digest together. govulncheck
-itself is pinned in `Dockerfile.test` and is updated by hand.
+Dependabot opens pull requests when the Go modules (checked weekly) or the `golang` base image (checked daily) have
+newer versions. They run `build-test` but not `publish-image`, and nothing merges automatically: check that CI passed,
+read the release notes, and merge. The `FROM` lines are pinned by digest, and Dependabot updates the tag and digest
+together. govulncheck itself is pinned in `Dockerfile.test` and is updated by hand.
+
+Dependabot waits before proposing a new version: 3 days for the Go modules (GitHub's default) and 2 days for the
+`golang` image, counted from the tag's last push on Docker Hub. When a Go security release turns `build-test` red, or
+fixes something that matters to aswa, bump the `FROM` lines by hand instead of waiting.
 
 A weekly scheduled pipeline runs `security-scan` on `main`, so vulnerabilities disclosed after the last push are still
 found. It runs govulncheck on the source and on the binary in `quay.io/nyulibraries/aswa:main`, the image the clusters
