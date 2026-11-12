@@ -142,7 +142,7 @@ and `:<branch>-<sha>`, with any `/` in the branch name replaced by `_` (`chore/f
 Dependabot opens pull requests when the Go modules (checked weekly) or the `golang` base image (checked daily) have
 newer versions. They run `build-test` but not `publish-image`, and nothing merges automatically: check that CI passed,
 read the release notes, and merge. The `FROM` lines are pinned by digest, and Dependabot updates the tag and digest
-together. govulncheck itself is pinned in `Dockerfile.test` and is updated by hand.
+together. govulncheck is a `tool` in `go.mod`, so the weekly Go modules update covers it.
 
 Dependabot waits before proposing a new version: 3 days for the Go modules (GitHub's default) and 2 days for the
 `golang` image, counted from the tag's last push on Docker Hub. When a Go security release turns `build-test` red, or
